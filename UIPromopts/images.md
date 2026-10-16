@@ -1,0 +1,2 @@
+C:\Users\VIP\Desktop\work\DreamLife\UIPromopts\heroDesign.png
+here is the design for the hero please review it as you can see the text is in the center and we can see the full image could you create a plan so that we could make it just like the design ?
