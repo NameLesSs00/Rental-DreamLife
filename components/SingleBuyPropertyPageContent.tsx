@@ -58,6 +58,13 @@ export default function SingleBuyPropertyPageContent({ id }: { id: string }) {
     return () => setPageEntity(null, null);
   }, [id, setPageEntity]);
 
+  const categoryValues = property?.categoryValues || [];
+  const { groups: amenityGroups, categories: amenityCategories } = useGroupedAmenities(
+    categoryValues,
+    categories,
+    t("buy.features")
+  );
+
   if (isLoading) return <div className="p-20 text-center">{t("buy.loadingProperty")}</div>;
   if (!property) return <div className="p-20 text-center">{t("buy.notFound")}</div>;
 
@@ -79,14 +86,6 @@ export default function SingleBuyPropertyPageContent({ id }: { id: string }) {
 
   const galleryImages = (property.images || []).sort((a, b) => a.displayOrder - b.displayOrder).map((img) => ({ src: `${API_BASE_URL}/${img.imageUrl}`, alt: property.title }));
   if (galleryImages.length === 0) galleryImages.push({ src: "/rent/property-card.png", alt: "Placeholder" });
-
-  
-
-  const { groups: amenityGroups, categories: amenityCategories } = useGroupedAmenities(
-    property.categoryValues || [],
-    categories,
-    t("buy.features")
-  );
 
   return (
     <main className="overflow-hidden bg-white font-[var(--font-poppins)] text-[#183c2f]">
