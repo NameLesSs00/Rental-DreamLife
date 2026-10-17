@@ -9,6 +9,7 @@ import ContactForm from "./ContactForm";
 import DynamicAmenityIcon from "./DynamicAmenityIcon";
 import { usePublicPropertyBuyingById } from "@/lib/hooks/usePropertyBuying";
 import { usePropertyBuyingCategories } from "@/lib/hooks/usePropertyBuyingCategory";
+import { useGroupedAmenities, type AmenityGroup } from "@/lib/hooks/useGroupedAmenities";
 import { useCurrencies } from "@/lib/hooks/useCurrency";
 import { API_BASE_URL } from "@/lib/api/config";
 import type { PropertyBuying, PropertyBuyingSection } from "@/lib/types/propertyBuying";
@@ -26,7 +27,20 @@ type QuickFact = {
   icon: string;
 };
 
-type DetailRow = [string, string];
+const propertyTypeNames: Record<number, string> = {
+  1: "Apartment",
+  2: "Villa",
+  3: "Studio",
+  4: "Chalet",
+  5: "Twin House",
+  6: "Townhouse",
+  7: "Duplex",
+  8: "Penthouse",
+  9: "Cabin",
+  10: "Hotel",
+  11: "2 Bedrooms",
+  12: "1 Bedroom",
+};
 
 export default function SingleBuyPropertyPageContent({ id }: { id: string }) {
   const { locale, t } = useI18n();
@@ -66,61 +80,57 @@ export default function SingleBuyPropertyPageContent({ id }: { id: string }) {
   const galleryImages = (property.images || []).sort((a, b) => a.displayOrder - b.displayOrder).map((img) => ({ src: `${API_BASE_URL}/${img.imageUrl}`, alt: property.title }));
   if (galleryImages.length === 0) galleryImages.push({ src: "/rent/property-card.png", alt: "Placeholder" });
 
-  const quickFacts = [
-    { label: `${property.area || 0} m²`, icon: "/homepage/properties/icons/size.svg" },
-    { label: `${property.bedrooms || 0} ${Number(property.bedrooms || 0) === 1 ? t("buy.bedroom") : t("buy.bedrooms")}`, icon: "/homepage/properties/icons/bed.svg" },
-    { label: `${property.bathrooms || 0} ${Number(property.bathrooms || 0) === 1 ? t("buy.bathroom") : t("buy.bathrooms")}`, icon: "/homepage/properties/icons/bath.svg" },
-  ];
+  
 
-  const priceDetails: DetailRow[] = [
-    [t("buy.price"), priceLabel],
-    [t("buy.status"), property.status === 1 ? t("buy.statuses.available") : property.status === 2 ? t("buy.statuses.reserved") : t("buy.statuses.sold")],
-  ];
-
-  const locationDetails: DetailRow[] = [
-    [t("buy.city"), property.address?.city || t("buy.unknown")],
-    [t("buy.area"), property.address?.area || t("buy.unknown")],
-    [t("buy.street"), property.address?.street || t("buy.unknown")],
-  ];
+  const { groups: amenityGroups, categories: amenityCategories } = useGroupedAmenities(
+    property.categoryValues || [],
+    categories,
+    t("buy.features")
+  );
 
   return (
     <main className="overflow-hidden bg-white font-[var(--font-poppins)] text-[#183c2f]">
-      <section className="px-5 pb-12 pt-6 lg:px-20 lg:pb-4 lg:pt-14">
+      <section className="px-5 pb-12 pt-6 lg:px-20 lg:pb-4 lg:pt-10">
         <div className="mx-auto w-full max-w-[1282px]">
           <ScrollAnimation delay={0}>
-            <PropertyHeader
-              property={property}
-              selectedCurrency={selectedCurrency}
-              priceLabel={priceLabel}
-              onCurrencyChange={handleCurrencyChange}
-            />
+            <PropertyHeader property={property} />
           </ScrollAnimation>
 
-          <div className="mt-5 min-w-0 lg:mt-[22px]">
+          <div className="mt-5 min-w-0 lg:mt-6">
             <ScrollAnimation delay={0} className="min-w-0">
               <PropertyImageGallery
                 images={galleryImages}
-                className="mx-auto max-w-[1080px]"
-                mainImageClassName="aspect-[16/10] sm:aspect-[16/8.8] lg:aspect-[16/8.2]"
+                variant="mosaic"
+                className="mx-auto max-w-[1180px]"
               />
-              <QuickFacts facts={quickFacts} />
             </ScrollAnimation>
           </div>
 
-          <ScrollAnimation delay={0.1}>
-            <DescriptionSection text={property.description} />
-          </ScrollAnimation>
+          <div className="mt-8 grid gap-8 lg:mt-10 lg:grid-cols-[minmax(0,1.72fr)_minmax(0,1fr)] lg:gap-10">
+            {/* ── Left column ── */}
+            <div className="min-w-0">
+              <ScrollAnimation delay={0.05}>
+                <DescriptionSection text={property.description} />
+              </ScrollAnimation>
 
-          <ScrollAnimation delay={0.1}>
-            <DetailsCards prices={priceDetails} location={locationDetails} />
-          </ScrollAnimation>
+              <ScrollAnimation delay={0.05}>
+                <AmenitiesSection groups={amenityGroups} />
+              </ScrollAnimation>
+            </div>
 
-          <ScrollAnimation delay={0.1}>
-            <AmenitiesSection
-              categoryValues={property.categoryValues || []}
-              categories={categories}
-            />
-          </ScrollAnimation>
+            {/* ── Right sticky sidebar ── */}
+            <aside className="min-w-0 lg:sticky lg:top-24 lg:self-start">
+              <ScrollAnimation delay={0.05}>
+                <PropertyInformationCard
+                  property={property}
+                  priceLabel={priceLabel}
+                  selectedCurrency={selectedCurrency}
+                  onCurrencyChange={handleCurrencyChange}
+                />
+                <BasicAmenitiesCard categories={amenityCategories} />
+              </ScrollAnimation>
+            </aside>
+          </div>
         </div>
       </section>
 
@@ -138,67 +148,21 @@ export default function SingleBuyPropertyPageContent({ id }: { id: string }) {
   );
 }
 
-function PropertyHeader({
-  property,
-  selectedCurrency,
-  priceLabel,
-  onCurrencyChange,
-}: {
-  property: PropertyBuying;
-  selectedCurrency: string;
-  priceLabel: string;
-  onCurrencyChange: (currency: string) => void;
-}) {
-  const { t, href } = useI18n();
-
+function PropertyHeader({ property }: { property: PropertyBuying }) {
   return (
     <header>
-      <nav className="flex items-center gap-1 text-[14px] leading-6 text-[#b3b3b3] lg:text-[20px] lg:leading-[30px]">
-        <span className="relative grid size-5 place-items-center lg:size-6">
-          <Image src="/single-property/icon-home.svg" alt="" fill sizes="24px" className="object-contain" />
+      <h1 className="text-[26px] font-bold leading-tight text-[#183c2f] lg:text-[40px] lg:leading-[1.15]">
+        {property.title}
+      </h1>
+      <p className="mt-2.5 flex items-center gap-1.5 text-[12px] leading-6 text-[#8a9a94] lg:text-[15px]">
+        <Image src="/homepage/properties/icons/location.svg" alt="" width={24} height={24} className="size-6" />
+        <span className="truncate">
+          {[property.address?.street, property.address?.area, property.address?.city, property.address?.country]
+            .filter(Boolean)
+            .join(", ")}
         </span>
-        <Link href={href("/")}>{t("common.home")}</Link>
-        <span>&gt;</span>
-        <Link href={href("/buy")}>{t("buy.heroTitle")}</Link>
-        <span>&gt;</span>
-        <span className="text-[#292d32]">{t("buy.detailsBreadcrumb")}</span>
-      </nav>
-
-      <div className="mt-4 lg:mt-6">
-        <h1 className="text-[16px] font-semibold leading-6 text-[#183c2f] lg:text-[28px] lg:font-medium lg:leading-[38px]">
-          {property.title}
-        </h1>
-        <p className="mt-2 flex items-center gap-1 text-[12px] leading-6 text-[#b3b3b3] lg:text-[16px]">
-          <Image src="/homepage/properties/icons/location.svg" alt="" width={24} height={24} className="size-6" />
-          <span className="truncate">{[property.address?.street, property.address?.area, property.address?.city, property.address?.country].filter(Boolean).join(", ")}</span>
-        </p>
-        <div className="mt-4 flex flex-col gap-3 rounded-xl border border-[#dfe8e4] bg-[#fbfdfc] p-4 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <p className="text-[12px] font-semibold uppercase tracking-[0.08em] text-[#667c74]">{t("buy.price")}</p>
-            <p className="mt-1 text-[24px] font-bold leading-tight text-[#183c2f] lg:text-[32px]">{priceLabel}</p>
-          </div>
-          <CurrencySelect
-            value={selectedCurrency}
-            onChange={onCurrencyChange}
-            className="w-full sm:w-[180px]"
-            selectClassName="h-11 w-full rounded-xl border border-[#dfe8e4] bg-white px-4 text-[14px] text-[#414847] outline-none transition focus:border-[#2C798B] focus:ring-2 focus:ring-[#2C798B]/10"
-          />
-        </div>
-      </div>
+      </p>
     </header>
-  );
-}
-
-function QuickFacts({ facts }: { facts: QuickFact[] }) {
-  return (
-    <div className="mx-auto mt-4 flex max-w-[1080px] flex-wrap items-center gap-x-7 gap-y-3 rounded-xl border border-[#dfe8e4] bg-[#fbfdfc] px-4 py-3 text-[13px] leading-5 text-[#40544c] lg:text-[14px]">
-      {facts.map((fact) => (
-        <span key={fact.label} className="inline-flex items-center gap-2.5 font-medium">
-          <Image src={fact.icon} alt="" width={22} height={22} className="size-[22px] shrink-0 object-contain" />
-          {fact.label}
-        </span>
-      ))}
-    </div>
   );
 }
 
@@ -206,97 +170,33 @@ function DescriptionSection({ text }: { text: string }) {
   const { t } = useI18n();
 
   return (
-    <section className="mt-8 lg:mt-10">
-      <SectionTitle>{t("buy.description")}</SectionTitle>
-      <p className="mt-[15px] max-w-[954px] text-[14px] leading-[1.9] text-[#656566] lg:text-[16px] lg:leading-[23px]">
+    <section>
+      <SectionTitle>{t("buy.aboutProperty")}</SectionTitle>
+      <p className="mt-[15px] whitespace-pre-line text-[14px] leading-[1.9] text-[#656566] lg:text-[16px] lg:leading-[23px]">
         {text || t("buy.noDescription")}
       </p>
     </section>
   );
 }
 
-function DetailsCards({ prices, location }: { prices: DetailRow[]; location: DetailRow[] }) {
-  const { t } = useI18n();
-
-  return (
-    <section className="mt-7 grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,2.05fr)]">
-      <InfoCard title={t("buy.priceDetails")} icon="/billing/icons/cash.svg" rows={prices} />
-      <InfoCard title={t("buy.location")} icon="/billing/icons/location.svg" rows={location} />
-    </section>
-  );
+function propertyTypeLabel(propertyTypeId: number) {
+  return propertyTypeNames[propertyTypeId] || String(propertyTypeId);
 }
 
-function InfoCard({ title, icon, rows }: { title: string; icon: string; rows: DetailRow[] }) {
-  return (
-    <article className="rounded-lg border border-[#dfe8e4] bg-white p-[25px] shadow-[0_4px_10px_rgba(175,132,255,0.03)]">
-      <h2 className="flex items-center gap-2 text-[12px] font-bold uppercase leading-4 tracking-[0.05em] text-[#183c2f]">
-        <Image src={icon} alt="" width={22} height={20} className="h-auto max-h-5 w-5 object-contain" />
-        {title}
-      </h2>
-      <dl className="mt-4 grid gap-3 text-[14px] leading-[22px]">
-        {rows.map(([label, value]) => (
-          <div key={label} className="flex items-center justify-between gap-6">
-            <dt className="text-[#183c2f]">{label}</dt>
-            <dd className="whitespace-nowrap font-medium text-[#101d28]">{value}</dd>
-          </div>
-        ))}
-      </dl>
-    </article>
-  );
-}
-
-function AmenitiesSection({
-  categoryValues,
-  categories,
-}: {
-  categoryValues: NonNullable<PropertyBuying["categoryValues"]>;
-  categories: PropertyBuyingCategory[];
-}) {
+/** "More Amenities" — every group with its own items, in a bordered card. */
+function AmenitiesSection({ groups }: { groups: AmenityGroup[] }) {
   const { t } = useI18n();
-  const sectionsMap = new Map<string, PropertyBuyingSection>();
-  const categoryById = new Map(categories.map((category) => [category.id, category]));
 
-  for (const cv of categoryValues) {
-    const item = cv.propertyBuyingCategoryItem;
-    if (!item) continue;
-
-    const catId = item.propertyBuyingCategoryId;
-    if (!sectionsMap.has(catId)) {
-      const category = categoryById.get(catId);
-      sectionsMap.set(catId, {
-        categoryId: catId,
-        categoryName: category?.name || t("buy.features"),
-        categoryIcon: category?.defaultIcon || category?.icon || null,
-        displayOrder: category?.displayOrder || 0,
-        items: [],
-      });
-    }
-
-    sectionsMap.get(catId)!.items.push({
-      itemId: item.id,
-      name: item.name,
-      icon: item.icon,
-      displayOrder: item.displayOrder || 0,
-    });
-  }
-
-  const sections = Array.from(sectionsMap.values())
-    .map((section) => ({
-      ...section,
-      items: [...section.items].sort((a, b) => a.displayOrder - b.displayOrder),
-    }))
-    .sort((a, b) => a.displayOrder - b.displayOrder);
-
-  if (sections.length === 0) return null;
+  if (groups.length === 0) return null;
 
   return (
     <section className="mt-7 rounded-2xl border border-[#dfe8e4] bg-white p-5 shadow-[0_2px_12px_rgba(24,60,47,0.03)] sm:p-6">
       <div className="flex items-center gap-2">
         <Image src="/icons/amenities/amenities-title.svg" alt="" width={22} height={22} className="object-contain" />
-        <SectionTitle>{t("buy.amenitiesFeatures")}</SectionTitle>
+        <SectionTitle>{t("buy.moreAmenities")}</SectionTitle>
       </div>
       <div className="mt-5 grid gap-6">
-        {sections?.map((section) => (
+        {groups.map((section) => (
           <div key={section.categoryId}>
             <h3 className="inline-flex min-h-9 items-center gap-2 rounded-lg bg-[#f5f7f6] px-3 text-[14px] font-semibold text-[#183c2f]">
               <DynamicAmenityIcon
@@ -307,8 +207,8 @@ function AmenitiesSection({
               />
               {section.categoryName}
             </h3>
-            <ul className="mt-3 grid gap-x-4 gap-y-2.5 text-[14px] leading-5 text-[#556960] sm:grid-cols-2 md:grid-cols-3">
-              {section.items?.map((item) => (
+            <ul className="mt-3 grid gap-x-4 gap-y-2.5 text-[14px] leading-5 text-[#556960] sm:grid-cols-2 lg:grid-cols-4">
+              {section.items.map((item) => (
                 <li key={item.itemId} className="flex items-center gap-2.5">
                   <DynamicAmenityIcon
                     icon={item.icon}
@@ -324,6 +224,120 @@ function AmenitiesSection({
         ))}
       </div>
     </section>
+  );
+}
+
+/** Sidebar card — price, size, location and core specs. */
+function PropertyInformationCard({
+  property,
+  priceLabel,
+  selectedCurrency,
+  onCurrencyChange,
+}: {
+  property: PropertyBuying;
+  priceLabel: string;
+  selectedCurrency: string;
+  onCurrencyChange: (currency: string) => void;
+}) {
+  const { t } = useI18n();
+
+  const locationText =
+    [property.address?.area, property.address?.city, property.address?.country]
+      .filter(Boolean)
+      .join(", ") || t("buy.unknown");
+
+  const typeLabel = propertyTypeLabel(property.propertyTypeId);
+
+  return (
+    <article className="rounded-xl border border-[#dfe8e4] bg-white p-5">
+      <h2 className="text-[15px] font-bold text-[#183c2f]">{t("buy.propertyInformation")}</h2>
+
+      <div className="mt-3 flex flex-wrap items-baseline justify-between gap-2">
+        <p className="text-[20px] font-bold leading-tight text-[#183c2f] lg:text-[24px]">{priceLabel}</p>
+        <p className="text-[13px] text-[#667c74]">{property.area || 0} m²</p>
+      </div>
+
+      <p className="mt-3 flex items-start gap-2 text-[12.5px] leading-5 text-[#667c74]">
+        <Image
+          src="/homepage/properties/icons/location.svg"
+          alt=""
+          width={16}
+          height={16}
+          className="mt-0.5 size-4 shrink-0"
+        />
+        <span className="min-w-0 break-words">{locationText}</span>
+      </p>
+
+      <div className="mt-4 flex flex-wrap gap-x-4 gap-y-2 border-t border-[#eef2f0] pt-3">
+        <SpecChip label={typeLabel} />
+        <SpecChip
+          label={`${property.bedrooms || 0} ${
+            Number(property.bedrooms || 0) === 1 ? t("buy.bedroom") : t("buy.bedrooms")
+          }`}
+          icon="/homepage/properties/icons/bed.svg"
+        />
+        <SpecChip
+          label={`${property.bathrooms || 0} ${
+            Number(property.bathrooms || 0) === 1 ? t("buy.bathroom") : t("buy.bathrooms")
+          }`}
+          icon="/homepage/properties/icons/bath.svg"
+        />
+      </div>
+
+      <CurrencySelect
+        value={selectedCurrency}
+        onChange={onCurrencyChange}
+        className="mt-4 w-full"
+        selectClassName="h-10 w-full rounded-xl border border-[#dfe8e4] bg-white px-3 text-[13px] text-[#414847] outline-none transition focus:border-[#2C798B]"
+      />
+    </article>
+  );
+}
+
+function SpecChip({ label, icon }: { label: string; icon?: string }) {
+  return (
+    <span className="inline-flex items-center gap-1.5 text-[12px] text-[#40544c]">
+      {icon ? (
+        <Image src={icon} alt="" width={15} height={15} className="size-[15px] object-contain opacity-70" />
+      ) : (
+        <span className="size-[15px] rounded-[3px] border border-[#9aa8a3]" />
+      )}
+      <span className="whitespace-nowrap">{label}</span>
+    </span>
+  );
+}
+
+/**
+ * Sidebar "Basic Amenities" — the category titles from "More Amenities",
+ * with their logos. Shares its source via `useGroupedAmenities`, so the two
+ * can never disagree.
+ */
+function BasicAmenitiesCard({
+  categories: amenityCategories,
+}: {
+  categories: Pick<AmenityGroup, "categoryId" | "categoryName" | "categoryIcon">[];
+}) {
+  const { t } = useI18n();
+
+  if (amenityCategories.length === 0) return null;
+
+  return (
+    <article className="mt-6 rounded-xl border border-[#dfe8e4] bg-white p-5">
+      <h2 className="text-[15px] font-bold text-[#183c2f]">{t("buy.basicAmenities")}</h2>
+      <div className="mt-4 grid grid-cols-2 gap-x-4 gap-y-3 sm:grid-cols-3">
+        {amenityCategories.map((cat) => (
+          <span key={cat.categoryId} className="flex items-center gap-2 text-[12.5px] text-[#40544c]">
+            <DynamicAmenityIcon
+              icon={cat.categoryIcon}
+              width={16}
+              height={16}
+              className="size-4 shrink-0 object-contain"
+            />
+            <span className="min-w-0 break-words">{cat.categoryName}</span>
+          </span>
+        ))}
+      </div>
+    </article>
   );
 }
 

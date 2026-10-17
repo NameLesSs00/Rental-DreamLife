@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import BestLocationsSection from "@/components/BestLocationsSection";
 import BlogInsightsSection from "@/components/BlogInsightsSection";
 import CategoriesSection from "@/components/CategoriesSection";
-import FacilitiesSection from "@/components/FacilitiesSection";
+import OurServices from "@/components/OurServices";
 import FaqSection from "@/components/FaqSection";
 import FeaturedPropertiesSection from "@/components/FeaturedPropertiesSection";
 import HeroSection from "@/components/HeroSection";
@@ -34,7 +34,7 @@ export default function Home() {
     <>
       <HeroSection />
       <CategoriesSection />
-      <FacilitiesSection />
+      <OurServices />
       <BestLocationsSection />
       <FeaturedPropertiesSection />
       <BlogInsightsSection />

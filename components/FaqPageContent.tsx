@@ -9,16 +9,19 @@ import { useI18n } from "./I18nProvider";
 const PAGE_STEP = 10;
 
 export default function FaqPageContent() {
-  const { t, href } = useI18n();
+  const { t, href, locale } = useI18n();
   const [pageSize, setPageSize] = useState(PAGE_STEP);
 
-  const { data, isLoading, isFetching, isError } = useFaqs({
-    IsPublished: true,
-    PageNumber: 1,
-    PageSize: pageSize,
-    SortBy: "displayOrder",
-    IsDescending: false,
-  });
+  const { data, isLoading, isFetching, isError } = useFaqs(
+    {
+      IsPublished: true,
+      PageNumber: 1,
+      PageSize: pageSize,
+      SortBy: "displayOrder",
+      IsDescending: false,
+    },
+    locale
+  );
 
   const faqs = data?.items ?? [];
   const totalCount = data?.totalCount ?? 0;
@@ -55,7 +58,7 @@ export default function FaqPageContent() {
       </section>
 
       {/* FAQ List */}
-      <section className="bg-[#f5f7f6] px-5 py-14 sm:px-8 sm:py-20 lg:px-20">
+      <section className="bg-[#F3F0E9] px-5 py-14 sm:px-8 sm:py-20 lg:px-20">
         <div className="mx-auto max-w-[900px]">
 
           {/* Loading skeleton */}

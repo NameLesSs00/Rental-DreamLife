@@ -10,26 +10,30 @@ interface LocationCardData {
   name: string;
   image: string;
   slug: string;
+  categoryId: string;
 }
 
 const TOP_ROW_LOCATIONS: LocationCardData[] = [
   {
     id: "el-fayrouz",
     name: "El Fayrouz",
-    image: "/homepage/locations/photo-el-fayrouz.png",
+    image: "/homepage/locations/el-fayrouz.jpg",
     slug: "El Fayrouz",
+    categoryId: "97f2f50d-8de5-4071-a100-d2a929b91d88",
   },
   {
     id: "el-sahel",
     name: "El Sahel",
-    image: "/homepage/locations/photo-el-sahel.png",
+    image: "/homepage/locations/el-sahel.jpg",
     slug: "El Sahel",
+    categoryId: "16868148-3381-445a-91e9-c82bd521aed0",
   },
   {
     id: "sahl-hasheesh",
     name: "Sahl Hasheesh",
-    image: "/homepage/locations/photo-sahl-hasheesh.png",
+    image: "/homepage/locations/sahl-hasheesh.jpg",
     slug: "Sahl Hasheesh",
+    categoryId: "bfa0cddd-6751-4743-9763-43ecadb2ae3b",
   },
 ];
 
@@ -37,14 +41,16 @@ const BOTTOM_ROW_LOCATIONS: LocationCardData[] = [
   {
     id: "el-gona",
     name: "ElGona",
-    image: "/homepage/locations/photo-el-gouna.png",
+    image: "/homepage/locations/el-gona.jpg",
     slug: "ElGona",
+    categoryId: "bac6e60e-6dae-4ca6-b84b-ececcd74e0eb",
   },
   {
     id: "titanic-area",
     name: "Titanic Area",
-    image: "/homepage/locations/photo-titanic-area.png",
+    image: "/homepage/locations/titanic-area.jpg",
     slug: "Titanic Area",
+    categoryId: "61ee8e7b-1f6d-4510-898f-13cf6f33eec6",
   },
 ];
 
@@ -73,15 +79,24 @@ export default function BestLocationsSection() {
 
         {/* Locations Grid */}
         <div className="mt-10 space-y-6 sm:mt-12 lg:mt-14">
-          {/* Top Row: 3 Cards */}
+          {/* Top Row: 3 Cards
+              Between `sm` and `lg` the row is 2-up, which would leave the 3rd card
+              orphaned beside a dead gap. It spans the full 2-col width instead, and
+              uses the wider aspect so it reads as a feature card rather than a
+              487px-tall slab. At `lg` it collapses back into the 3-across row. */}
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {TOP_ROW_LOCATIONS.map((loc, idx) => (
               <LocationCard
                 key={loc.id}
                 item={loc}
                 index={idx}
-                aspectRatioClass="aspect-[400/286]"
-                hrefUrl={href(`/rent?location=${encodeURIComponent(loc.slug)}`)}
+                className={idx === 2 ? "sm:col-span-2 lg:col-span-1" : undefined}
+                aspectRatioClass={
+                  idx === 2
+                    ? "aspect-[4/3] sm:aspect-[616/340] lg:aspect-[400/290]"
+                    : "aspect-[4/3] sm:aspect-[400/290]"
+                }
+                hrefUrl={href(`/rent?CategoryId=${loc.categoryId}&location=${encodeURIComponent(loc.name)}`)}
               />
             ))}
           </div>
@@ -93,8 +108,8 @@ export default function BestLocationsSection() {
                 key={loc.id}
                 item={loc}
                 index={idx + 3}
-                aspectRatioClass="aspect-[616/318]"
-                hrefUrl={href(`/rent?location=${encodeURIComponent(loc.slug)}`)}
+                aspectRatioClass="aspect-[16/10] sm:aspect-[616/340]"
+                hrefUrl={href(`/rent?CategoryId=${loc.categoryId}&location=${encodeURIComponent(loc.name)}`)}
               />
             ))}
           </div>
@@ -109,11 +124,13 @@ function LocationCard({
   index,
   aspectRatioClass,
   hrefUrl,
+  className,
 }: {
   item: LocationCardData;
   index: number;
   aspectRatioClass: string;
   hrefUrl: string;
+  className?: string;
 }) {
   return (
     <motion.article
@@ -122,27 +139,34 @@ function LocationCard({
       viewport={{ once: true, margin: "-40px" }}
       transition={{ duration: 0.5, delay: index * 0.08 }}
       whileHover={{ y: -5 }}
-      className="group relative"
+      className={`group relative ${className ?? ""}`}
     >
       <Link
         href={hrefUrl}
-        className={`relative block w-full ${aspectRatioClass} overflow-hidden rounded-[26px] bg-[#0c2434] shadow-[0_12px_30px_rgba(0,0,0,0.12)] transition-shadow duration-300 hover:shadow-[0_20px_40px_rgba(0,0,0,0.22)]`}
+        style={{ boxShadow: "0px 2px 40px 5px rgba(0, 0, 0, 0.40)" }}
+        className={`relative block w-full ${aspectRatioClass} overflow-hidden rounded-[26px] bg-[#0c2434] transition-all duration-300 hover:scale-[1.01]`}
       >
-        {/* Real photo asset extracted from reference */}
+        {/* Full-size high resolution photo */}
         <Image
           src={item.image}
           alt={item.name}
           fill
-          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-          className="object-cover transition-transform duration-500 ease-out group-hover:scale-105"
+          sizes="(max-width: 640px) 100vw, (min-width: 1024px) 33vw, 100vw"
+          className="object-cover object-center transition-transform duration-500 ease-out group-hover:scale-105"
         />
 
-        {/* Real CSS Dark Gradient Overlay for readability */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/35 to-transparent transition-opacity duration-300 group-hover:opacity-95" />
+        {/* Filter overlay matching exact Figma linear gradient */}
+        <div
+          className="pointer-events-none absolute inset-0 transition-opacity duration-300 group-hover:opacity-95"
+          style={{
+            background:
+              "linear-gradient(180deg, rgba(255, 255, 255, 0) 36.54%, rgba(16, 31, 98, 0.4) 62.61%, rgba(1, 0, 43, 0.85) 88.18%)",
+          }}
+        />
 
-        {/* Card Content: Real HTML Text & Separate Real SVG Icon */}
-        <div className="absolute inset-x-0 bottom-0 flex items-center justify-between p-5 sm:p-6 lg:p-7">
-          <h3 className="text-[20px] font-bold tracking-normal text-[#FFFFFF] sm:text-[23px] lg:text-[26px]">
+        {/* Card Content */}
+        <div className="absolute inset-x-0 bottom-0 flex items-center justify-between px-5 pt-3 pb-3 sm:px-6 sm:pb-4 lg:px-7 lg:pb-4">
+          <h3 className="font-semibold text-[22px] sm:text-[26px] lg:text-[32px] leading-tight tracking-normal text-[#FFFFFF]">
             {item.name}
           </h3>
 

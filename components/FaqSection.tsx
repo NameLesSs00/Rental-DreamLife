@@ -5,115 +5,104 @@ import { useFaqs } from "@/lib/hooks/useFaq";
 import FaqAccordion from "./FaqAccordion";
 import { motion } from "framer-motion";
 import { useI18n } from "./I18nProvider";
-import type { FaqItem } from "@/lib/types/faq";
-
-const fallbackFaqs: FaqItem[] = [
-  {
-    id: "faq-1",
-    question: "What types of properties do you offer?",
-    answer: "We offer a wide range of properties including luxury villas, modern apartments, chalets, and studios across prime locations in Hurghada and the Red Sea.",
-    displayOrder: 1,
-    isPublished: true,
-    createdAtUtc: new Date().toISOString(),
-    updatedAtUtc: new Date().toISOString(),
-  },
-  {
-    id: "faq-2",
-    question: "Can you help me find a property within my budget?",
-    answer: "Yes, our team works closely with you to understand your budget and find the best properties that deliver exceptional quality and value.",
-    displayOrder: 2,
-    isPublished: true,
-    createdAtUtc: new Date().toISOString(),
-    updatedAtUtc: new Date().toISOString(),
-  },
-  {
-    id: "faq-3",
-    question: "Do you offer both buying and renting services?",
-    answer: "Yes, we provide full-service solutions for both short/long-term renting and property buying across Hurghada and coastal destinations.",
-    displayOrder: 3,
-    isPublished: true,
-    createdAtUtc: new Date().toISOString(),
-    updatedAtUtc: new Date().toISOString(),
-  },
-  {
-    id: "faq-4",
-    question: "Can I contact you for more details about a specific property?",
-    answer: "Yes! You can contact us anytime via our contact form, phone, or WhatsApp to receive full details, photos, and personalized advice.",
-    displayOrder: 4,
-    isPublished: true,
-    createdAtUtc: new Date().toISOString(),
-    updatedAtUtc: new Date().toISOString(),
-  },
-  {
-    id: "faq-5",
-    question: "Can I visit a property before making a decision?",
-    answer: "Certainly. We arrange scheduled in-person property tours as well as virtual walkthroughs so you can inspect every detail before deciding.",
-    displayOrder: 5,
-    isPublished: true,
-    createdAtUtc: new Date().toISOString(),
-    updatedAtUtc: new Date().toISOString(),
-  },
-];
 
 export default function FaqSection() {
-  const { href } = useI18n();
-  const { data, isLoading } = useFaqs({
-    IsPublished: true,
-    PageNumber: 1,
-    PageSize: 5,
-    SortBy: "displayOrder",
-    IsDescending: false,
-  });
+  const { href, locale, t } = useI18n();
+  const { data, isLoading, isError } = useFaqs(
+    {
+      IsPublished: true,
+      PageNumber: 1,
+      PageSize: 10,
+      SortBy: "displayOrder",
+      IsDescending: false,
+    },
+    locale
+  );
 
-  const apiFaqs = data?.items ?? [];
-  const faqs = apiFaqs.length > 0 ? apiFaqs : fallbackFaqs;
+  const faqs = data?.items ?? [];
 
   return (
     <section className="bg-[#b3cbca] px-5 py-14 font-[var(--font-poppins)] sm:px-8 sm:py-18 lg:px-14 lg:py-20">
       <div className="mx-auto max-w-[1320px]">
-        <div className="flex flex-col lg:flex-row items-start gap-8 lg:gap-12 xl:gap-16">
-          {/* Left Column: Heading + Description + Still need A Help box */}
+        {/* Grid rather than flex: the CTA has to sit under the heading on desktop but
+            AFTER the accordion on mobile. Explicit col/row placement handles desktop,
+            while plain DOM order handles mobile — no `order` overrides to fight. */}
+        <div className="grid grid-cols-1 items-start gap-8 lg:grid-cols-[320px_minmax(0,1fr)] lg:gap-x-12 lg:gap-y-0 xl:grid-cols-[340px_minmax(0,1fr)] xl:gap-x-16">
+          {/* Heading + Description — first on mobile, top-left on desktop */}
           <motion.div
             initial={{ opacity: 0, x: -20 }}
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true, margin: "-40px" }}
             transition={{ duration: 0.5 }}
-            className="flex w-full flex-col lg:w-[320px] xl:w-[340px] lg:shrink-0"
+            className="lg:col-start-1 lg:row-start-1"
           >
             <h2 className="text-[36px] sm:text-[44px] font-extrabold tracking-tight text-[#183640]">
-              FAQ
+              {t("common.faq") || "FAQ"}
             </h2>
             <p className="mt-2 text-[14px] sm:text-[15px] leading-relaxed text-[#456167]">
-              Find clear answers to common questions about our properties, services, and real-estate process.
+              {t("faq.pageBody") ||
+                "Find clear answers to common questions about our properties, services, and real-estate process."}
             </p>
-
-            {/* Still need A Help ? Card */}
-            <div className="mt-8 sm:mt-10 rounded-2xl bg-[#f8faf9] p-6 sm:p-7 text-center shadow-xs">
-              <h3 className="text-[18px] sm:text-[20px] font-bold text-[#183640]">
-                Still need A Help ?
-              </h3>
-              <Link
-                href={href("/contact")}
-                className="mt-5 block w-full rounded-xl bg-[#183640] py-3 text-center text-[14px] sm:text-[15px] font-semibold text-white shadow-xs transition hover:bg-[#11262d]"
-              >
-                Contact Us
-              </Link>
-            </div>
           </motion.div>
 
-          {/* Right Column: 5 Accordion Items in a big white card */}
+          {/* Accordion — second on mobile, right column on desktop */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: "-40px" }}
             transition={{ duration: 0.5 }}
-            className="w-full flex-1 min-w-0"
+            className="min-w-0 lg:col-start-2 lg:row-span-2 lg:row-start-1"
           >
             {isLoading ? (
               <div className="h-[340px] animate-pulse rounded-2xl sm:rounded-3xl bg-white/70" />
+            ) : isError ? (
+              <div className="flex h-[200px] flex-col items-center justify-center rounded-2xl sm:rounded-3xl bg-white/70 p-6 text-center text-[#456167]">
+                <p className="font-semibold text-[#183640]">{t("faq.failed") || "Unable to load FAQs right now."}</p>
+              </div>
+            ) : faqs.length === 0 ? (
+              <div className="flex h-[200px] items-center justify-center rounded-2xl sm:rounded-3xl bg-white/70 p-6 text-center text-[#456167]">
+                <p>{t("faq.emptyYet") || "No FAQs have been published yet."}</p>
+              </div>
             ) : (
-              <FaqAccordion items={faqs} />
+              <div className="space-y-4">
+                <FaqAccordion items={faqs} />
+                <div className="flex justify-end pt-1">
+                  <Link
+                    href={href("/faq")}
+                    className="text-[14px] font-semibold text-[#183640] underline-offset-4 hover:underline"
+                  >
+                    {t("faq.viewAll") || "View all FAQs"} &rarr;
+                  </Link>
+                </div>
+              </div>
             )}
+          </motion.div>
+
+          {/* Still need A Help ? Card — last on mobile, under the heading on desktop.
+              `lg:gap-y-0` + `items-start` keep it snug under the heading instead of
+              stretching down its tall grid row. */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-40px" }}
+            transition={{ duration: 0.5 }}
+            className="mt-8 sm:mt-10 lg:col-start-1 lg:row-start-2"
+          >
+            <div className="rounded-2xl bg-[#f8faf9] p-6 text-center shadow-xs sm:p-7">
+              <h3 className="text-[18px] font-bold text-[#183640] sm:text-[20px]">
+                {t("faq.stillQuestions") || "Still have questions?"}
+              </h3>
+              <p className="mt-2 text-[13px] leading-relaxed text-[#667c74]">
+                {t("faq.contactBody") ||
+                  "Send us a message and our local team will help you choose the right stay or transfer."}
+              </p>
+              <Link
+                href={href("/contact")}
+                className="mt-5 block w-full rounded-xl bg-[#183640] py-3 text-center text-[14px] font-semibold text-white shadow-xs transition hover:bg-[#11262d] sm:text-[15px]"
+              >
+                {t("common.contact") || "Contact Us"}
+              </Link>
+            </div>
           </motion.div>
         </div>
       </div>

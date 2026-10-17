@@ -17,7 +17,7 @@ export default function FaqAccordion({ items }: { items: FaqItem[] }) {
             <button
               type="button"
               onClick={() => setOpenId(isOpen ? null : faq.id)}
-              className="flex w-full items-center justify-between gap-4 px-5 sm:px-8 py-5 sm:py-6 text-left transition-colors hover:bg-[#fafbfb]"
+              className="flex w-full items-center justify-between gap-4 px-5 sm:px-8 py-5 sm:py-6 text-start transition-colors hover:bg-[#fafbfb]"
             >
               <h3 className="text-[14.5px] sm:text-[16px] font-medium leading-snug text-[#183640]">
                 {faq.question}

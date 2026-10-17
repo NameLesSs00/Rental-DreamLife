@@ -20,6 +20,7 @@
     "tryAgain": "Réessayer",
     "backToHome": "Retour à l'accueil",
     "readArticle": "Lire l'article",
+    "allBlogs": "Tous les articles",
     "exploreHomes": "Explorer les locations",
     "night": "nuit",
     "nights": "nuits",
@@ -145,7 +146,17 @@
       "locationMissing": "Emplacement non précisé",
       "bed": "Lit",
       "bath": "Salle de bain",
-      "notAvailable": "N/D"
+      "notAvailable": "N/D",
+      "bestSellingTitle": "Meilleures propriétés à vendre",
+      "bestSellingDescription": "Découvrez des propriétés qui se distinguent par leur emplacement, leur qualité et leur valeur à long terme.",
+      "forSaleBadge": "À vendre",
+      "viewDetails": "Voir les détails",
+      "previous": "Propriétés précédentes",
+      "next": "Propriétés suivantes",
+      "bestRentalTitle": "Meilleures propriétés à louer",
+      "bestRentalBody": "Découvrez les villas et appartements les plus populaires à louer à Hurghada et sur la mer Rouge. Choisissez parmi une sélection de propriétés très bien notées.",
+      "forRentBadge": "À louer",
+      "findNextHome": "Trouvez votre prochain domicile"
     },
     "views": {
       "eyebrow": "Vues en vedette",
@@ -224,6 +235,18 @@
     }
   },
   "rent": {
+    "allTypes": "Tous les types",
+    "searchPlaceholder": "Rechercher des propriétés",
+    "rooms": "Chambres",
+    "minPrice": "Prix minimum",
+    "maxPrice": "Prix maximum",
+    "villa": "Villa",
+    "apartment": "Appartement",
+    "studio": "Studio",
+    "chalet": "Chalet",
+    "twinHouse": "Maison jumelée",
+    "checkIn": "Date d'arrivée",
+    "checkOut": "Date de départ",
     "metadataTitle": "Locations de vacances et maisons à Hurghada",
     "metadataDescription": "Trouvez et réservez des appartements, chalets, studios et maisons de vacances vérifiés à Hurghada et El Kawther.",
     "heroTitle": "Trouvez votre prochaine location de vacances",
@@ -475,7 +498,18 @@
       "messagePlaceholder": "Écrivez votre message ici...",
       "sending": "Envoi...",
       "send": "Envoyer le message"
-    }
+    },
+    "heroTitle": "Contactez-nous",
+    "heroSubtitle": "Notre équipe est prête à vous aider.",
+    "methodsTitle": "Moyens de contact :",
+    "offlineAddress": "Adresse",
+    "offlineAddressVal": "El Kawther, Hurghada",
+    "phoneWhatsapp": "Téléphone & WhatsApp",
+    "emailCard": "E-mail",
+    "sendMessage": "Envoyez-nous un message",
+    "submitMessage": "Envoyer le message",
+    "openInMaps": "Ouvrir dans Google Maps",
+    "officeLocation": "El Kawther, Hurghada"
   },
   "about": {
     "eyebrow": "Qui sommes-nous",
@@ -520,7 +554,33 @@
     },
     "ctaTitle": "Prêt à organiser vos vacances à Hurghada ?",
     "ctaBody": "Indiquez-nous vos dates et préférences, et notre équipe locale vous aidera à trouver la location idéale avec arrivée simple et transfert privé.",
-    "ctaAction": "Contacter notre équipe"
+    "ctaAction": "Contacter notre équipe",
+    "heroTitle": "Une meilleure façon de se sentir chez soi",
+    "heroSubtitle": "Nous vous connectons avec des logements triés sur le volet et une expérience de location fluide, où que vous souhaitiez être.",
+    "aboutUsTitle": "À propos de nous",
+    "aboutUsBody": "Découvrez de nouvelles opportunités avec notre plateforme immobilière et de location de vacances tout-en-un à Hurghada.",
+    "statsBanner": {
+      "stat1Count": "10 000+",
+      "stat1Title": "Hôtes de confiance",
+      "stat1Desc": "Travaillez avec des propriétaires vérifiés et fiables",
+      "stat2Count": "4 500+",
+      "stat2Title": "Logements sélectionnés",
+      "stat2Desc": "Des appartements confortables aux villas spacieuses",
+      "stat3Count": "98%",
+      "stat3Title": "Services orientés client",
+      "stat3Desc": "Un vrai soutien, de vraies personnes, une vraie attention"
+    },
+    "featuresList": {
+      "card1Title": "Logements soigneusement sélectionnés",
+      "card1Desc": "Nous sélectionnons chaque propriété pour la qualité, le confort et un excellent emplacement",
+      "card2Title": "Tarifs clairs et honnêtes",
+      "card2Desc": "Pas de frais cachés, pas de surprises",
+      "card3Title": "Accompagnement personnalisé",
+      "card3Desc": "Un soutien attentif pour un séjour sans souci"
+    },
+    "ourPeopleTitle": "Notre équipe",
+    "ourPeopleSubtitle": "Les personnes derrière votre séjour parfait",
+    "ourPeopleBody": "Derrière chaque expérience exceptionnelle se trouve une équipe dévouée."
   },
   "blogs": {
     "homeEyebrow": "Guides voyage et séjour",
@@ -651,15 +711,33 @@
     "heroAlt": "Appartement de vacances Hurghada Vacation Homes",
     "card1Title": "1. Informations collectées",
     "card1Items": [
-      ["Détails de réservation :", "Nom complet, adresse e-mail, numéro de téléphone et nombre de personnes pour la confirmation du séjour."],
-      ["Vérification d'identité :", "Copie du passeport ou de la pièce d'identité requise à l'arrivée conformément aux exigences de l'Autorité du Tourisme égyptienne et pour l'accès aux barrières du complexe."],
-      ["Dossiers de paiement :", "Identifiants de transaction et horodatages. Nous ne stockons aucun numéro complet de carte bancaire."]
+      [
+        "Détails de réservation :",
+        "Nom complet, adresse e-mail, numéro de téléphone et nombre de personnes pour la confirmation du séjour."
+      ],
+      [
+        "Vérification d'identité :",
+        "Copie du passeport ou de la pièce d'identité requise à l'arrivée conformément aux exigences de l'Autorité du Tourisme égyptienne et pour l'accès aux barrières du complexe."
+      ],
+      [
+        "Dossiers de paiement :",
+        "Identifiants de transaction et horodatages. Nous ne stockons aucun numéro complet de carte bancaire."
+      ]
     ],
     "card2Title": "2. Utilisation de vos données",
     "card2Items": [
-      ["Gestion des séjours :", "Organisation de l'arrivée (dès 14h00), du départ (avant 12h00) et remise des clés."],
-      ["Communication client :", "Envoi des instructions d'accès, codes de porte et assistance durant votre séjour."],
-      ["Services additionnels :", "Réservation de transferts aéroport, blanchisserie à la demande ou ménage supplémentaire sur demande."]
+      [
+        "Gestion des séjours :",
+        "Organisation de l'arrivée (dès 14h00), du départ (avant 12h00) et remise des clés."
+      ],
+      [
+        "Communication client :",
+        "Envoi des instructions d'accès, codes de porte et assistance durant votre séjour."
+      ],
+      [
+        "Services additionnels :",
+        "Réservation de transferts aéroport, blanchisserie à la demande ou ménage supplémentaire sur demande."
+      ]
     ],
     "card3Title": "3. Règlement intérieur & Sécurité",
     "card3Body": "Conformément au règlement intérieur de nos résidences, seuls les invités enregistrés sont autorisés dans les appartements. Les pièces d'identité garantissent la conformité avec la sécurité du complexe, empêchent les fêtes ou visiteurs non autorisés et préservent la tranquillité du voisinage.",
@@ -679,9 +757,18 @@
     "heroAlt": "Hébergement de vacances Hurghada Vacation Homes",
     "card1Title": "1. Situations éligibles au remboursement",
     "card1Items": [
-      ["Annulations dans les délais :", "Remboursement intégral ou partiel selon notre calendrier d'annulation (14 jours ou plus pour 100 %, 7 à 13 jours pour 50 %)."],
-      ["Conditions inhabitables :", "En cas de panne majeure (plomberie, électricité, structure) non résolue sans délai, les voyageurs sont remboursés intégralement."],
-      ["Paiements en double ou excédentaires :", "Régularisés immédiatement après confirmation auprès de la passerelle de paiement."]
+      [
+        "Annulations dans les délais :",
+        "Remboursement intégral ou partiel selon notre calendrier d'annulation (14 jours ou plus pour 100 %, 7 à 13 jours pour 50 %)."
+      ],
+      [
+        "Conditions inhabitables :",
+        "En cas de panne majeure (plomberie, électricité, structure) non résolue sans délai, les voyageurs sont remboursés intégralement."
+      ],
+      [
+        "Paiements en double ou excédentaires :",
+        "Régularisés immédiatement après confirmation auprès de la passerelle de paiement."
+      ]
     ],
     "card2Title": "2. État des lieux au départ",
     "card2Intro": "Lors du départ (avant 12h00), notre équipe inspecte l'appartement pour vérifier le respect du règlement. Les dégradations suivantes entraîneront des déductions sur la caution :",
@@ -693,9 +780,18 @@
     ],
     "card3Title": "3. Éléments non remboursables",
     "card3Items": [
-      ["Nuitées consommées :", "Les jours de séjour effectués et les dates passées ne sont jamais remboursables."],
-      ["Services payants effectués :", "Les services de blanchisserie livrés, les transferts exécutés et les ménages réalisés ne sont pas remboursables."],
-      ["Infractions au règlement :", "Les réservations interrompues pour fêtes non autorisées, visiteurs clandestins ou animaux sans autorisation ne donnent droit à aucun remboursement."]
+      [
+        "Nuitées consommées :",
+        "Les jours de séjour effectués et les dates passées ne sont jamais remboursables."
+      ],
+      [
+        "Services payants effectués :",
+        "Les services de blanchisserie livrés, les transferts exécutés et les ménages réalisés ne sont pas remboursables."
+      ],
+      [
+        "Infractions au règlement :",
+        "Les réservations interrompues pour fêtes non autorisées, visiteurs clandestins ou animaux sans autorisation ne donnent droit à aucun remboursement."
+      ]
     ],
     "card4Title": "4. Délais et modes de traitement",
     "card4Body": "Les remboursements approuvés sont effectués sur le moyen de paiement d'origine utilisé lors de la réservation (PayPal ou carte bancaire). Après validation administrative, les fonds apparaissent généralement sur votre compte sous 5 à 10 jours ouvrés selon votre banque.",
@@ -713,9 +809,18 @@
     "heroAlt": "Logement à louer Hurghada Vacation Homes",
     "card1Title": "1. Délais standards d'annulation",
     "card1Items": [
-      ["14 jours ou plus avant l'arrivée :", "Les annulations effectuées au moins 14 jours avant l'heure d'arrivée (14h00) sont éligibles à un remboursement intégral de l'acompte."],
-      ["7 à 13 jours avant l'arrivée :", "Les annulations effectuées entre 7 et 13 jours avant donnent droit à 50 % de remboursement de l'acompte."],
-      ["Moins de 7 jours / Non-présentation :", "Les annulations à moins de 7 jours ou les non-présentations sans préavis ne sont pas remboursables."]
+      [
+        "14 jours ou plus avant l'arrivée :",
+        "Les annulations effectuées au moins 14 jours avant l'heure d'arrivée (14h00) sont éligibles à un remboursement intégral de l'acompte."
+      ],
+      [
+        "7 à 13 jours avant l'arrivée :",
+        "Les annulations effectuées entre 7 et 13 jours avant donnent droit à 50 % de remboursement de l'acompte."
+      ],
+      [
+        "Moins de 7 jours / Non-présentation :",
+        "Les annulations à moins de 7 jours ou les non-présentations sans préavis ne sont pas remboursables."
+      ]
     ],
     "card2Title": "2. Infractions au règlement intérieur",
     "card2Intro": "Tout voyageur s'engage à respecter notre règlement intérieur dès sa réservation. L'annulation immédiate sans remboursement s'applique en cas de manquements graves tels que :",

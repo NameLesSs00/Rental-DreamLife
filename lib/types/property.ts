@@ -87,7 +87,8 @@ export interface PropertyImage {
 
 export interface DailyPrice {
   date: string;
-  price: number;
+  price?: number;
+  priceInfo?: PriceInfo | null;
 }
 
 export interface PropertyDailyPricesData {

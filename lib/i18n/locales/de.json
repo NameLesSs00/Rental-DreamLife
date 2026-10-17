@@ -20,6 +20,7 @@
     "tryAgain": "Erneut versuchen",
     "backToHome": "Zur Startseite",
     "readArticle": "Artikel lesen",
+    "allBlogs": "Alle Artikel",
     "exploreHomes": "Ferienwohnungen ansehen",
     "night": "Nacht",
     "nights": "Nächte",
@@ -145,7 +146,17 @@
       "locationMissing": "Standort nicht angegeben",
       "bed": "Bett",
       "bath": "Bad",
-      "notAvailable": "N/V"
+      "notAvailable": "N/V",
+      "bestSellingTitle": "Bestverkaufte Immobilien",
+      "bestSellingDescription": "Entdecken Sie Immobilien, die sich durch ihre Lage, ihre Qualität und ihren langfristigen Wert auszeichnen.",
+      "forSaleBadge": "Zu verkaufen",
+      "viewDetails": "Details anzeigen",
+      "previous": "Vorherige Immobilien",
+      "next": "Nächste Immobilien",
+      "bestRentalTitle": "Beste Mietobjekte",
+      "bestRentalBody": "Entdecken Sie die beliebtesten Villen und Apartments zur Miete in Hurghada und am Roten Meer. Wählen Sie aus einer Auswahl sehr gut bewerteter Objekte.",
+      "forRentBadge": "Zu vermieten",
+      "findNextHome": "Finden Sie Ihr nächstes Zuhause"
     },
     "views": {
       "eyebrow": "Ausgewählte Aussichten",
@@ -224,6 +235,18 @@
     }
   },
   "rent": {
+    "allTypes": "Alle Typen",
+    "searchPlaceholder": "Immobilien suchen",
+    "rooms": "Zimmer",
+    "minPrice": "Mindestpreis",
+    "maxPrice": "Höchstpreis",
+    "villa": "Villa",
+    "apartment": "Wohnung",
+    "studio": "Studio",
+    "chalet": "Chalet",
+    "twinHouse": "Doppelhaus",
+    "checkIn": "Anreise",
+    "checkOut": "Abreise",
     "metadataTitle": "Ferienwohnungen und Urlaubsunterkünfte in Hurghada",
     "metadataDescription": "Finden und buchen Sie geprüfte Apartments, Chalets, Studios und Ferienwohnungen in Hurghada und El Kawther.",
     "heroTitle": "Finden Sie Ihre nächste Ferienunterkunft",
@@ -475,7 +498,18 @@
       "messagePlaceholder": "Schreiben Sie Ihre Nachricht hier...",
       "sending": "Wird gesendet...",
       "send": "Nachricht senden"
-    }
+    },
+    "heroTitle": "Kontakt aufnehmen",
+    "heroSubtitle": "Unser Team ist bereit, Ihnen zu helfen.",
+    "methodsTitle": "Kontaktmethoden :",
+    "offlineAddress": "Adresse",
+    "offlineAddressVal": "El Kawther, Hurghada",
+    "phoneWhatsapp": "Telefon & WhatsApp",
+    "emailCard": "E-Mail",
+    "sendMessage": "Senden Sie uns eine Nachricht",
+    "submitMessage": "Nachricht senden",
+    "openInMaps": "In Google Maps öffnen",
+    "officeLocation": "El Kawther, Hurghada"
   },
   "about": {
     "eyebrow": "Wer wir sind",
@@ -520,7 +554,33 @@
     },
     "ctaTitle": "Bereit, Ihren Hurghada-Urlaub zu planen?",
     "ctaBody": "Senden Sie uns Ihre Reisedaten und Wünsche, und unser Team hilft Ihnen, die passende Ferienwohnung zu finden.",
-    "ctaAction": "Gastgeberteam kontaktieren"
+    "ctaAction": "Gastgeberteam kontaktieren",
+    "heroTitle": "Ein besserer Weg, sich wie zu Hause zu fühlen",
+    "heroSubtitle": "Wir verbinden Sie mit handverlesenen Unterkünften und einem reibungslosen Mieterlebnis, wo immer Sie sein möchten.",
+    "aboutUsTitle": "Über uns",
+    "aboutUsBody": "Entdecken Sie neue Möglichkeiten mit unserer All-in-One-Plattform für Immobilien und Ferienvermietungen in Hurghada.",
+    "statsBanner": {
+      "stat1Count": "10.000+",
+      "stat1Title": "Vertrauenswürdige Gastgeber",
+      "stat1Desc": "Zusammenarbeit mit verifizierten und zuverlässigen Eigentümern",
+      "stat2Count": "4.500+",
+      "stat2Title": "Kuratierte Unterkünfte",
+      "stat2Desc": "Von gemütlichen Apartments bis hin zu geräumigen Villen",
+      "stat3Count": "98%",
+      "stat3Title": "Gästeorientierter Service",
+      "stat3Desc": "Echte Unterstützung, echte Menschen, echte Fürsorge"
+    },
+    "featuresList": {
+      "card1Title": "Sorgfältig ausgewählte Unterkünfte",
+      "card1Desc": "Wir wählen jede Immobilie für Qualität, Komfort und eine großartige Lage aus",
+      "card2Title": "Klare & ehrliche Preise",
+      "card2Desc": "Keine versteckten Gebühren, keine Überraschungen",
+      "card3Title": "Persönlicher Support",
+      "card3Desc": "Individuelle Betreuung für einen sorgenfreien Aufenthalt"
+    },
+    "ourPeopleTitle": "Unser Team",
+    "ourPeopleSubtitle": "Die Menschen hinter Ihrem perfekten Aufenthalt",
+    "ourPeopleBody": "Hinter jedem großartigen Erlebnis steht ein engagiertes Team."
   },
   "blogs": {
     "homeEyebrow": "Reise- und Aufenthaltsführer",
@@ -651,15 +711,33 @@
     "heroAlt": "Hurghada Vacation Homes Ferienwohnung",
     "card1Title": "1. Erhobene Daten",
     "card1Items": [
-      ["Buchungsdetails:", "Vollständiger Name, E-Mail-Adresse, Telefonnummer und Gästeanzahl zur Bestätigung Ihrer Reservierung."],
-      ["Identitätsprüfung:", "Reisepass- oder Personalausweiskopien bei der Ankunft gemäß Vorgaben der ägyptischen Tourismusbehörde und zur Zugangskontrolle am Resorttor."],
-      ["Zahlungsdaten:", "Transaktions-IDs und Zeitstempel der Zahlungsbestätigung. Wir speichern keine vollständigen Kreditkartennummern."]
+      [
+        "Buchungsdetails:",
+        "Vollständiger Name, E-Mail-Adresse, Telefonnummer und Gästeanzahl zur Bestätigung Ihrer Reservierung."
+      ],
+      [
+        "Identitätsprüfung:",
+        "Reisepass- oder Personalausweiskopien bei der Ankunft gemäß Vorgaben der ägyptischen Tourismusbehörde und zur Zugangskontrolle am Resorttor."
+      ],
+      [
+        "Zahlungsdaten:",
+        "Transaktions-IDs und Zeitstempel der Zahlungsbestätigung. Wir speichern keine vollständigen Kreditkartennummern."
+      ]
     ],
     "card2Title": "2. Verwendung Ihrer Daten",
     "card2Items": [
-      ["Buchungsverwaltung:", "Organisation von Check-in (ab 14:00 Uhr), Check-out (bis 12:00 Uhr mittags) und Schlüsselübergabe."],
-      ["Gästekommunikation:", "Bereitstellung von Anreisehinweisen, Türcodes und Unterstützung während Ihres Urlaubs."],
-      ["Zusatzleistungen:", "Organisation von Flughafentransfers, Wäscheservice auf Anfrage oder zusätzlicher Reinigung."]
+      [
+        "Buchungsverwaltung:",
+        "Organisation von Check-in (ab 14:00 Uhr), Check-out (bis 12:00 Uhr mittags) und Schlüsselübergabe."
+      ],
+      [
+        "Gästekommunikation:",
+        "Bereitstellung von Anreisehinweisen, Türcodes und Unterstützung während Ihres Urlaubs."
+      ],
+      [
+        "Zusatzleistungen:",
+        "Organisation von Flughafentransfers, Wäscheservice auf Anfrage oder zusätzlicher Reinigung."
+      ]
     ],
     "card3Title": "3. Hausregeln & Sicherheit",
     "card3Body": "Gemäß unseren Hausregeln dürfen sich nur registrierte Gäste in den Apartments aufhalten. Die Identitätsdaten stellen die Einhaltung der Resortsicherheit sicher, verhindern unangemeldete Feiern oder Besucher und garantieren eine ruhige Nachbarschaft.",
@@ -679,9 +757,18 @@
     "heroAlt": "Hurghada Vacation Homes Ferienobjekt",
     "card1Title": "1. Berechtigte Rückerstattungsszenarien",
     "card1Items": [
-      ["Fristgerechte Stornierungen:", "Volle oder anteilige Rückerstattung gemäß unserer Stornierungsfristen (100 % ab 14 Tagen, 50 % bei 7–13 Tagen vor Anreise)."],
-      ["Unbewohnbare Mängel:", "Sollten wesentliche Mängel an Sanitär, Strom oder Bauwerk nicht umgehend behoben werden können, erhalten Gäste eine vollständige Erstattung."],
-      ["Überzahlungen oder Doppelbuchungen:", "Werden unmittelbar nach Prüfung mit dem Zahlungsanbieter korrigiert."]
+      [
+        "Fristgerechte Stornierungen:",
+        "Volle oder anteilige Rückerstattung gemäß unserer Stornierungsfristen (100 % ab 14 Tagen, 50 % bei 7–13 Tagen vor Anreise)."
+      ],
+      [
+        "Unbewohnbare Mängel:",
+        "Sollten wesentliche Mängel an Sanitär, Strom oder Bauwerk nicht umgehend behoben werden können, erhalten Gäste eine vollständige Erstattung."
+      ],
+      [
+        "Überzahlungen oder Doppelbuchungen:",
+        "Werden unmittelbar nach Prüfung mit dem Zahlungsanbieter korrigiert."
+      ]
     ],
     "card2Title": "2. Wohnungsinspektion beim Check-out",
     "card2Intro": "Beim Check-out (vor 12:00 Uhr mittags) prüft unser Team das Apartment auf Einhaltung der Hausregeln. Folgende Schäden führen zu Abzügen von der Kaution:",
@@ -693,9 +780,18 @@
     ],
     "card3Title": "3. Nicht erstattungsfähige Leistungen",
     "card3Items": [
-      ["Genutzte Übernachtungen:", "Bereits verbrachte Urlaubstage sind nicht erstattungsfähig."],
-      ["Erbringung gebuchter Services:", "Durchgeführte Wäscheservices, Transfers und abgeschlossene Reinigungen können nach Erbringung nicht erstattet werden."],
-      ["Verstöße gegen die Hausordnung:", "Bei Abbruch des Aufenthalts wegen Partys, unbefugter Besucher oder Haustieren besteht kein Anspruch auf Rückerstattung."]
+      [
+        "Genutzte Übernachtungen:",
+        "Bereits verbrachte Urlaubstage sind nicht erstattungsfähig."
+      ],
+      [
+        "Erbringung gebuchter Services:",
+        "Durchgeführte Wäscheservices, Transfers und abgeschlossene Reinigungen können nach Erbringung nicht erstattet werden."
+      ],
+      [
+        "Verstöße gegen die Hausordnung:",
+        "Bei Abbruch des Aufenthalts wegen Partys, unbefugter Besucher oder Haustieren besteht kein Anspruch auf Rückerstattung."
+      ]
     ],
     "card4Title": "4. Fristen und Abwicklung",
     "card4Body": "Genehmigte Rückerstattungen werden über die ursprüngliche Zahlungsmethode (PayPal oder Bankkarte) abgewickelt. Nach Freigabe durch die Verwaltung dauert die Gutschrift in der Regel 5 bis 10 Werktage, abhängig von Ihrem Kreditinstitut.",
@@ -713,9 +809,18 @@
     "heroAlt": "Hurghada Vacation Homes Mietunterkunft",
     "card1Title": "1. Standard-Stornierungsfristen",
     "card1Items": [
-      ["14+ Tage vor Anreise:", "Bei Stornierung mindestens 14 Tage vor dem Check-in-Datum (14:00 Uhr) wird die geleistete Anzahlung vollständig erstattet."],
-      ["7 bis 13 Tage vor Anreise:", "Bei Stornierung zwischen 7 und 13 Tagen vor Anreise werden 50 % der Anzahlung erstattet."],
-      ["Weniger als 7 Tage / Nichterscheinen:", "Bei Stornierungen unter 7 Tagen vor Anreise oder Nichterscheinen ohne Mitteilung erfolgt keine Rückerstattung."]
+      [
+        "14+ Tage vor Anreise:",
+        "Bei Stornierung mindestens 14 Tage vor dem Check-in-Datum (14:00 Uhr) wird die geleistete Anzahlung vollständig erstattet."
+      ],
+      [
+        "7 bis 13 Tage vor Anreise:",
+        "Bei Stornierung zwischen 7 und 13 Tagen vor Anreise werden 50 % der Anzahlung erstattet."
+      ],
+      [
+        "Weniger als 7 Tage / Nichterscheinen:",
+        "Bei Stornierungen unter 7 Tagen vor Anreise oder Nichterscheinen ohne Mitteilung erfolgt keine Rückerstattung."
+      ]
     ],
     "card2Title": "2. Verstöße gegen die Hausordnung",
     "card2Intro": "Gäste verpflichten sich mit der Buchung zur Einhaltung der Hausregeln. Eine fristlose Kündigung ohne Rückerstattung erfolgt bei schweren Verstößen wie:",

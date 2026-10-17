@@ -20,6 +20,7 @@
     "tryAgain": "Try Again",
     "backToHome": "Back to Home",
     "readArticle": "Read Article",
+    "allBlogs": "All Articles",
     "exploreHomes": "Explore Vacation Homes",
     "night": "night",
     "nights": "nights",
@@ -145,7 +146,17 @@
       "locationMissing": "Location not specified",
       "bed": "Bed",
       "bath": "Bath",
-      "notAvailable": "N/A"
+      "notAvailable": "N/A",
+      "bestSellingTitle": "Best Selling Properties",
+      "bestSellingDescription": "Explore properties that stand out for their location, quality, and long-term value.",
+      "forSaleBadge": "For Sale",
+      "viewDetails": "View Details",
+      "previous": "Previous properties",
+      "next": "Next properties",
+      "bestRentalTitle": "Best rental Properties",
+      "bestRentalBody": "Explore the most popular villas and apartments for renting in Hurghada and the Red Sea. Choose from a selection of highly rated properties.",
+      "forRentBadge": "For Rent",
+      "findNextHome": "Find Your Next Home"
     },
     "views": {
       "eyebrow": "Featured Views",
@@ -224,6 +235,18 @@
     }
   },
   "rent": {
+    "allTypes": "All Types",
+    "searchPlaceholder": "Search properties",
+    "rooms": "Rooms",
+    "minPrice": "Min Price",
+    "maxPrice": "Max Price",
+    "villa": "Villa",
+    "apartment": "Apartment",
+    "studio": "Studio",
+    "chalet": "Chalet",
+    "twinHouse": "Twin House",
+    "checkIn": "Check-In Date",
+    "checkOut": "Check-Out Date",
     "metadataTitle": "Hurghada Vacation Rentals & Holiday Homes",
     "metadataDescription": "Find and book verified holiday apartments, chalets, studios, and vacation homes in Hurghada and El Kawther with local guest support.",
     "heroTitle": "Find Your Next Vacation Rental Home",
@@ -488,7 +511,18 @@
       "messagePlaceholder": "Write your message here...",
       "sending": "Sending...",
       "send": "Send Message"
-    }
+    },
+    "heroTitle": "Get in Touch",
+    "heroSubtitle": "Our Team is ready to assist you.",
+    "methodsTitle": "Contact Methods :",
+    "offlineAddress": "Address",
+    "offlineAddressVal": "El Kawther, Hurghada",
+    "phoneWhatsapp": "Phone & WhatsApp",
+    "emailCard": "Email",
+    "sendMessage": "Send Us a Message",
+    "submitMessage": "Submit Message",
+    "openInMaps": "Open in Google Maps",
+    "officeLocation": "El Kawther, Hurghada"
   },
   "about": {
     "eyebrow": "Who we are",
@@ -533,7 +567,33 @@
     },
     "ctaTitle": "Ready to plan your Hurghada holiday?",
     "ctaBody": "Tell us your travel dates and preferences, and our local team will help you find the ideal vacation home with effortless check-in and private airport transfers.",
-    "ctaAction": "Contact Our Host Team"
+    "ctaAction": "Contact Our Host Team",
+    "heroTitle": "A Better Way To Feel At Home",
+    "heroSubtitle": "We Connect you with handpicked homes and seamless rental experience, whatever you want to be.",
+    "aboutUsTitle": "About Us",
+    "aboutUsBody": "Discover new opportunities with our all-in-one real estate and holiday rental platform in Hurghada. We bring together a diverse selection of properties, from cozy holiday apartments and beachfront villas to long-term rental homes and real estate for sale. Whether you're searching for the perfect getaway, a place to call home, or a valuable investment on the Red Sea, we connect you with suitable properties and provide local assistance, personalized service, and convenient solutions tailored to your needs.",
+    "statsBanner": {
+      "stat1Count": "10,000+",
+      "stat1Title": "Trusted Hosts",
+      "stat1Desc": "work with verified and reliable properties owners",
+      "stat2Count": "4,500+",
+      "stat2Title": "Curated Homes",
+      "stat2Desc": "From Cozy apartments to spacious Villas",
+      "stat3Count": "98%",
+      "stat3Title": "Guest-first Services",
+      "stat3Desc": "Real support, real people , real care"
+    },
+    "featuresList": {
+      "card1Title": "Carefully Selected Home",
+      "card1Desc": "we handpick every property for quality comfort and a great location, so you can book with confidence",
+      "card2Title": "Clear & Honest Pricing",
+      "card2Desc": "No hidden fees, no surprises. just straightforward prices and real value",
+      "card3Title": "Personal Support",
+      "card3Desc": "we handpick every property for quality comfort and a great location, so you can book with confidence"
+    },
+    "ourPeopleTitle": "Our People",
+    "ourPeopleSubtitle": "The People Behind Your Perfect Stay",
+    "ourPeopleBody": "Behind every great experience is a dedicated team. Our local team in Hurghada is passionate about helping travelers, property seekers, and homeowners find the right solutions for their needs. From discovering the perfect holiday rental to exploring properties for sale, we focus on providing personal attention, reliable information, and friendly support at every step."
   },
   "blogs": {
     "homeEyebrow": "Travel & Stay Guides",
@@ -659,6 +719,10 @@
     "body": "The page you are looking for may have moved, or the address may be incorrect."
   },
   "buy": {
+    "basicAmenities": "Basic Amenities",
+    "propertyInformation": "Property Information",
+    "moreAmenities": "More Amenities",
+    "aboutProperty": "About Property",
     "heroTitle": "Properties for Sale",
     "heroSubtitle": "Find your perfect home in Hurghada",
     "availableProperties": "Available Properties",
@@ -712,15 +776,33 @@
     "heroAlt": "Hurghada Vacation Homes guest apartment",
     "card1Title": "1. Information We Collect",
     "card1Items": [
-      ["Booking Details:", "Full name, email address, phone number, and number of guests for reservation confirmations."],
-      ["Identity Verification:", "Passport or national ID copies required upon arrival to comply with Egyptian Tourism Authority rules and resort gate access."],
-      ["Payment Records:", "Transaction IDs and payment confirmation timestamps. We do not store raw credit card numbers."]
+      [
+        "Booking Details:",
+        "Full name, email address, phone number, and number of guests for reservation confirmations."
+      ],
+      [
+        "Identity Verification:",
+        "Passport or national ID copies required upon arrival to comply with Egyptian Tourism Authority rules and resort gate access."
+      ],
+      [
+        "Payment Records:",
+        "Transaction IDs and payment confirmation timestamps. We do not store raw credit card numbers."
+      ]
     ],
     "card2Title": "2. How We Use Your Data",
     "card2Items": [
-      ["Reservation Management:", "Scheduling check-in (from 2:00 PM), check-out (before 12:00 PM), and key handovers."],
-      ["Guest Communication:", "Providing arrival instructions, apartment access codes, and assistance during your stay."],
-      ["Additional Services:", "Arranging optional airport transfers, on-demand laundry, or extra apartment cleaning upon request."]
+      [
+        "Reservation Management:",
+        "Scheduling check-in (from 2:00 PM), check-out (before 12:00 PM), and key handovers."
+      ],
+      [
+        "Guest Communication:",
+        "Providing arrival instructions, apartment access codes, and assistance during your stay."
+      ],
+      [
+        "Additional Services:",
+        "Arranging optional airport transfers, on-demand laundry, or extra apartment cleaning upon request."
+      ]
     ],
     "card3Title": "3. House Rules & Security",
     "card3Body": "In accordance with our property house rules, only registered guests are permitted inside the apartments. Guest identification records ensure compliance with resort safety protocols, prevent unauthorized visitors or parties, and guarantee a peaceful community environment for all neighbors.",
@@ -740,9 +822,18 @@
     "heroAlt": "Hurghada Vacation Homes hospitality property",
     "card1Title": "1. Eligible Refund Scenarios",
     "card1Items": [
-      ["Timely Cancellations:", "Full or partial refunds issued in accordance with our Cancellation Policy timelines (14+ days for full refund, 7–13 days for 50%)."],
-      ["Uninhabitable Conditions:", "If a property experiences major plumbing, electrical, or structural failures that cannot be repaired promptly, guests are refunded in full."],
-      ["Overpayments or Duplicate Charges:", "Reconciled immediately upon identification with the payment gateway."]
+      [
+        "Timely Cancellations:",
+        "Full or partial refunds issued in accordance with our Cancellation Policy timelines (14+ days for full refund, 7–13 days for 50%)."
+      ],
+      [
+        "Uninhabitable Conditions:",
+        "If a property experiences major plumbing, electrical, or structural failures that cannot be repaired promptly, guests are refunded in full."
+      ],
+      [
+        "Overpayments or Duplicate Charges:",
+        "Reconciled immediately upon identification with the payment gateway."
+      ]
     ],
     "card2Title": "2. Check-out Property Inspection",
     "card2Intro": "During check-out (before 12:00 PM noon), our local team inspects the apartment to ensure compliance with House Rules. The following damages will result in deductions from the security deposit:",
@@ -754,9 +845,18 @@
     ],
     "card3Title": "3. Non-Refundable Items",
     "card3Items": [
-      ["Consumed Nights:", "Completed accommodation days and past dates are non-refundable."],
-      ["Completed Paid Services:", "Rendered laundry services, executed airport transfers, and completed cleaning requests are non-refundable once delivered."],
-      ["Rule Violations:", "Bookings terminated on-site due to unauthorized parties, illegal visitors, or pet violations do not qualify for any refund."]
+      [
+        "Consumed Nights:",
+        "Completed accommodation days and past dates are non-refundable."
+      ],
+      [
+        "Completed Paid Services:",
+        "Rendered laundry services, executed airport transfers, and completed cleaning requests are non-refundable once delivered."
+      ],
+      [
+        "Rule Violations:",
+        "Bookings terminated on-site due to unauthorized parties, illegal visitors, or pet violations do not qualify for any refund."
+      ]
     ],
     "card4Title": "4. Processing Timeline & Methods",
     "card4Body": "Approved refunds are processed through the original payment method used during booking (PayPal account or bank card). Once initiated by our administrative team, funds typically appear in your account within 5 to 10 business days, depending on your bank or payment provider's settlement schedule.",
@@ -774,9 +874,18 @@
     "heroAlt": "Hurghada Vacation Homes rental property",
     "card1Title": "1. Standard Cancellation Windows",
     "card1Items": [
-      ["14+ Days Prior:", "Cancellations made at least 14 days before the scheduled check-in date (2:00 PM) are eligible for a full refund of the deposit paid."],
-      ["7 to 13 Days Prior:", "Cancellations made between 7 and 13 days prior are eligible for a 50% refund of the deposit."],
-      ["Less than 7 Days / No-Show:", "Cancellations made within 7 days of arrival or failure to check in without notice are non-refundable."]
+      [
+        "14+ Days Prior:",
+        "Cancellations made at least 14 days before the scheduled check-in date (2:00 PM) are eligible for a full refund of the deposit paid."
+      ],
+      [
+        "7 to 13 Days Prior:",
+        "Cancellations made between 7 and 13 days prior are eligible for a 50% refund of the deposit."
+      ],
+      [
+        "Less than 7 Days / No-Show:",
+        "Cancellations made within 7 days of arrival or failure to check in without notice are non-refundable."
+      ]
     ],
     "card2Title": "2. House Rules Violations",
     "card2Intro": "Guests agree to respect our official House Rules upon booking. Immediate reservation cancellation without refund applies if a guest commits serious breaches during their stay, including:",

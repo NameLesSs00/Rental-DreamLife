@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { DM_Serif_Display, Geist, Geist_Mono, IBM_Plex_Sans_JP, Poppins, Rakkas } from "next/font/google";
+import { DM_Serif_Display, Geist, Geist_Mono, IBM_Plex_Sans_JP, Manrope, Poppins, Rakkas } from "next/font/google";
 import "./globals.css";
 import Providers from "./providers";
 import { siteConfig } from "@/lib/site";
@@ -39,6 +39,12 @@ const rakkas = Rakkas({
   weight: "400",
 });
 
+const manrope = Manrope({
+  variable: "--font-manrope",
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700", "800"],
+});
+
 export const metadata: Metadata = {
   metadataBase: new URL(siteConfig.url),
   applicationName: siteConfig.name,
@@ -64,9 +70,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} ${ibmPlexSansJp.variable} ${poppins.variable} ${rakkas.variable} ${dmSerifDisplay.variable} h-full antialiased`}
+      className={`${geistSans.variable} ${geistMono.variable} ${ibmPlexSansJp.variable} ${poppins.variable} ${rakkas.variable} ${dmSerifDisplay.variable} ${manrope.variable} antialiased`}
     >
-      <body className="min-h-full flex flex-col">
+      <body className="min-h-screen flex flex-col">
         <Providers>{children}</Providers>
       </body>
     </html>

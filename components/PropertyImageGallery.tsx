@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import Image from "next/image";
+import { AnimatePresence, motion } from "framer-motion";
 
 interface GalleryImage {
   src: string;
@@ -13,12 +14,18 @@ interface PropertyImageGalleryProps {
   images: GalleryImage[];
   className?: string;
   mainImageClassName?: string;
+  /**
+   * "default" — single large photo plus a thumbnail filmstrip (rental pages).
+   * "mosaic"   — one large photo on the left with two stacked on the right.
+   */
+  variant?: "default" | "mosaic";
 }
 
 export default function PropertyImageGallery({
   images,
   className = "",
   mainImageClassName = "aspect-[16/10] sm:aspect-[16/9]",
+  variant = "default",
 }: PropertyImageGalleryProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [activeIndex, setActiveIndex] = useState(0);
@@ -103,6 +110,87 @@ export default function PropertyImageGallery({
   if (!images || images.length === 0) return null;
 
   const activeImage = images[activeIndex] || images[0];
+
+  // ─── Mosaic: one large photo left, two stacked right ───
+  if (variant === "mosaic") {
+    const tiles = [0, 1, 2]
+      .map((i) => images[i])
+      .filter(Boolean);
+    const overflow = images.length - tiles.length;
+
+    return (
+      <div className={`w-full ${className}`}>
+        <div className="grid gap-3 sm:grid-cols-[1.62fr_1fr] sm:gap-4">
+          {tiles.map((image, i) => (
+            <button
+              key={image.src + i}
+              type="button"
+              onClick={() => {
+                setActiveIndex(i);
+                setIsOpen(true);
+              }}
+              className={`group relative cursor-pointer overflow-hidden rounded-2xl bg-[#e8eeec] shadow-sm select-none ${
+                i === 0
+                  ? "aspect-[16/10] sm:row-span-2 sm:aspect-auto sm:h-full sm:min-h-[320px]"
+                  : "hidden aspect-[16/9] sm:aspect-auto sm:block"
+              }`}
+            >
+              <Image
+                src={image.src}
+                alt={image.alt || ""}
+                fill
+                sizes="(max-width: 640px) 100vw, 60vw"
+                className="object-cover transition-transform duration-500 group-hover:scale-[1.03]"
+              />
+              {i === 0 && (
+                <span className="absolute left-3.5 top-3.5 z-10 flex items-center gap-1.5 rounded-full bg-black/60 px-3 py-1 text-[12px] font-semibold text-white backdrop-blur-md">
+                  <svg className="size-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
+                    <rect x="3" y="3" width="18" height="18" rx="2" />
+                    <circle cx="8.5" cy="8.5" r="1.5" />
+                    <path d="m21 15-3.5-3.5L6 23" />
+                  </svg>
+                  {images.length}
+                </span>
+              )}
+            </button>
+          ))}
+        </div>
+
+        {overflow > 0 && (
+          <button
+            type="button"
+            onClick={() => setIsOpen(true)}
+            className="mt-3 w-full rounded-xl border border-[#dfe8e4] bg-white py-2.5 text-[13px] font-semibold text-[#183c2f] transition hover:border-[#2C798B]"
+          >
+            +{overflow}
+          </button>
+        )}
+
+        <AnimatePresence>
+          {isOpen && (
+            <motion.div
+              key="mosaic-lightbox"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-[100] flex flex-col bg-black/95 animate-in fade-in duration-200 select-none"
+              onClick={() => setIsOpen(false)}
+            >
+              <div className="relative flex-1 p-4 lg:px-24">
+                <Image
+                  src={activeImage.src}
+                  alt={activeImage.alt || ""}
+                  fill
+                  sizes="100vw"
+                  className="object-contain"
+                />
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+    );
+  }
 
   return (
     <div className={`w-full ${className}`}>

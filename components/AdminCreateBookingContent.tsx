@@ -136,7 +136,10 @@ export default function AdminCreateBookingContent() {
         const d = new Date(p.date);
         return d >= checkInDate && d < checkOutDate;
       })
-      .reduce((sum, p) => sum + p.price, 0);
+      .reduce((sum, p) => {
+        const amount = typeof p.price === "number" && !isNaN(p.price) ? p.price : p.priceInfo?.amount ?? p.priceInfo?.baseAmount ?? 0;
+        return sum + amount;
+      }, 0);
     return total > 0 ? total : null;
   }, [dailyPricesData, checkIn, checkOut]);
 

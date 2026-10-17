@@ -3,10 +3,11 @@ import { defaultLocale, type Locale } from "@/lib/i18n/config";
 import type { BlogApiResponse, BlogItem, PaginatedBlogsResponse } from "@/lib/types/blog";
 import { getBlogSlug } from "@/lib/utils/blogSlug";
 
-const uuidPattern = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const uuidPattern = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i;
 
 async function getPublishedBlogs(locale: Locale = defaultLocale) {
   try {
+    const cleanBase = API_BASE_URL.replace(/\/+$/, "");
     const params = new URLSearchParams({
       IsPublished: "true",
       PageNumber: "1",
@@ -15,7 +16,7 @@ async function getPublishedBlogs(locale: Locale = defaultLocale) {
       IsDescending: "false",
     });
 
-    const res = await fetch(`${API_BASE_URL}/api/blogs?${params.toString()}`, {
+    const res = await fetch(`${cleanBase}/api/blogs?${params.toString()}`, {
       next: { revalidate: 300 },
       headers: { "Accept-Language": locale, "X-Locale": locale },
       signal: AbortSignal.timeout(8000),
@@ -84,7 +85,9 @@ export async function getBlogBySlug(slug: string, locale: Locale = defaultLocale
 
 async function getBlogById(id: string, locale: Locale) {
   try {
-    const res = await fetch(`${API_BASE_URL}/api/blogs/${id}?incrementViewCount=true`, {
+    const cleanBase = API_BASE_URL.replace(/\/+$/, "");
+    const url = `${cleanBase}/api/blogs/${id}?incrementViewCount=false`;
+    const res = await fetch(url, {
       next: { revalidate: 60 },
       headers: { "Accept-Language": locale, "X-Locale": locale },
       signal: AbortSignal.timeout(8000),

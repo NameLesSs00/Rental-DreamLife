@@ -148,7 +148,7 @@ export default function CurrencySwitcher({
         <button
           type="button"
           onClick={() => setIsMobileOpen((prev) => !prev)}
-          className="flex h-11 w-full items-center justify-between rounded-xl border border-[#dfe8e4] bg-white px-3.5 text-[14px] font-semibold text-[#2C798B] shadow-[0_2px_8px_rgba(31,77,61,0.04)] transition hover:border-[#2C798B]/35"
+          className="flex h-11 w-full items-center justify-between rounded-[10px] border border-[#dfe8e4] bg-white px-3.5 text-[14px] font-semibold text-[#2C798B] shadow-[0_2px_8px_rgba(31,77,61,0.04)] transition hover:border-[#2C798B]/35"
           aria-expanded={isMobileOpen}
           aria-label={t("common.currency")}
         >
@@ -177,7 +177,7 @@ export default function CurrencySwitcher({
               animate={{ opacity: 1, height: "auto" }}
               exit={{ opacity: 0, height: 0 }}
               transition={{ duration: 0.22, ease: smoothEase }}
-              className="mt-1.5 overflow-hidden rounded-xl border border-[#dfe8e4] bg-white p-1 shadow-[0_8px_20px_rgba(31,77,61,0.08)]"
+              className="mt-1.5 overflow-hidden rounded-[14px] border border-[#dfe8e4] bg-white p-1 shadow-[0_8px_20px_rgba(31,77,61,0.08)]"
             >
               {availableCurrencies.map((item) => {
                 const isSelected =
@@ -224,7 +224,7 @@ export default function CurrencySwitcher({
       <button
         type="button"
         onClick={() => setIsOpen((prev) => !prev)}
-        className="flex h-10 xl:h-11 min-w-[96px] xl:min-w-[108px] items-center justify-between gap-1.5 xl:gap-2.5 rounded-full border border-[#dfe8e4] bg-white px-2.5 xl:px-3.5 text-[13px] xl:text-[14px] font-semibold text-[#2C798B] shadow-[0_6px_16px_rgba(31,77,61,0.05)] transition hover:border-[#2C798B]/35 hover:bg-[#f8faf9]"
+        className="flex h-10 xl:h-11 min-w-[96px] xl:min-w-[108px] items-center justify-between gap-1.5 xl:gap-2.5 rounded-[10px] border border-[#dfe8e4] bg-white px-2.5 xl:px-3.5 text-[13px] xl:text-[14px] font-semibold text-[#2C798B] shadow-[0_6px_16px_rgba(31,77,61,0.05)] transition hover:border-[#2C798B]/35 hover:bg-[#f8faf9]"
         aria-haspopup="menu"
         aria-expanded={isOpen}
         aria-label={t("common.currency")}
@@ -249,7 +249,7 @@ export default function CurrencySwitcher({
             animate="visible"
             exit="exit"
             role="menu"
-            className="absolute right-0 top-[calc(100%+10px)] z-[80] w-52 origin-top-right overflow-hidden rounded-xl border border-[#dfe8e4] bg-white p-1.5 shadow-[0_18px_42px_rgba(31,77,61,0.16)]"
+            className="absolute right-0 top-[calc(100%+10px)] z-[80] w-52 origin-top-right overflow-hidden rounded-[14px] border border-[#dfe8e4] bg-white p-1.5 shadow-[0_18px_42px_rgba(31,77,61,0.16)]"
           >
             {availableCurrencies.map((item) => {
               const isSelected =

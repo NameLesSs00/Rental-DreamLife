@@ -3,30 +3,13 @@
 import { useState } from "react";
 import type { ChangeEvent, FormEvent } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
-import type { Variants } from "framer-motion";
-import Image from "next/image";
+import { toast } from "sonner";
 import { useSubmitContact } from "@/lib/hooks/useContact";
 import { useI18n } from "./I18nProvider";
-
-const fadeUp: Variants = {
-  hidden: { opacity: 0, y: 22 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: "easeOut" } },
-};
-
-const container: Variants = {
-  hidden: {},
-  visible: {
-    transition: {
-      staggerChildren: 0.08,
-      delayChildren: 0.04,
-    },
-  },
-};
 
 export default function ContactForm({ defaultSubject = "" }: { defaultSubject?: string }) {
   const { t } = useI18n();
   const shouldReduceMotion = useReducedMotion();
-  const viewport = { once: true, amount: 0.2 };
 
   const { mutate: submitContact, isPending } = useSubmitContact();
 
@@ -54,166 +37,144 @@ export default function ContactForm({ defaultSubject = "" }: { defaultSubject?: 
       onSuccess: (res) => {
         if (res.isSuccess) {
           setStatus("success");
+          toast.success(res.message || "Message sent successfully!");
           setFormData({ name: "", email: "", phone: "", subject: defaultSubject, message: "" });
         } else {
           setStatus("error");
-          setErrorMessage(res.errors?.[0] ?? res.message ?? t("contact.form.errorFallback"));
+          const msg = res.errors?.[0] ?? res.message ?? t("contact.form.errorFallback");
+          setErrorMessage(msg);
+          toast.error(msg);
         }
       },
-      onError: () => {
+      onError: (err: any) => {
         setStatus("error");
-        setErrorMessage(t("contact.form.networkError"));
+        const msg =
+          err?.response?.data?.errors?.[0] ||
+          err?.response?.data?.message ||
+          t("contact.form.networkError") ||
+          "Network error. Please try again.";
+        setErrorMessage(msg);
+        toast.error(msg);
       },
     });
   }
 
   return (
-    <motion.div
-      variants={shouldReduceMotion ? undefined : fadeUp}
-      initial={shouldReduceMotion ? undefined : "hidden"}
-      whileInView={shouldReduceMotion ? undefined : "visible"}
-      viewport={viewport}
-      className="min-w-0 w-full"
-    >
+    <div className="h-full w-full">
       <AnimatePresence mode="wait">
         {status === "success" ? (
           <motion.div
             key="success"
-            initial={shouldReduceMotion ? undefined : { opacity: 0, y: 16 }}
-            animate={shouldReduceMotion ? undefined : { opacity: 1, y: 0 }}
-            exit={shouldReduceMotion ? undefined : { opacity: 0, y: -12 }}
-            className="flex min-h-[440px] flex-col items-center justify-center gap-6 rounded-2xl border border-[#c4dfd4] bg-[#f5f7f6] px-6 py-12 text-center shadow-[0_8px_24px_rgba(31,77,61,0.06)] sm:px-8"
+            initial={shouldReduceMotion ? undefined : { opacity: 0, scale: 0.96 }}
+            animate={shouldReduceMotion ? undefined : { opacity: 1, scale: 1 }}
+            exit={shouldReduceMotion ? undefined : { opacity: 0 }}
+            className="flex h-full min-h-[460px] flex-col items-center justify-center gap-5 rounded-[20px] border border-[#d8e0dd] bg-white p-8 text-center shadow-xs"
           >
-            <motion.div
-              initial={shouldReduceMotion ? undefined : { scale: 0.86 }}
-              animate={shouldReduceMotion ? undefined : { scale: 1 }}
-              className="grid size-20 place-items-center rounded-full bg-[#2C798B] shadow-lg"
-            >
-              <svg className="size-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
+            <div className="grid size-16 place-items-center rounded-full bg-[#e8f1ee] text-[#2C798B]">
+              <svg className="size-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
               </svg>
-            </motion.div>
+            </div>
             <div>
-              <h2 className="text-[24px] font-semibold text-[#183c2f] lg:text-[30px]">{t("contact.form.sentTitle")}</h2>
-              <p className="mt-2 max-w-[420px] text-[14px] leading-7 text-[#667c74] lg:text-[16px]">
-                {t("contact.form.sentBody")}
+              <h3 className="text-[22px] font-bold text-[#142d38]">
+                {t("contact.form.sentTitle") || "Message Sent"}
+              </h3>
+              <p className="mt-2 max-w-[360px] text-[13.5px] leading-relaxed text-[#718288]">
+                {t("contact.form.sentBody") ||
+                  "Thank you for reaching out. Our team will review your message and get back to you shortly."}
               </p>
             </div>
             <button
               type="button"
               onClick={() => setStatus("idle")}
-              className="inline-flex h-11 items-center gap-2 rounded-full border-2 border-[#2C798B] px-6 text-[14px] font-semibold text-[#2C798B] transition hover:bg-[#2C798B] hover:text-white"
+              className="mt-2 inline-flex h-10 items-center justify-center rounded-lg bg-[#71a8b7] px-6 text-[13.5px] font-semibold text-white transition hover:bg-[#5c95a4]"
             >
-              {t("contact.form.sendAnother")}
+              {t("contact.form.sendAnother") || "Send Another Message"}
             </button>
           </motion.div>
         ) : (
-          <motion.form
-            key="form"
+          <form
             onSubmit={handleSubmit}
-            variants={shouldReduceMotion ? undefined : container}
-            initial={shouldReduceMotion ? undefined : "hidden"}
-            animate={shouldReduceMotion ? undefined : "visible"}
-            exit={shouldReduceMotion ? undefined : { opacity: 0, y: -12 }}
-            className="rounded-2xl border border-[#e0eae5] bg-white p-5 shadow-[0_8px_24px_rgba(31,77,61,0.06)] sm:p-7 lg:p-8"
+            className="flex h-full flex-col justify-between gap-4 rounded-[20px] border border-[#d8e0dd] bg-white p-6 shadow-xs sm:p-7"
           >
-            <AnimatePresence>
-              {status === "error" && (
-                <motion.div
-                  initial={shouldReduceMotion ? undefined : { opacity: 0, y: -8 }}
-                  animate={shouldReduceMotion ? undefined : { opacity: 1, y: 0 }}
-                  exit={shouldReduceMotion ? undefined : { opacity: 0, y: -8 }}
-                  className="mb-6 flex items-start gap-3 rounded-xl border border-red-200 bg-red-50 px-4 py-3"
-                >
-                  <svg className="mt-0.5 size-5 shrink-0 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.5">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
-                  </svg>
-                  <p className="text-[13px] leading-5 text-red-700">{errorMessage}</p>
-                </motion.div>
-              )}
-            </AnimatePresence>
+            {status === "error" && (
+              <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-[13px] text-red-700">
+                {errorMessage}
+              </div>
+            )}
 
-            <motion.div variants={container} className="grid gap-5 sm:grid-cols-2">
-              <ContactInput label={t("contact.form.name")} id="contact-name" name="name" value={formData.name} onChange={handleChange} placeholder={t("contact.form.namePlaceholder")} />
-              <ContactInput label={t("contact.form.email")} id="contact-email" name="email" type="email" value={formData.email} onChange={handleChange} placeholder={t("contact.form.emailPlaceholder")} />
-              <ContactInput label={t("contact.form.phone")} id="contact-phone" name="phone" type="tel" value={formData.phone} onChange={handleChange} placeholder={t("contact.form.phonePlaceholder")} />
-              <ContactInput label={t("contact.form.subject")} id="contact-subject" name="subject" value={formData.subject} onChange={handleChange} placeholder={t("contact.form.subjectPlaceholder")} />
+            <div className="flex flex-col gap-3">
+              {/* Your Name */}
+              <input
+                type="text"
+                name="name"
+                required
+                value={formData.name}
+                onChange={handleChange}
+                placeholder={t("contact.form.name") || "Your Name"}
+                className="w-full rounded-lg border border-[#d8e0dd] bg-[#fbfdfc] px-4 py-2.5 text-[13.5px] text-[#142d38] placeholder-[#9aa8a3] outline-none transition focus:border-[#71a8b7] focus:bg-white"
+              />
 
-              <motion.div variants={fadeUp} className="flex flex-col gap-2 sm:col-span-2">
-                <label htmlFor="contact-message" className="text-[13px] font-semibold text-[#183c2f]">
-                  {t("contact.form.message")} <span className="text-red-500">*</span>
-                </label>
-                <textarea
-                  id="contact-message"
-                  name="message"
-                  required
-                  value={formData.message}
-                  onChange={handleChange}
-                  placeholder={t("contact.form.messagePlaceholder")}
-                  rows={5}
-                  className="min-h-[150px] resize-y rounded-xl border border-[#c0c8c6] px-4 py-3 text-[14px] leading-6 text-[#183c2f] outline-none transition placeholder:text-[#aab4b0] focus:border-[#2C798B] focus:ring-2 focus:ring-[#2C798B]/10"
-                />
-              </motion.div>
+              {/* Phone Number */}
+              <input
+                type="tel"
+                name="phone"
+                value={formData.phone}
+                onChange={handleChange}
+                placeholder={t("contact.form.phone") || "Phone Number"}
+                className="w-full rounded-lg border border-[#d8e0dd] bg-[#fbfdfc] px-4 py-2.5 text-[13.5px] text-[#142d38] placeholder-[#9aa8a3] outline-none transition focus:border-[#71a8b7] focus:bg-white"
+              />
 
-              <motion.div variants={fadeUp} className="sm:col-span-2">
-                <button
-                  type="submit"
-                  disabled={isPending}
-                  className="inline-flex min-h-12 w-full items-center justify-center gap-2.5 rounded-full bg-[#2C798B] px-6 py-3 text-[15px] font-semibold text-white shadow-md transition hover:bg-[#183640] hover:shadow-lg disabled:cursor-not-allowed disabled:opacity-70"
-                >
-                  {isPending ? (
-                    <>
-                      <span className="size-5 animate-spin rounded-full border-2 border-white/30 border-t-white" />
-                      {t("contact.form.sending")}
-                    </>
-                  ) : (
-                    <>
-                      {t("contact.form.send")}
-                      <Image src="/contact/icons/send.svg" alt="" width={16} height={14} className="h-[14px] w-4" />
-                    </>
-                  )}
-                </button>
-              </motion.div>
-            </motion.div>
-          </motion.form>
+              {/* Email Address */}
+              <input
+                type="email"
+                name="email"
+                required
+                value={formData.email}
+                onChange={handleChange}
+                placeholder={t("contact.form.email") || "Email Address"}
+                className="w-full rounded-lg border border-[#d8e0dd] bg-[#fbfdfc] px-4 py-2.5 text-[13.5px] text-[#142d38] placeholder-[#9aa8a3] outline-none transition focus:border-[#71a8b7] focus:bg-white"
+              />
+
+              {/* Subject */}
+              <input
+                type="text"
+                name="subject"
+                value={formData.subject}
+                onChange={handleChange}
+                placeholder={t("contact.form.subject") || "Subject"}
+                className="w-full rounded-lg border border-[#d8e0dd] bg-[#fbfdfc] px-4 py-2.5 text-[13.5px] text-[#142d38] placeholder-[#9aa8a3] outline-none transition focus:border-[#71a8b7] focus:bg-white"
+              />
+
+              {/* Your Message... */}
+              <textarea
+                name="message"
+                required
+                rows={5}
+                value={formData.message}
+                onChange={handleChange}
+                placeholder={t("contact.form.messagePlaceholder") || "Your Message..."}
+                className="w-full resize-none rounded-lg border border-[#d8e0dd] bg-[#fbfdfc] px-4 py-3 text-[13.5px] text-[#142d38] placeholder-[#9aa8a3] outline-none transition focus:border-[#71a8b7] focus:bg-white"
+              />
+            </div>
+
+            {/* Submit Button */}
+            <div className="pt-1">
+              <button
+                type="submit"
+                disabled={isPending}
+                className="flex h-[44px] w-full items-center justify-center rounded-lg bg-[#71a8b7] px-6 text-[14px] font-semibold text-white shadow-xs transition hover:bg-[#5c95a4] active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {isPending ? (
+                  <span className="size-5 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+                ) : (
+                  <span>{t("contact.submitMessage") || "Submit Message"}</span>
+                )}
+              </button>
+            </div>
+          </form>
         )}
       </AnimatePresence>
-    </motion.div>
-  );
-}
-
-function ContactInput({
-  label,
-  id,
-  name,
-  value,
-  onChange,
-  placeholder,
-  type = "text",
-}: {
-  label: string;
-  id: string;
-  name: string;
-  value: string;
-  onChange: (event: ChangeEvent<HTMLInputElement>) => void;
-  placeholder: string;
-  type?: string;
-}) {
-  return (
-    <motion.div variants={fadeUp} className="flex min-w-0 flex-col gap-2">
-      <label htmlFor={id} className="text-[13px] font-semibold text-[#183c2f]">
-        {label} <span className="text-red-500">*</span>
-      </label>
-      <input
-        id={id}
-        type={type}
-        name={name}
-        required
-        value={value}
-        onChange={onChange}
-        placeholder={placeholder}
-        className="h-12 rounded-xl border border-[#c0c8c6] px-4 text-[14px] text-[#183c2f] outline-none transition placeholder:text-[#aab4b0] focus:border-[#2C798B] focus:ring-2 focus:ring-[#2C798B]/10 lg:h-[52px]"
-      />
-    </motion.div>
+    </div>
   );
 }

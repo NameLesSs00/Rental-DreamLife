@@ -4,6 +4,7 @@ import { ReactNode, useEffect, useState } from "react";
 import { QueryClient, QueryClientProvider, MutationCache } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { Toaster, toast } from "sonner";
+import SmoothScroll from "@/components/SmoothScroll";
 
 export default function Providers({ children }: { children: ReactNode }) {
   useEffect(() => {
@@ -38,6 +39,7 @@ export default function Providers({ children }: { children: ReactNode }) {
 
   return (
     <QueryClientProvider client={queryClient}>
+      <SmoothScroll />
       {children}
       <Toaster position="top-right" richColors />
       <ReactQueryDevtools initialIsOpen={false} />

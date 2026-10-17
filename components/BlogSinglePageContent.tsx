@@ -4,23 +4,24 @@ import { motion, useReducedMotion } from "framer-motion";
 import type { Variants } from "framer-motion";
 import Image from "next/image";
 import Link from "next/link";
+import { useEffect } from "react";
+import { Calendar, ArrowLeft } from "lucide-react";
 import type { BlogItem, BlogSection } from "@/lib/types/blog";
 import { getBlogSlug } from "@/lib/utils/blogSlug";
 import { resolveApiImageUrl } from "@/lib/utils/imageUrl";
 import { useI18n } from "./I18nProvider";
 import { useHeaderStore } from "@/lib/headerStore";
-import { useEffect } from "react";
 
 const fallbackHeroImage = "/blog-single/hero.png";
-const fallbackCardImage = "/blogs/articles.png";
+const fallbackCardImage = "/blogs/blog-featured-default.png";
 const smoothEase: [number, number, number, number] = [0.22, 1, 0.36, 1];
 
 const fadeUp: Variants = {
-  hidden: { opacity: 0, y: 24 },
+  hidden: { opacity: 0, y: 20 },
   visible: {
     opacity: 1,
     y: 0,
-    transition: { duration: 0.52, ease: smoothEase },
+    transition: { duration: 0.45, ease: smoothEase },
   },
 };
 
@@ -28,11 +29,28 @@ const container: Variants = {
   hidden: {},
   visible: {
     transition: {
-      staggerChildren: 0.1,
-      delayChildren: 0.08,
+      staggerChildren: 0.08,
+      delayChildren: 0.06,
     },
   },
 };
+
+function splitParagraphs(text: string): string[] {
+  return text
+    .split(/\r?\n+/)
+    .map((paragraph) => paragraph.trim())
+    .filter(Boolean);
+}
+
+function formatDate(value: string, locale: string, fallback: string): string {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return fallback;
+  return new Intl.DateTimeFormat(locale, {
+    month: "long",
+    day: "numeric",
+    year: "numeric",
+  }).format(date);
+}
 
 export default function BlogSinglePageContent({
   blog,
@@ -42,7 +60,7 @@ export default function BlogSinglePageContent({
   relatedBlogs?: BlogItem[];
 }) {
   const shouldReduceMotion = useReducedMotion();
-  const { locale, t } = useI18n();
+  const { locale, t, href } = useI18n();
   const setPageEntity = useHeaderStore((state) => state.setPageEntity);
 
   useEffect(() => {
@@ -53,262 +71,272 @@ export default function BlogSinglePageContent({
   const heroImage = resolveApiImageUrl(blog.featuredImageUrl) || fallbackHeroImage;
   const sections = [...(blog.blogSections ?? [])].sort((a, b) => a.displayOrder - b.displayOrder);
   const introParagraphs = splitParagraphs(blog.content || blog.summary || t("blogs.noContent"));
+
   const initial = shouldReduceMotion ? undefined : "hidden";
   const animate = shouldReduceMotion ? undefined : "visible";
-  const viewport = { once: true, amount: 0.2 };
 
   return (
-    <main className="overflow-hidden bg-white font-[var(--font-poppins)] text-[#183c2f]">
-      <motion.article
-        variants={shouldReduceMotion ? undefined : container}
-        initial={initial}
-        animate={animate}
-        className="px-5 pb-14 pt-7 sm:px-8 sm:pb-16 lg:px-20 lg:pb-20 lg:pt-12"
-      >
-        <div className="mx-auto max-w-[1120px]">
-          <motion.header variants={fadeUp} className="flex flex-col gap-6">
-            <BlogBreadcrumb title={blog.title} />
+    <main className="min-h-screen bg-[#F3F0E9] font-[var(--font-poppins)] text-[#183c2f]">
+      <div className="mx-auto w-full max-w-[1400px] px-4 pb-20 pt-5 sm:px-6 sm:pb-28 sm:pt-8 lg:px-8 xl:px-10">
+        {/* Back Link & Breadcrumb */}
+        <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
+          <Link
+            href={href("/blogs")}
+            className="inline-flex items-center gap-2 text-[13.5px] font-semibold text-[#142d38] transition hover:text-[#2C798B]"
+          >
+            <ArrowLeft className="size-4" />
+            <span>{t("common.allBlogs") || "All Articles"}</span>
+          </Link>
 
-            <div className="max-w-[900px]">
-              <h1 className="text-[28px] font-semibold leading-tight text-[#2C798B] sm:text-[38px] lg:text-[48px]">
-                {blog.title}
-              </h1>
-              {blog.summary && (
-                <p className="mt-4 max-w-[820px] text-[15px] leading-7 text-[#667c74] sm:text-[17px] lg:text-[20px] lg:leading-9">
-                  {blog.summary}
-                </p>
-              )}
-            </div>
+          <nav
+            aria-label="Breadcrumb"
+            className="flex min-w-0 flex-wrap items-center gap-2 text-[13px] font-medium text-[#718288]"
+          >
+            <Link href={href("/")} className="transition hover:text-[#142d38]">
+              {t("common.home") || "Home"}
+            </Link>
+            <span>/</span>
+            <Link href={href("/blogs")} className="transition hover:text-[#142d38]">
+              {t("common.blogs") || "Blogs"}
+            </Link>
+            <span>/</span>
+            <span className="max-w-[220px] truncate text-[#142d38] sm:max-w-[360px]">{blog.title}</span>
+          </nav>
+        </div>
 
-            <ArticleMeta date={blog.createdAtUtc} locale={locale} />
+        {/* Primary White Card Container */}
+        <article className="overflow-hidden rounded-[24px] border border-black/5 bg-[#FFFFFF] p-6 shadow-sm sm:rounded-[32px] sm:p-10 lg:p-14">
+          {/* Header & Title */}
+          <motion.header
+            variants={shouldReduceMotion ? undefined : container}
+            initial={initial}
+            animate={animate}
+            className="mx-auto max-w-[960px]"
+          >
+            <motion.h1
+              variants={fadeUp}
+              className="text-[28px] font-extrabold leading-[1.2] tracking-tight text-[#142d38] sm:text-[38px] lg:text-[46px]"
+            >
+              {blog.title}
+            </motion.h1>
 
+            {/* Editorial Lead Summary */}
+            {blog.summary && (
+              <motion.p
+                variants={fadeUp}
+                className="mt-4 border-l-4 border-[#2C798B] pl-4 text-[16px] font-medium leading-relaxed text-[#4b5b63] sm:text-[18px] lg:text-[20px]"
+              >
+                {blog.summary}
+              </motion.p>
+            )}
+
+            {/* Metadata Bar */}
             <motion.div
               variants={fadeUp}
-              className="relative aspect-[16/10] w-full overflow-hidden rounded-2xl bg-[#e4e0da] shadow-[0_16px_40px_rgba(31,77,61,0.12)] sm:aspect-[16/8] lg:rounded-3xl"
+              className="mt-6 flex items-center border-y border-[#f0f0f0] py-3 text-[13.5px] text-[#718288]"
+            >
+              <div className="inline-flex items-center gap-2">
+                <Calendar className="size-4 text-[#2C798B]" />
+                <span>{formatDate(blog.createdAtUtc, locale, t("common.recently") || "Recently")}</span>
+              </div>
+            </motion.div>
+
+            {/* Hero Photograph with full object-cover and crisp frame */}
+            <motion.div
+              variants={fadeUp}
+              className="relative mt-8 aspect-[16/9] w-full overflow-hidden rounded-[20px] border border-black/5 bg-[#e6edea] shadow-[0_8px_30px_rgba(0,0,0,0.06)] sm:rounded-[26px]"
             >
               <Image
                 src={heroImage}
                 alt={blog.title}
                 fill
                 priority
-                sizes="(min-width: 1024px) 1120px, 100vw"
-                className="object-contain"
+                sizes="(min-width: 1200px) 1100px, 100vw"
+                className="object-cover object-center"
               />
             </motion.div>
           </motion.header>
 
-          <motion.div
-            variants={shouldReduceMotion ? undefined : container}
-            initial={initial}
-            whileInView={animate}
-            viewport={viewport}
-            className="mt-9 max-w-[900px] space-y-5 text-[15px] leading-7 text-[#656566] sm:text-[17px] lg:mt-12 lg:text-[19px] lg:leading-9"
-          >
-            {introParagraphs.map((paragraph, index) => (
-              <motion.p key={`${paragraph}-${index}`} variants={fadeUp}>
-                {paragraph}
-              </motion.p>
-            ))}
-          </motion.div>
+          {/* 2-Column Editorial Layout (Main Reading Column + Sticky Quick Navigation) */}
+          <div className="mx-auto mt-10 grid max-w-[1140px] grid-cols-1 gap-12 lg:grid-cols-[1fr_300px] xl:gap-16">
+            {/* Left: Article Reading Body */}
+            <div className="min-w-0 max-w-[760px]">
+              {/* Introduction Paragraphs */}
+              <div className="space-y-5 text-[16px] leading-[1.8] text-[#33464f] sm:text-[17.5px] sm:leading-[1.85]">
+                {introParagraphs.map((paragraph, index) => (
+                  <p key={`intro-${index}`}>{paragraph}</p>
+                ))}
+              </div>
 
-          <div className="mt-12 space-y-14 lg:mt-16 lg:space-y-20">
-            {sections.map((section) => (
-              <ArticleSection key={section.id} section={section} shouldReduceMotion={shouldReduceMotion} />
-            ))}
+              {/* Sections (clean, natural, without numbering) */}
+              {sections.length > 0 && (
+                <div className="mt-12 space-y-12 sm:mt-16 sm:space-y-16">
+                  {sections.map((section) => {
+                    const paragraphs = splitParagraphs(section.content);
+                    const sectionImage = resolveApiImageUrl(section.imageUrl);
+
+                    return (
+                      <section
+                        key={section.id}
+                        id={`section-${section.id}`}
+                        className="scroll-mt-28 border-t border-[#f0f0f0] pt-10 first:border-0 first:pt-0"
+                      >
+                        <h2 className="text-[22px] font-bold leading-snug text-[#142d38] sm:text-[28px] lg:text-[30px]">
+                          {section.title}
+                        </h2>
+
+                        {/* Section image with full-bleed object-cover */}
+                        {sectionImage && (
+                          <div className="relative my-6 aspect-[16/9] w-full overflow-hidden rounded-[18px] border border-black/5 bg-[#e6edea] shadow-xs sm:rounded-[22px]">
+                            <Image
+                              src={sectionImage}
+                              alt={section.title}
+                              fill
+                              sizes="(min-width: 1024px) 760px, 100vw"
+                              className="object-cover object-center"
+                            />
+                          </div>
+                        )}
+
+                        {/* Section paragraphs */}
+                        <div className="mt-5 space-y-4 text-[16px] leading-[1.8] text-[#33464f] sm:text-[17px] sm:leading-[1.85]">
+                          {paragraphs.map((p, idx) => (
+                            <p key={`${section.id}-${idx}`}>{p}</p>
+                          ))}
+                        </div>
+                      </section>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
+            {/* Right: Sticky Sidebar for Quick Jump & DreamLife booking CTA */}
+            <aside className="hidden lg:block">
+              <div className="sticky top-28 space-y-6">
+                {/* Table of Contents (if sections exist) */}
+                {sections.length > 0 && (
+                  <div className="rounded-[20px] border border-black/5 bg-[#F9F7F3] p-5 shadow-xs">
+                    <p className="text-[12px] font-bold uppercase tracking-wider text-[#2C798B]">
+                      In this article
+                    </p>
+                    <nav className="mt-3.5 space-y-2.5">
+                      {sections.map((sec) => (
+                        <a
+                          key={sec.id}
+                          href={`#section-${sec.id}`}
+                          className="block text-[13.5px] font-medium leading-snug text-[#4d5e66] transition hover:translate-x-1 hover:text-[#142d38]"
+                        >
+                          {sec.title}
+                        </a>
+                      ))}
+                    </nav>
+                  </div>
+                )}
+
+                {/* DreamLife Booking CTA Banner */}
+                <div className="overflow-hidden rounded-[20px] border border-[#2C798B]/20 bg-[#183640] p-6 text-white shadow-sm">
+                  <p className="text-[11.5px] font-semibold uppercase tracking-wider text-[#79cbd8]">
+                    DreamLife Hurghada
+                  </p>
+                  <h3 className="mt-2 text-[19px] font-bold leading-snug text-white">
+                    Planning Your Trip to Hurghada?
+                  </h3>
+                  <p className="mt-2.5 text-[13px] leading-relaxed text-white/80">
+                    Discover handpicked luxury beachfront villas and modern holiday apartments.
+                  </p>
+                  <div className="mt-5 flex flex-col gap-2.5">
+                    <Link
+                      href={href("/rent")}
+                      className="inline-flex h-10 items-center justify-center rounded-full bg-[#2C798B] px-5 text-[13px] font-semibold text-white transition hover:bg-[#23606e]"
+                    >
+                      Browse Vacation Rentals
+                    </Link>
+                    <Link
+                      href={href("/buy")}
+                      className="inline-flex h-10 items-center justify-center rounded-full border border-white/20 px-5 text-[13px] font-medium text-white transition hover:bg-white/10"
+                    >
+                      Properties For Sale
+                    </Link>
+                  </div>
+                </div>
+              </div>
+            </aside>
           </div>
+        </article>
 
-          <RelatedBlogs blogs={relatedBlogs} shouldReduceMotion={shouldReduceMotion} />
-        </div>
-      </motion.article>
+        {/* Related Articles Section at the Bottom */}
+        {relatedBlogs.length > 0 && (
+          <section className="mt-16 sm:mt-20">
+            <div className="mb-8 flex flex-col gap-1.5">
+              <p className="text-[12.5px] font-bold uppercase tracking-wider text-[#2C798B]">
+                {t("common.blogs") || "More to Explore"}
+              </p>
+              <h2 className="text-[26px] font-bold leading-tight text-[#142d38] sm:text-[32px]">
+                Related Articles
+              </h2>
+            </div>
+
+            {/* Same box cards matching the main blogs page */}
+            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              {relatedBlogs.map((relatedBlog) => (
+                <RelatedBoxCard key={relatedBlog.id} blog={relatedBlog} locale={locale} />
+              ))}
+            </div>
+          </section>
+        )}
+      </div>
     </main>
   );
 }
 
-function BlogBreadcrumb({ title }: { title: string }) {
-  const { t, href } = useI18n();
-
-  return (
-    <nav
-      aria-label="Breadcrumb"
-      className="flex min-w-0 flex-wrap items-center gap-2 text-[13px] font-medium leading-6 text-[#667c74] sm:text-[15px]"
-    >
-      <Image src="/blog-single/icons/bookmark.svg" alt="" width={20} height={20} className="size-5 shrink-0" />
-      <Link href={href("/")} className="transition hover:text-[#2C798B]">
-        {t("common.home")}
-      </Link>
-      <span>/</span>
-      <Link href={href("/blogs")} className="transition hover:text-[#2C798B]">
-        {t("common.blogs")}
-      </Link>
-      <span>/</span>
-      <span className="min-w-0 max-w-full truncate text-[#183c2f]">{title}</span>
-    </nav>
-  );
-}
-
-function ArticleMeta({ date, locale }: { date: string; locale: string }) {
-  const { t } = useI18n();
-
-  return (
-    <div className="inline-flex w-fit items-center gap-2 rounded-full bg-[#f5f7f6] px-4 py-2 text-[13px] font-medium text-[#667c74] sm:text-[14px]">
-      <Image src="/blog-single/icons/calendar.svg" alt="" width={18} height={18} className="size-[18px] shrink-0" />
-      <span>{formatDate(date, locale, t("common.recently"))}</span>
-    </div>
-  );
-}
-
-function ArticleSection({
-  section,
-  shouldReduceMotion,
-}: {
-  section: BlogSection;
-  shouldReduceMotion: boolean | null;
-}) {
-  const paragraphs = splitParagraphs(section.content);
-  const imageSrc = resolveApiImageUrl(section.imageUrl);
-
-  return (
-    <motion.section
-      variants={shouldReduceMotion ? undefined : container}
-      initial={shouldReduceMotion ? undefined : "hidden"}
-      whileInView={shouldReduceMotion ? undefined : "visible"}
-      viewport={{ once: true, amount: 0.18 }}
-      className="max-w-[980px]"
-    >
-      {imageSrc && (
-        <motion.div
-          variants={fadeUp}
-          className="relative aspect-[16/10] w-full overflow-hidden rounded-2xl bg-[#e4e0da] shadow-[0_12px_32px_rgba(31,77,61,0.1)] sm:aspect-[16/7] lg:rounded-3xl"
-        >
-          <Image
-            src={imageSrc}
-            alt={section.title}
-            fill
-            sizes="(min-width: 1024px) 980px, 100vw"
-            className="object-contain"
-          />
-        </motion.div>
-      )}
-
-      <motion.div variants={fadeUp} className={imageSrc ? "mt-7" : ""}>
-        {section.sectionType && section.sectionType.toLowerCase() !== "text" && (
-          <p className="mb-2 text-[12px] font-semibold uppercase text-[#2C798B] sm:text-[13px]">
-            {section.sectionType}
-          </p>
-        )}
-        <h2 className="text-[23px] font-semibold leading-tight text-[#2C798B] sm:text-[30px] lg:text-[34px]">
-          {section.title}
-        </h2>
-      </motion.div>
-
-      <motion.div
-        variants={container}
-        className="mt-5 space-y-5 text-[15px] leading-7 text-[#656566] sm:text-[17px] lg:text-[19px] lg:leading-9"
-      >
-        {paragraphs.map((paragraph, index) => (
-          <motion.p key={`${section.id}-${index}`} variants={fadeUp}>
-            {paragraph}
-          </motion.p>
-        ))}
-      </motion.div>
-    </motion.section>
-  );
-}
-
-function RelatedBlogs({
-  blogs,
-  shouldReduceMotion,
-}: {
-  blogs: BlogItem[];
-  shouldReduceMotion: boolean | null;
-}) {
-  const { t } = useI18n();
-
-  if (blogs.length === 0) return null;
-
-  return (
-    <motion.section
-      variants={shouldReduceMotion ? undefined : container}
-      initial={shouldReduceMotion ? undefined : "hidden"}
-      whileInView={shouldReduceMotion ? undefined : "visible"}
-      viewport={{ once: true, amount: 0.18 }}
-      className="mt-16 border-t border-[#e8f0ec] pt-10 lg:mt-20 lg:pt-14"
-    >
-      <motion.div variants={fadeUp} className="flex flex-col gap-2">
-        <p className="text-[13px] font-semibold uppercase text-[#2C798B]">{t("common.blogs")}</p>
-        <h2 className="text-[26px] font-semibold leading-tight text-[#2C798B] sm:text-[32px]">
-          {t("common.readArticle")}
-        </h2>
-      </motion.div>
-
-      <motion.div variants={container} className="mt-7 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-        {blogs.map((relatedBlog) => (
-          <RelatedBlogCard key={relatedBlog.id} blog={relatedBlog} shouldReduceMotion={shouldReduceMotion} />
-        ))}
-      </motion.div>
-    </motion.section>
-  );
-}
-
-function RelatedBlogCard({
-  blog,
-  shouldReduceMotion,
-}: {
-  blog: BlogItem;
-  shouldReduceMotion: boolean | null;
-}) {
-  const { t, href, locale } = useI18n();
+function RelatedBoxCard({ blog, locale }: { blog: BlogItem; locale: string }) {
+  const { href, t } = useI18n();
   const imageSrc = resolveApiImageUrl(blog.featuredImageUrl) || fallbackCardImage;
-  const excerpt = blog.summary || blog.content || t("seo.siteDescription");
+  const excerpt = blog.summary || blog.content?.replace(/<[^>]+>/g, "").slice(0, 110) || "";
+  const blogUrl = href(`/blogs/${getBlogSlug(blog)}`);
 
   return (
-    <motion.article
-      variants={fadeUp}
-      whileHover={shouldReduceMotion ? undefined : { y: -6 }}
-      className="group flex min-w-0 flex-col overflow-hidden rounded-2xl bg-white shadow-[0_4px_18px_rgba(31,77,61,0.1)] transition-shadow duration-300 hover:shadow-[0_16px_34px_rgba(31,77,61,0.16)]"
-    >
-      <Link href={href(`/blogs/${getBlogSlug(blog)}`)} className="flex h-full flex-col">
-        <div className="relative aspect-[16/10] overflow-hidden bg-[#e4e0da]">
-          <Image
-            src={imageSrc}
-            alt={blog.title}
-            fill
-            sizes="(min-width: 1024px) 31vw, (min-width: 640px) 50vw, 100vw"
-            className="object-contain transition duration-500 group-hover:scale-105"
-          />
-        </div>
-
-        <div className="flex flex-1 flex-col p-5">
-          <p className="text-[12px] font-medium text-[#8a9a94]">{formatDate(blog.createdAtUtc, locale, t("common.recently"))}</p>
-          <h3 className="mt-3 line-clamp-2 text-[18px] font-semibold leading-snug text-[#183c2f]">
-            {blog.title}
-          </h3>
-          <p className="mt-2 line-clamp-3 text-[14px] leading-6 text-[#667c74]">
-            {excerpt}
-          </p>
-          <span className="mt-5 inline-flex text-[14px] font-semibold text-[#2C798B]">
-            {t("common.readArticle")}
-          </span>
-        </div>
+    <article className="group flex flex-col overflow-hidden rounded-[24px] border border-black/5 bg-[#FFFFFF] shadow-[0_4px_20px_rgba(0,0,0,0.05)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_12px_28px_rgba(0,0,0,0.09)]">
+      {/* Top Image */}
+      <Link href={blogUrl} className="relative aspect-[16/10] w-full overflow-hidden bg-[#e6edea]">
+        <Image
+          src={imageSrc}
+          alt={blog.title}
+          fill
+          sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
+          className="object-cover object-center transition duration-500 group-hover:scale-105"
+        />
       </Link>
-    </motion.article>
+
+      {/* Content */}
+      <div className="flex flex-1 flex-col justify-between p-5 sm:p-6">
+        <div>
+          <Link href={blogUrl} className="hover:underline">
+            <h3 className="line-clamp-2 text-[17px] font-bold leading-snug text-[#142d38] sm:text-[19px]">
+              {blog.title}
+            </h3>
+          </Link>
+          {excerpt && (
+            <p className="mt-2.5 line-clamp-2 text-[13.5px] leading-relaxed text-[#718288]">
+              {excerpt}
+            </p>
+          )}
+        </div>
+
+        <div className="mt-6 flex items-center justify-between border-t border-[#f0f0f0] pt-4">
+          <div className="flex items-center gap-1.5 text-[12px] text-[#718288]">
+            <Calendar className="size-3.5 text-[#2C798B]" />
+            <span>{formatDate(blog.createdAtUtc, locale, t("common.recently") || "Recently")}</span>
+          </div>
+          <Link
+            href={blogUrl}
+            className="rounded-full border border-[#8a9a94] px-4 py-1.5 text-[12px] font-medium text-[#142d38] transition hover:border-[#142d38] hover:bg-[#142d38] hover:text-white"
+          >
+            read article
+          </Link>
+        </div>
+      </div>
+    </article>
   );
-}
-
-function splitParagraphs(text: string) {
-  return text
-    .split(/\r?\n+/)
-    .map((paragraph) => paragraph.trim())
-    .filter(Boolean);
-}
-
-function formatDate(value: string, locale: string, fallback: string) {
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return fallback;
-
-  return new Intl.DateTimeFormat(locale, {
-    month: "long",
-    day: "numeric",
-    year: "numeric",
-  }).format(date);
 }

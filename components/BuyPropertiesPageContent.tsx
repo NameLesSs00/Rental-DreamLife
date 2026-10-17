@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { Suspense, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { usePublicBuyProperties } from "@/lib/hooks/usePropertyBuying";
 import { slugify } from "@/lib/utils/slugify";
 import { API_BASE_URL } from "@/lib/api/config";
@@ -13,7 +13,7 @@ import { useI18n } from "./I18nProvider";
 import { PropertyType } from "@/lib/types/property";
 import type { PropertyBuyingListItem } from "@/lib/types/propertyBuying";
 import { useSelectedCurrency } from "@/lib/hooks/useSelectedCurrency";
-import { useCategories } from "@/lib/hooks/useCategory";
+import PageHero from "@/components/PageHero";
 
 const propertyTypeNames: Record<number, string> = {
   1: "Apartment",
@@ -49,7 +49,7 @@ function BuyPropertiesPageInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const paramsObj = useMemo(() => Object.fromEntries(searchParams.entries()), [searchParams]);
-  const [selectedCurrency, setSelectedCurrency] = useSelectedCurrency(paramsObj.Currency);
+  const [selectedCurrency] = useSelectedCurrency(paramsObj.Currency);
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
 
   const searchTerm = paramsObj.search || paramsObj.SearchTerm || "";
@@ -65,35 +65,23 @@ function BuyPropertiesPageInner() {
     Currency: selectedCurrency,
   });
 
-  const handleCurrencyChange = (nextCurrency: string) => {
-    const normalizedCurrency = nextCurrency.toUpperCase();
-    const nextParams = new URLSearchParams(searchParams.toString());
-    nextParams.set("Currency", normalizedCurrency);
-    setSelectedCurrency(normalizedCurrency);
-    router.push(href(`/buy?${nextParams.toString()}`));
-  };
-
-  const handleFilterSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    const formData = new FormData(e.currentTarget);
-    const newParams = new URLSearchParams();
-
-    const searchVal = (formData.get("searchTerm") as string)?.trim();
-    const propertyTypeVal = formData.get("propertyType") as string;
-    const roomsVal = formData.get("rooms") as string;
-    const minPriceVal = formData.get("minPrice") as string;
-    const maxPriceVal = formData.get("maxPrice") as string;
-
-    if (searchVal) newParams.set("search", searchVal);
-    if (propertyTypeVal) newParams.set("propertyTypeId", propertyTypeVal);
-    if (roomsVal) newParams.set("bedrooms", roomsVal);
-    if (minPriceVal) newParams.set("minPrice", minPriceVal);
-    if (maxPriceVal) newParams.set("maxPrice", maxPriceVal);
-    if (selectedCurrency) newParams.set("Currency", selectedCurrency);
-
-    router.push(href(`/buy?${newParams.toString()}`));
+  /**
+   * Single source of truth for applying a filter change. Every control navigates
+   * through here so results update instantly — no Search button. Empty values
+   * delete the param so filters can be cleared.
+   */
+  const navigate = (patch: Record<string, string>) => {
+    const next = new URLSearchParams(searchParams.toString());
+    Object.entries(patch).forEach(([key, value]) => {
+      if (value) next.set(key, value);
+      else next.delete(key);
+    });
+    next.delete("page");
+    const qs = next.toString();
+    router.push(href(`/buy${qs ? `?${qs}` : ""}`));
     setMobileFiltersOpen(false);
   };
+
 
   // Client-side filtering for min/max price & bedrooms
   const filteredList = useMemo(() => {
@@ -138,12 +126,39 @@ function BuyPropertiesPageInner() {
   }
 
   return (
-    <main className="bg-[#fbfbf9] font-[var(--font-poppins)] text-[#183c2f]">
+    <main className="min-h-screen bg-[#F3F0E9] font-[var(--font-poppins)] text-[#183c2f]">
       {/* Hero Section with exact background & live text */}
-      <BuyPropertiesHero />
+      {/* 1. Hero Section: Unified PageHero with identical spacing and height */}
+      <PageHero
+        imageSrc="/buy/buy-hero-bg.jpg"
+        imageAlt="Discover Properties for Sale in Hurghada"
+        title={
+          <>
+            Discover Properties<br />
+            for Sale
+          </>
+        }
+        subtitle="Explore exceptional homes and investment opportunities in one of Egypt's most attractive Red Sea destinations."
+
+        maxTitleWidth="max-w-[640px]"
+        maxSubtitleWidth="max-w-[560px]"
+        priority
+      />
 
       {/* Main Content Layout */}
-      <div className="mx-auto max-w-[1536px] px-4 pb-24 sm:px-6 lg:px-10">
+      {/* Main Content Layout aligned with max-w-[1536px] matching About and Contact */}
+      <div className="mx-auto w-full max-w-[1536px] px-4 pb-24 sm:px-6 sm:pb-28 lg:px-10">
+        {/* Breadcrumb Navigation */}
+        <nav
+          aria-label="Breadcrumb"
+          className="mt-8 mb-6 flex items-center gap-1.5 text-[14px] font-semibold text-[#142d38]"
+        >
+          <Link href={href("/")} className="hover:underline">
+            {t("common.home") || "Home"}
+          </Link>
+          <span className="text-[#8a9a94]">/</span>
+          <span className="text-[#718288]">{t("nav.items.buy") || "Buy"}</span>
+        </nav>
         <ListingHeading />
 
         {/* Mobile filter button */}
@@ -160,16 +175,61 @@ function BuyPropertiesPageInner() {
           </button>
         </div>
 
+        {/* Mobile filter drawer */}
+        <AnimatePresence>
+          {mobileFiltersOpen && (
+            <motion.div
+              className="fixed inset-0 z-[90] lg:hidden"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+            >
+              <button
+                type="button"
+                aria-label={t("rent.closeFilters") || "Close filters"}
+                onClick={() => setMobileFiltersOpen(false)}
+                className="absolute inset-0 bg-black/40"
+              />
+              <motion.aside
+                initial={{ x: "-100%" }}
+                animate={{ x: 0 }}
+                exit={{ x: "-100%" }}
+                transition={{ type: "tween", duration: 0.3, ease: "easeInOut" }}
+                className="absolute inset-y-0 left-0 flex w-full max-w-[340px] flex-col bg-white shadow-2xl"
+              >
+                <div className="flex shrink-0 items-center justify-between border-b border-[#f0f0f0] px-5 py-4">
+                  <h2 className="text-[18px] font-bold text-[#183640]">
+                    {t("rent.filters") || "Filters"}
+                  </h2>
+                  <button
+                    type="button"
+                    onClick={() => setMobileFiltersOpen(false)}
+                    aria-label={t("rent.closeFilters") || "Close filters"}
+                    className="grid size-8 place-items-center rounded-full text-[#656566] transition hover:bg-[#f5f5f5]"
+                  >
+                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
+                      <path d="M1 1l12 12M13 1L1 13" />
+                    </svg>
+                  </button>
+                </div>
+                <div className="flex-1 overflow-y-auto px-5 py-4">
+                  <BuyFilterForm paramsObj={paramsObj} navigate={navigate} />
+                </div>
+              </motion.aside>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
         <div className="mt-8 flex flex-col gap-6 lg:flex-row lg:items-start lg:gap-8 xl:gap-10">
           {/* Desktop sidebar */}
-          <aside className="hidden lg:sticky lg:top-8 lg:block lg:w-[310px] lg:shrink-0">
-            <BuyFilterForm paramsObj={paramsObj} onSubmit={handleFilterSubmit} />
+          <aside className="hidden lg:sticky lg:top-8 lg:block lg:w-[340px] lg:shrink-0">
+            <BuyFilterForm paramsObj={paramsObj} navigate={navigate} />
           </aside>
 
           {/* Property grid */}
           <div className="min-w-0 flex-1">
             {isLoading ? (
-              <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-3">
+              <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
                 {Array.from({ length: 6 }).map((_, idx) => (
                   <div key={idx} className="h-[380px] animate-pulse rounded-[20px] bg-white shadow-xs" />
                 ))}
@@ -187,7 +247,7 @@ function BuyPropertiesPageInner() {
                 }}
                 initial="hidden"
                 animate="visible"
-                className="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-3"
+                className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3"
               >
                 {filteredList.map((property) => (
                   <BuyPropertyCard
@@ -205,37 +265,7 @@ function BuyPropertiesPageInner() {
     </main>
   );
 }
-
-function BuyPropertiesHero() {
-  return (
-    <section className="mx-auto max-w-[1536px] px-4 sm:px-6 lg:px-10 pt-4 sm:pt-6">
-      <div className="relative h-[280px] sm:h-[360px] md:h-[420px] lg:h-[480px] w-full overflow-hidden rounded-[20px] sm:rounded-[28px] shadow-sm">
-        <Image
-          src="/rent/rent-hero-bg.png"
-          alt="Discover Properties for Sale in Hurghada"
-          fill
-          priority
-          sizes="(max-width: 1536px) 100vw, 1536px"
-          className="object-cover object-center"
-        />
-        {/* Soft vignette gradient for high contrast readability matching reference */}
-        <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-black/35 to-transparent flex items-center">
-          <div className="px-6 sm:px-12 lg:px-16 max-w-2xl">
-            <h1 className="text-[28px] sm:text-[42px] lg:text-[52px] font-extrabold leading-[1.12] text-white tracking-tight drop-shadow-xs">
-              Discover<br />
-              Properties for<br />
-              Sale in Hurghada
-            </h1>
-            <p className="mt-3 sm:mt-4 max-w-[440px] text-[13.5px] sm:text-[15.5px] leading-relaxed text-white/95 font-medium drop-shadow-xs">
-              Explore exceptional homes and investment opportunities in one of Egypt&apos;s most attractive Red Sea destinations.
-            </p>
-          </div>
-        </div>
-      </div>
-    </section>
-  );
-}
-
+
 function ListingHeading() {
   return (
     <div className="pt-8 sm:pt-12 pb-3 text-center">
@@ -249,196 +279,113 @@ function ListingHeading() {
 
 function BuyFilterForm({
   paramsObj,
-  onSubmit,
+  navigate,
 }: {
   paramsObj: Record<string, string>;
-  onSubmit: (e: React.FormEvent<HTMLFormElement>) => void;
+  navigate: (patch: Record<string, string>) => void;
 }) {
-  const { href } = useI18n();
-  const { data: categories } = useCategories();
-  const [advancedOpen, setAdvancedOpen] = useState(false);
+  const { t } = useI18n();
 
-  const searchVal = paramsObj.search || paramsObj.SearchTerm || "";
   const propertyTypeVal = paramsObj.propertyTypeId || "";
   const roomsVal = paramsObj.bedrooms || "";
   const minPriceVal = paramsObj.minPrice || "";
   const maxPriceVal = paramsObj.maxPrice || "";
+  const searchVal = paramsObj.search || paramsObj.SearchTerm || "";
+
+  const labelCls = "mb-1.5 block text-[11.5px] font-semibold text-[#656566]";
 
   return (
-    <form onSubmit={onSubmit} className="rounded-2xl border border-[#e2e8e6] bg-white p-5 shadow-[0_2px_12px_rgba(0,0,0,0.04)]">
-      {/* Search Input at Top */}
-      <div>
-        <input
-          type="text"
-          name="searchTerm"
-          defaultValue={searchVal}
-          placeholder="Search"
-          className="w-full rounded-xl border border-[#e2e8e6] bg-[#fbfdfc] px-3.5 py-2.5 text-[13px] text-[#142d38] placeholder-[#8a9a94] outline-none transition focus:border-[#2C798B] focus:bg-white"
-        />
-      </div>
-
-      <div className="mt-4 flex flex-col gap-4">
-        {/* DATES OF STAY / FILTER CRITERIA Box */}
-        <div className="rounded-xl border border-[#e2e8e6] bg-[#fbfdfc] p-3.5">
-          <div className="mb-2 flex items-center justify-between">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-[#718288]">
-              DATES OF STAY
-            </span>
-          </div>
-          <div className="flex flex-col gap-2">
-            <label className="block">
-              <span className="mb-1 block text-[11px] font-medium text-[#718288]">Check-In Date</span>
-              <input
-                type="date"
-                name="from"
-                className="w-full rounded-lg border border-[#e2e8e6] bg-white px-3 py-1.5 text-[12px] text-[#142d38] outline-none focus:border-[#2C798B]"
-              />
-            </label>
-            <label className="block">
-              <span className="mb-1 block text-[11px] font-medium text-[#718288]">Check-Out Date</span>
-              <input
-                type="date"
-                name="to"
-                className="w-full rounded-lg border border-[#e2e8e6] bg-white px-3 py-1.5 text-[12px] text-[#142d38] outline-none focus:border-[#2C798B]"
-              />
-            </label>
-          </div>
-        </div>
-
-        {/* Property Type row with For Rent pill */}
+    <div className="rounded-2xl border border-[#e2e8e6] bg-white p-5 shadow-xs">
+      <div className="flex flex-col gap-4">
+        {/* Search */}
         <div>
-          <span className="mb-1.5 block text-[11.5px] font-semibold text-[#656566]">Property Type</span>
-          <div className="flex items-center gap-2">
-            <select
-              name="propertyType"
-              defaultValue={propertyTypeVal}
-              className="flex-1 rounded-xl border border-[#e2e8e6] bg-[#fbfdfc] px-3 py-2 text-[12.5px] text-[#142d38] outline-none focus:border-[#2C798B]"
-            >
-              <option value="">All Types</option>
-              <option value={PropertyType.Villa}>Villa</option>
-              <option value={PropertyType.Apartment}>Apartment</option>
-              <option value={PropertyType.Studio}>Studio</option>
-              <option value={PropertyType.Chalet}>Chalet</option>
-              <option value={PropertyType.TwinHouse}>Twin House</option>
-            </select>
-            <span className="shrink-0 rounded-full border border-[#d5dedb] px-3 py-1.5 text-[11.5px] font-medium text-[#183640]">
-              For Rent
-            </span>
-          </div>
+          <span className={labelCls}>{t("rent.searchPlaceholder") || "Search"}</span>
+          <input
+            type="text"
+            defaultValue={searchVal}
+            key={searchVal}
+            onBlur={(e) => navigate({ search: e.target.value.trim() })}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") navigate({ search: (e.target as HTMLInputElement).value.trim() });
+            }}
+            placeholder={t("rent.searchPlaceholder") || "Search properties"}
+            className="w-full rounded-xl border border-[#e2e8e6] bg-[#fbfdfc] px-3.5 py-2.5 text-[13px] text-[#183640] outline-none transition placeholder-[#8a9a94] focus:border-[#2C798B] focus:bg-white"
+          />
         </div>
 
-        {/* Location row with For Sale pill */}
+        {/* Property Type */}
         <div>
-          <span className="mb-1.5 block text-[11.5px] font-semibold text-[#656566]">Location</span>
-          <div className="flex items-center gap-2">
-            <select
-              name="city"
-              className="flex-1 rounded-xl border border-[#e2e8e6] bg-[#fbfdfc] px-3 py-2 text-[12.5px] text-[#142d38] outline-none focus:border-[#2C798B]"
-            >
-              <option value="">All Locations</option>
-              {categories?.map((cat) => (
-                <option key={cat.id} value={cat.id}>{cat.name}</option>
-              ))}
-            </select>
-            <Link
-              href={href("/buy")}
-              className="shrink-0 rounded-full border border-[#d5dedb] px-3 py-1.5 text-[11.5px] font-medium text-[#183640] transition hover:border-[#2C798B] hover:bg-[#2C798B] hover:text-white"
-            >
-              For Sale
-            </Link>
-          </div>
-        </div>
-
-        {/* Rooms row with All pill */}
-        <div>
-          <span className="mb-1.5 block text-[11.5px] font-semibold text-[#656566]">Rooms</span>
-          <div className="flex items-center gap-2">
-            <select
-              name="rooms"
-              defaultValue={roomsVal}
-              className="flex-1 rounded-xl border border-[#e2e8e6] bg-[#fbfdfc] px-3 py-2 text-[12.5px] text-[#142d38] outline-none focus:border-[#2C798B]"
-            >
-              <option value="">All</option>
-              <option value="1">1</option>
-              <option value="2">2</option>
-              <option value="3">3</option>
-              <option value="4">4+</option>
-            </select>
-            <span className="shrink-0 rounded-full border border-[#d5dedb] px-4 py-1.5 text-[11.5px] font-medium text-[#183640]">
-              All
-            </span>
-          </div>
-        </div>
-
-        {/* Min Price / Max Price + Search Button */}
-        <div>
-          <div className="grid grid-cols-[1fr_1fr_auto] items-end gap-2">
-            <div>
-              <span className="mb-1 block text-[11px] font-semibold text-[#656566]">Min Price</span>
-              <input
-                type="number"
-                name="minPrice"
-                defaultValue={minPriceVal}
-                placeholder="0.0 EG"
-                min="0"
-                className="w-full rounded-lg border border-[#e2e8e6] bg-[#fbfdfc] px-2.5 py-1.5 text-[12px] text-[#142d38] outline-none focus:border-[#2C798B]"
-              />
-            </div>
-            <div>
-              <span className="mb-1 block text-[11px] font-semibold text-[#656566]">Max Price</span>
-              <input
-                type="number"
-                name="maxPrice"
-                defaultValue={maxPriceVal}
-                placeholder="0.0 EG"
-                min="0"
-                className="w-full rounded-lg border border-[#e2e8e6] bg-[#fbfdfc] px-2.5 py-1.5 text-[12px] text-[#142d38] outline-none focus:border-[#2C798B]"
-              />
-            </div>
-            <button
-              type="submit"
-              className="h-[34px] shrink-0 rounded-lg bg-[#71a8b7] px-3.5 text-[12.5px] font-semibold text-white shadow-xs transition hover:bg-[#5b95a4]"
-            >
-              Search
-            </button>
-          </div>
-        </div>
-
-        {/* Advanced Accordion Toggle */}
-        <div className="border-t border-[#f0f0f0] pt-2">
-          <button
-            type="button"
-            onClick={() => setAdvancedOpen(!advancedOpen)}
-            className="flex w-full items-center justify-between py-1.5 text-[12px] font-medium text-[#718288] hover:text-[#183640]"
+          <span className={labelCls}>{t("rent.propertyType") || "Property Type"}</span>
+          <select
+            value={propertyTypeVal}
+            onChange={(e) => navigate({ propertyTypeId: e.target.value })}
+            className="w-full rounded-xl border border-[#e2e8e6] bg-[#fbfdfc] px-3 py-2 text-[12.5px] text-[#183640] outline-none focus:border-[#2C798B]"
           >
-            <span className="flex items-center gap-1.5">
-              <svg className="size-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <line x1="4" y1="21" x2="4" y2="14" /><line x1="4" y1="10" x2="4" y2="3" /><line x1="12" y1="21" x2="12" y2="12" /><line x1="12" y1="8" x2="12" y2="3" /><line x1="20" y1="21" x2="20" y2="16" /><line x1="20" y1="12" x2="20" y2="3" />
-              </svg>
-              Advanced
-            </span>
-            <svg className={`size-3.5 transition-transform duration-200 ${advancedOpen ? "rotate-180" : ""}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <polyline points="6 9 12 15 18 9" />
-            </svg>
-          </button>
-          {advancedOpen && (
-            <div className="mt-2 flex flex-col gap-2 pt-2">
-              {["Available Now", "Sea View", "Pool View", "Garden View", "Mountain View"].map((label) => (
-                <label key={label} className="flex cursor-pointer items-center gap-2 text-[12.5px] text-[#414847]">
-                  <input
-                    type="checkbox"
-                    className="size-3.5 rounded border-[#d0d0d0] accent-[#2C798B]"
-                  />
-                  {label}
-                </label>
-              ))}
+            <option value="">{t("rent.allTypes") || "All Types"}</option>
+            <option value={PropertyType.Villa}>{t("rent.villa") || "Villa"}</option>
+            <option value={PropertyType.Apartment}>{t("rent.apartment") || "Apartment"}</option>
+            <option value={PropertyType.Studio}>{t("rent.studio") || "Studio"}</option>
+            <option value={PropertyType.Chalet}>{t("rent.chalet") || "Chalet"}</option>
+            <option value={PropertyType.TwinHouse}>{t("rent.twinHouse") || "Twin House"}</option>
+          </select>
+        </div>
+
+        {/* Bedrooms — typed number */}
+        <div>
+          <label htmlFor="buy-min-bedrooms" className={labelCls}>
+            {t("rent.rooms")}
+          </label>
+          <input
+            id="buy-min-bedrooms"
+            type="number"
+            inputMode="numeric"
+            min="0"
+            step="1"
+            value={roomsVal}
+            onChange={(e) => {
+              const raw = e.target.value;
+              const n = Number(raw);
+              if (raw !== "" && (!Number.isFinite(n) || n < 0)) return;
+              navigate({ bedrooms: raw === "" ? "" : String(Math.floor(n)) });
+            }}
+            placeholder="0"
+            className="w-full rounded-xl border border-[#e2e8e6] bg-[#fbfdfc] px-3 py-2 text-[12.5px] text-[#183640] outline-none transition focus:border-[#2C798B]"
+          />
+        </div>
+
+        {/* Price — USD only */}
+        <div>
+          <div className="grid grid-cols-2 items-end gap-2">
+            <div>
+              <span className={labelCls}>{t("rent.minPrice") || "Min Price"}</span>
+              <input
+                type="number"
+                value={minPriceVal}
+                onChange={(e) => navigate({ minPrice: e.target.value })}
+                placeholder="0"
+                min="0"
+                className="w-full rounded-lg border border-[#e2e8e6] bg-[#fbfdfc] px-2.5 py-1.5 text-[12px] text-[#142d38] outline-none focus:border-[#2C798B]"
+              />
             </div>
-          )}
+            <div>
+              <span className={labelCls}>{t("rent.maxPrice") || "Max Price"}</span>
+              <input
+                type="number"
+                value={maxPriceVal}
+                onChange={(e) => navigate({ maxPrice: e.target.value })}
+                placeholder="0"
+                min="0"
+                className="w-full rounded-lg border border-[#e2e8e6] bg-[#fbfdfc] px-2.5 py-1.5 text-[12px] text-[#142d38] outline-none focus:border-[#2C798B]"
+              />
+            </div>
+          </div>
+          <p className="mt-1.5 text-[11px] text-[#8a9a94]">USD</p>
         </div>
       </div>
-    </form>
+    </div>
   );
 }
+
 
 function BuyPropertyCard({
   property,
@@ -449,7 +396,7 @@ function BuyPropertyCard({
   url: string;
   selectedCurrency: string;
 }) {
-  const { href } = useI18n();
+  const {} = useI18n();
   const image = property.coverImageUrl
     ? `${API_BASE_URL}/${property.coverImageUrl}`
     : "/rent/property-card.png";

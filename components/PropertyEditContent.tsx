@@ -24,7 +24,7 @@ import { API_BASE_URL } from "@/lib/api/config";
 import Image from "next/image";
 import { BedType, PropertyType, type DailyPrice } from "@/lib/types/property";
 import type { AdminBookingListItem } from "@/lib/types/booking";
-import { formatUsd } from "@/lib/utils/currency";
+import { formatUsd, formatCurrency } from "@/lib/utils/currency";
 import { getPropertyLandmarks, sortLandmarks } from "@/lib/utils/landmarks";
 import { getSelectedPropertyCategoryItemIds } from "@/lib/utils/propertyCategoryValues";
 import TranslationFields from "@/components/admin/TranslationFields";
@@ -1259,7 +1259,17 @@ function AdminDailyPricesCalendar({
             const priceInfo = priceByDate.get(day.date);
             const hasPrice = Boolean(priceInfo);
             const isSelected = selectedDates.includes(day.date);
-            const title = hasPrice ? `${day.date} - ${formatUsd(priceInfo?.price || 0)}` : `${day.date} - no price`;
+            const amount =
+              typeof priceInfo?.price === "number" && !isNaN(priceInfo.price)
+                ? priceInfo.price
+                : typeof priceInfo?.priceInfo?.amount === "number"
+                ? priceInfo.priceInfo.amount
+                : typeof priceInfo?.priceInfo?.baseAmount === "number"
+                ? priceInfo.priceInfo.baseAmount
+                : 0;
+            const currencyCode = priceInfo?.priceInfo?.currency || "USD";
+            const formattedPrice = formatCurrency(amount, currencyCode);
+            const title = hasPrice ? `${day.date} - ${formattedPrice}` : `${day.date} - no price`;
 
             return (
               <div key={day.date} className="group relative min-w-0">
@@ -1280,7 +1290,7 @@ function AdminDailyPricesCalendar({
                     {day.day}
                   </span>
                   <span className={isSelected ? "w-full truncate text-[11px] font-semibold text-[#2C798B]" : hasPrice ? "w-full truncate text-[11px] font-semibold text-[#2C798B]" : "w-full truncate text-[10px] text-[#a2b0aa]"}>
-                    {hasPrice ? formatUsd(priceInfo?.price || 0) : "No price"}
+                    {hasPrice ? formattedPrice : "No price"}
                   </span>
                 </button>
 

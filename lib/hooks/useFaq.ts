@@ -13,13 +13,16 @@ import { adminTranslationLocales, buildTranslationFromRecords, type LocaleRecord
 const FAQS_KEY = "faqs";
 
 // 1. Paginated FAQ list
-export function useFaqs(query: FaqsQuery) {
+export function useFaqs(query: FaqsQuery, locale?: string) {
   return useQuery({
-    queryKey: [FAQS_KEY, query],
+    queryKey: [FAQS_KEY, query, locale],
     queryFn: async () => {
       const { data } = await axiosInstance.get<
         FaqApiResponse<PaginatedResponse<FaqItem>>
-      >("/api/faqs", { params: query });
+      >("/api/faqs", {
+        params: query,
+        headers: locale ? { "Accept-Language": locale, "X-Locale": locale } : undefined,
+      });
       return data.data as PaginatedResponse<FaqItem>;
     },
     staleTime: 30 * 1000,

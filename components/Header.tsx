@@ -129,6 +129,17 @@ export default function Header() {
     { href: "/contact", label: t("nav.items.contact") },
   ];
 
+  const [isScrolled, setIsScrolled] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 4);
+    };
+    handleScroll();
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
   useEffect(() => {
     if (menuOpen) {
       document.body.style.overflow = "hidden";
@@ -146,7 +157,11 @@ export default function Header() {
         variants={headerMotion}
         initial={initialState}
         animate="visible"
-        className="sticky top-0 z-[60] w-full bg-white font-[var(--font-poppins)] shadow-[0_2px_2px_rgba(0,0,0,0.15)] lg:shadow-none"
+        className={`sticky top-0 z-[60] w-full bg-white/95 backdrop-blur-md font-[var(--font-poppins)] transition-shadow duration-300 ${
+          isScrolled
+            ? "shadow-[0_4px_20px_rgba(0,0,0,0.08)] border-b border-black/5"
+            : "border-b border-black/[0.04]"
+        }`}
       >
         <motion.div
           variants={headerInnerMotion}
@@ -261,16 +276,9 @@ export default function Header() {
             })}
           </motion.nav>
 
-          <motion.div variants={headerItemMotion} className="hidden shrink-0 items-center gap-2 xl:gap-2.5 justify-end lg:flex">
+          <motion.div variants={headerItemMotion} className="hidden shrink-0 items-center gap-2.5 justify-end lg:flex xl:gap-3">
             <CurrencySwitcher />
             <LanguageSwitcher locale={locale} publicPathname={publicPathname} queryString={queryString} />
-            <Link
-              href={href("/rent")}
-              aria-label="Reserve"
-              className="inline-flex h-[38px] min-w-[96px] items-center justify-center rounded-[8px] bg-[#7faeb9] px-5 text-[15px] font-medium text-white shadow-sm transition-colors hover:bg-[#6fa0ab]"
-            >
-              Reserve
-            </Link>
           </motion.div>
 
           {/* Mobile hamburger button */}
@@ -458,7 +466,7 @@ function LanguageSwitcher({
       <button
         type="button"
         onClick={() => setIsOpen((current) => !current)}
-        className="flex h-10 xl:h-11 min-w-[134px] xl:min-w-[156px] items-center justify-between gap-2 xl:gap-3 rounded-full border border-[#dfe8e4] bg-white px-2.5 xl:px-3 text-[13px] xl:text-[14px] font-semibold text-[#1F4D3D] shadow-[0_6px_16px_rgba(31,77,61,0.05)] transition hover:border-[#2e6f57]/35 hover:bg-[#f8faf9]"
+        className="flex h-10 xl:h-11 min-w-[134px] xl:min-w-[156px] items-center justify-between gap-2 xl:gap-3 rounded-[10px] border border-[#dfe8e4] bg-white px-2.5 xl:px-3 text-[13px] xl:text-[14px] font-semibold text-[#1F4D3D] shadow-[0_6px_16px_rgba(31,77,61,0.05)] transition hover:border-[#2e6f57]/35 hover:bg-[#f8faf9]"
         aria-haspopup="menu"
         aria-expanded={isOpen}
       >
@@ -486,7 +494,7 @@ function LanguageSwitcher({
             animate="visible"
             exit="exit"
             role="menu"
-            className="absolute right-0 top-[calc(100%+10px)] z-[80] w-56 origin-top-right overflow-hidden rounded-xl border border-[#dfe8e4] bg-white p-1.5 shadow-[0_18px_42px_rgba(31,77,61,0.16)]"
+            className="absolute right-0 top-[calc(100%+10px)] z-[80] w-56 origin-top-right overflow-hidden rounded-[14px] border border-[#dfe8e4] bg-white p-1.5 shadow-[0_18px_42px_rgba(31,77,61,0.16)]"
           >
             {locales.map((item) => {
               const isSelected = item === locale;
@@ -609,7 +617,7 @@ function MobileLanguageSwitcher({
       <button
         type="button"
         onClick={() => setIsOpen((prev) => !prev)}
-        className="flex h-11 w-full items-center justify-between rounded-xl border border-[#dfe8e4] bg-white px-3.5 text-[14px] font-semibold text-[#1F4D3D] shadow-[0_2px_8px_rgba(31,77,61,0.04)] transition hover:border-[#2e6f57]/35"
+        className="flex h-11 w-full items-center justify-between rounded-[10px] border border-[#dfe8e4] bg-white px-3.5 text-[14px] font-semibold text-[#1F4D3D] shadow-[0_2px_8px_rgba(31,77,61,0.04)] transition hover:border-[#2e6f57]/35"
         aria-expanded={isOpen}
       >
         <div className="flex items-center gap-2.5">
@@ -637,7 +645,7 @@ function MobileLanguageSwitcher({
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
             transition={{ duration: 0.22, ease: smoothEase }}
-            className="mt-1.5 overflow-hidden rounded-xl border border-[#dfe8e4] bg-white p-1 shadow-[0_8px_20px_rgba(31,77,61,0.08)]"
+            className="mt-1.5 overflow-hidden rounded-[14px] border border-[#dfe8e4] bg-white p-1 shadow-[0_8px_20px_rgba(31,77,61,0.08)]"
           >
             {locales.map((item) => {
               const isSelected = item === locale;

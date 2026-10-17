@@ -3,5 +3,5 @@ import { slugify } from "@/lib/utils/slugify";
 
 export function getBlogSlug(blog: Pick<BlogItem, "id" | "title">) {
   const titleSlug = slugify(blog.title);
-  return titleSlug || blog.id;
+  return titleSlug ? `${titleSlug}-${blog.id}` : blog.id;
 }

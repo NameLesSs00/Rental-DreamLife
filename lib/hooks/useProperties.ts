@@ -293,7 +293,7 @@ export function useProperties(params: PropertyQueryParams = {}) {
   });
 }
 
-export function usePublicRentProperties(params: PropertyQueryParams = {}) {
+export function usePublicRentProperties(params: PropertyQueryParams = {}, options: { enabled?: boolean } = {}) {
   return useQuery({
     queryKey: [KEY, "public", params],
     queryFn: async () => {
@@ -302,6 +302,15 @@ export function usePublicRentProperties(params: PropertyQueryParams = {}) {
       const categoryId = getRentCategoryId(params);
       const bedroomNo = getRentBedroomNo(params);
       const baseParams = stripRentGroupParams({ pageNumber: 1, pageSize: 10, ...params });
+
+      if (categoryId || bedroomNo !== null) {
+        baseParams.pageNumber = 1;
+        baseParams.pageSize = 1000;
+        if (categoryId) {
+          delete baseParams.City;
+          delete baseParams.city;
+        }
+      }
 
       if (!shouldUseFilterEndpoint && groupedTypes.length === 0) {
         const { data } = await axiosInstance.get<PropertyApiResponse<PaginatedResponse<PropertyListItem>>>(
@@ -316,15 +325,6 @@ export function usePublicRentProperties(params: PropertyQueryParams = {}) {
         }
 
         return data.data;
-      }
-
-      if (categoryId || bedroomNo !== null) {
-        baseParams.pageNumber = 1;
-        baseParams.pageSize = 1000;
-        if (categoryId) {
-          delete baseParams.City;
-          delete baseParams.city;
-        }
       }
 
       if (groupedTypes.length > 0) {
@@ -366,6 +366,7 @@ export function usePublicRentProperties(params: PropertyQueryParams = {}) {
 
       return data.data;
     },
+    enabled: options.enabled ?? true,
     staleTime: 30 * 1000,
   });
 }
@@ -650,7 +651,25 @@ export function usePropertyDailyPrices({ propertyId, startDate, endDate }: Prope
         `/api/properties/${propertyId}/daily-prices`,
         { params: { startDate, endDate } }
       );
-      return data.data ?? { propertyId, prices: [] };
+      const raw = data.data ?? { propertyId, prices: [] };
+      const prices = (raw.prices ?? []).map((item) => {
+        const amount =
+          typeof item.price === "number" && !isNaN(item.price)
+            ? item.price
+            : typeof item.priceInfo?.amount === "number"
+            ? item.priceInfo.amount
+            : typeof item.priceInfo?.baseAmount === "number"
+            ? item.priceInfo.baseAmount
+            : 0;
+        return {
+          ...item,
+          price: amount,
+        };
+      });
+      return {
+        ...raw,
+        prices,
+      };
     },
     enabled: !!propertyId,
     staleTime: 30 * 1000,

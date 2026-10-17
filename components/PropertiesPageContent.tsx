@@ -1,6 +1,6 @@
 "use client";
 
-import { usePublicRentProperties } from "@/lib/hooks/useProperties";
+import { usePublicRentProperties, useSearchProperties } from "@/lib/hooks/useProperties";
 import { PropertyType, type PropertyListItem } from "@/lib/types/property";
 import { slugify } from "@/lib/utils/slugify";
 import { API_BASE_URL } from "@/lib/api/config";
@@ -14,8 +14,8 @@ import { Suspense, useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useInHouseBookings } from "@/lib/hooks/useBooking";
 import { useI18n } from "./I18nProvider";
-import type { Currency } from "@/lib/types/currency";
 import { useSelectedCurrency } from "@/lib/hooks/useSelectedCurrency";
+import PageHero from "@/components/PageHero";
 
 type RentGridItem = PropertyListItem & {
   size?: number | null;
@@ -53,36 +53,29 @@ const propertyTypeNames: Record<number, string> = {
   12: "1 Bedroom",
 };
 
-function formatNumberParam(value: number) {
-  return Number.isInteger(value) ? String(value) : value.toFixed(2).replace(/\.?0+$/, "");
-}
-
-function convertPriceFilterToBaseCurrency(
-  value: string | undefined,
-  selectedCurrency: string,
-  currencies: Currency[],
-) {
-  const amount = Number(value);
-  if (!value || !Number.isFinite(amount)) return value;
-
-  const selected = currencies.find((currency) => currency.code.toUpperCase() === selectedCurrency.toUpperCase());
-  if (!selected || selected.isBaseCurrency || selected.exchangeRate === 0) return value;
-
-  const baseCurrency = currencies.find((currency) => currency.isBaseCurrency);
-  const baseRate = baseCurrency?.exchangeRate || 1;
-  return formatNumberParam((amount / selected.exchangeRate) * baseRate);
-}
-
-function buildRentApiParams(paramsObj: Record<string, string>, selectedCurrency: string, currencies: Currency[]) {
+/**
+ * Translates the URL's filter params into `/api/properties/filter` params.
+ *
+ * - Location maps to `Area` (a name) because the endpoint has **no `CategoryId`**.
+ *   Previously we passed `CategoryId`, which forced the hook to resolve membership
+ *   client-side with one `GET /api/properties/{id}` per item — up to 1000 requests.
+ * - Prices are USD only, so no FX conversion happens here.
+ */
+function buildRentApiParams(paramsObj: Record<string, string>) {
   const apiParams: Record<string, string> = { ...paramsObj };
 
-  if (apiParams.MinPrice) {
-    apiParams.MinPrice = convertPriceFilterToBaseCurrency(apiParams.MinPrice, selectedCurrency, currencies) || apiParams.MinPrice;
-  }
+  const area = paramsObj.location || paramsObj.Area || "";
+  delete apiParams.location;
+  delete apiParams.Area;
+  delete apiParams.CategoryId;
+  delete apiParams.categoryId;
+  if (area) apiParams.Area = area;
 
-  if (apiParams.MaxPrice) {
-    apiParams.MaxPrice = convertPriceFilterToBaseCurrency(apiParams.MaxPrice, selectedCurrency, currencies) || apiParams.MaxPrice;
-  }
+  // Prices are USD — pass straight through.
+  delete apiParams.minPrice;
+  delete apiParams.maxPrice;
+  if (paramsObj.MinPrice) apiParams.MinPrice = paramsObj.MinPrice;
+  if (paramsObj.MaxPrice) apiParams.MaxPrice = paramsObj.MaxPrice;
 
   return apiParams;
 }
@@ -99,22 +92,33 @@ function PropertiesPageInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { t, href } = useI18n();
+  const { data: categories } = useCategories();
   const paramsObj = useMemo(() => Object.fromEntries(searchParams.entries()), [searchParams]);
-  const [selectedCurrency, setSelectedCurrency] = useSelectedCurrency(paramsObj.Currency);
-  const effectiveParamsObj = useMemo(
-    () => ({ ...paramsObj, Currency: selectedCurrency }),
-    [paramsObj, selectedCurrency],
-  );
-  const paramsKey = `${searchParams.toString()}|${selectedCurrency}`;
-  const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
+  const [selectedCurrency] = useSelectedCurrency(paramsObj.Currency);
 
-  const handleCurrencyChange = (nextCurrency: string) => {
-    const normalizedCurrency = nextCurrency.toUpperCase();
-    const newParams = new URLSearchParams(searchParams.toString());
-    newParams.set("Currency", normalizedCurrency);
-    setSelectedCurrency(normalizedCurrency);
-    router.push(href(`/rent?${newParams.toString()}`));
-  };
+  // `location` is the area name. Category ids from older inbound links are resolved
+  // to their name once categories load, so existing links keep working.
+  const locationParam = paramsObj.location || paramsObj.Area || "";
+
+  const effectiveLocation = useMemo(() => {
+    const legacyCategoryId = paramsObj.CategoryId || paramsObj.categoryId || "";
+    if (locationParam) return locationParam;
+    if (!legacyCategoryId || !categories?.length) return "";
+    return categories.find((c) => c.id === legacyCategoryId)?.name || "";
+  }, [locationParam, paramsObj.CategoryId, paramsObj.categoryId, categories]);
+
+  const effectiveParamsObj = useMemo(() => {
+    const rest = { ...paramsObj };
+    delete rest.CategoryId;
+    delete rest.categoryId;
+    return {
+      ...rest,
+      Currency: selectedCurrency,
+      ...(effectiveLocation ? { location: effectiveLocation } : {}),
+    };
+  }, [paramsObj, selectedCurrency, effectiveLocation]);
+  const paramsKey = `${searchParams.toString()}|${selectedCurrency}|${effectiveLocation}`;
+  const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
 
   useEffect(() => {
     if (mobileFiltersOpen) {
@@ -125,54 +129,45 @@ function PropertiesPageInner() {
     return () => { document.body.style.overflow = ""; };
   }, [mobileFiltersOpen]);
 
-  const handleFilterSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    const formData = new FormData(e.currentTarget);
-    const newParams = new URLSearchParams();
-
-    const from = (formData.get("from") as string)?.trim();
-    const to = (formData.get("to") as string)?.trim();
-    const minCapacity = (formData.get("minCapacity") as string)?.trim();
-    const city = formData.get("city") as string;
-    const minPrice = formData.get("minPrice") as string;
-    const maxPrice = formData.get("maxPrice") as string;
-    const propertyType = formData.get("propertyType") as string;
-    const searchTerm = (formData.get("searchTerm") as string)?.trim();
-
-    if (from && to) {
-      newParams.set("from", from);
-      newParams.set("to", to);
-    }
-    if (minCapacity) newParams.set("MinCapacity", minCapacity);
-    if (city) newParams.set("CategoryId", city);
-    if (minPrice) newParams.set("MinPrice", minPrice);
-    if (maxPrice) newParams.set("MaxPrice", maxPrice);
-    if (propertyType) newParams.set("PropertyType", propertyType);
-    if (searchTerm) newParams.set("SearchTerm", searchTerm);
-    if (selectedCurrency) newParams.set("Currency", selectedCurrency);
-
-    const isAvailable = formData.get("isAvailable");
-    const hasSeaView = formData.get("hasSeaView");
-    const hasPoolView = formData.get("hasPoolView");
-    const hasGardenView = formData.get("hasGardenView");
-    const hasMountainView = formData.get("hasMountainView");
-    const hasCityView = formData.get("hasCityView");
-
-    if (isAvailable) newParams.set("IsAvailable", "true");
-    if (hasSeaView) newParams.set("HasSeaView", "true");
-    if (hasPoolView) newParams.set("HasPoolView", "true");
-    if (hasGardenView) newParams.set("HasGardenView", "true");
-    if (hasMountainView) newParams.set("HasMountainView", "true");
-    if (hasCityView) newParams.set("HasCityView", "true");
-
+  /**
+   * Single source of truth for "apply this filter change".
+   * Every control navigates through here, so results update instantly without a
+   * Search button. Empty values delete the param, so filters can be cleared.
+   */
+  const navigate = (patch: Record<string, string>, options?: { replace?: boolean }) => {
+    const next = new URLSearchParams(searchParams.toString());
+    Object.entries(patch).forEach(([key, value]) => {
+      if (value) next.set(key, value);
+      else next.delete(key);
+    });
+    next.delete("page"); // any filter change resets pagination
+    const qs = next.toString();
+    const target = href(`/rent${qs ? `?${qs}` : ""}`);
+    if (options?.replace) router.replace(target, { scroll: false });
+    else router.push(target);
     setMobileFiltersOpen(false);
-    router.push(href(`/rent?${newParams.toString()}`));
   };
 
+
   return (
-    <main className="min-h-screen bg-[#fafaf8] font-[var(--font-poppins)]">
+    <main className="min-h-screen bg-[#F3F0E9] font-[var(--font-poppins)]">
       {/* Hero Section matching Photo 2 */}
-      <PropertiesHero />
+      {/* 1. Hero Section: Unified PageHero with identical spacing and height */}
+      <PageHero
+        imageSrc="/rent/rent-hero-bg.jpg"
+        imageAlt="Browse Homes, Apartments & rental with Ease"
+        title={
+          <>
+            Browse Vacation Homes<br />
+            with Ease
+          </>
+        }
+        subtitle="Explore rentals that match your space, style, and way of living."
+
+        maxTitleWidth="max-w-[640px]"
+        maxSubtitleWidth="max-w-[560px]"
+        priority
+      />
 
       {/* Mobile filter floating trigger button */}
       <div className="sticky top-20 z-30 flex justify-end px-4 py-2 lg:hidden">
@@ -214,10 +209,9 @@ function PropertiesPageInner() {
             </div>
             <div className="flex-1 overflow-y-auto px-5 py-4">
               <FilterForm
-                key={`mobile-${paramsKey}`}
                 paramsObj={effectiveParamsObj}
-                onSubmit={handleFilterSubmit}
-                onCurrencyChange={handleCurrencyChange}
+                categories={categories}
+                navigate={navigate}
               />
             </div>
           </motion.aside>
@@ -225,17 +219,28 @@ function PropertiesPageInner() {
       </AnimatePresence>
 
       {/* Main Content Layout matching Photo 1 */}
-      <div className="mx-auto max-w-[1536px] px-4 pb-24 sm:px-6 lg:px-10">
+      {/* Main Content Layout aligned with max-w-[1536px] matching About and Contact */}
+      <div className="mx-auto w-full max-w-[1536px] px-4 pb-24 sm:px-6 sm:pb-28 lg:px-10">
+        {/* Breadcrumb Navigation */}
+        <nav
+          aria-label="Breadcrumb"
+          className="mt-8 mb-6 flex items-center gap-1.5 text-[14px] font-semibold text-[#142d38]"
+        >
+          <Link href={href("/")} className="hover:underline">
+            {t("common.home") || "Home"}
+          </Link>
+          <span className="text-[#8a9a94]">/</span>
+          <span className="text-[#718288]">{t("common.rent") || "Vacation Homes"}</span>
+        </nav>
         <ListingHeading />
         <div className="mt-8 flex flex-col gap-6 lg:flex-row lg:items-start lg:gap-8 xl:gap-10">
           {/* Desktop sidebar */}
-          <aside className="hidden lg:sticky lg:top-8 lg:block lg:w-[310px] lg:shrink-0">
+          <aside className="hidden lg:sticky lg:top-8 lg:block lg:w-[340px] lg:shrink-0">
             <FilterForm
-              key={`desktop-${paramsKey}`}
               paramsObj={effectiveParamsObj}
-              onSubmit={handleFilterSubmit}
-              onCurrencyChange={handleCurrencyChange}
-            />
+                categories={categories}
+                navigate={navigate}
+              />
           </aside>
           {/* Property grid */}
           <div className="min-w-0 flex-1">
@@ -244,35 +249,6 @@ function PropertiesPageInner() {
         </div>
       </div>
     </main>
-  );
-}
-
-function PropertiesHero() {
-  return (
-    <section className="mx-auto max-w-[1536px] px-4 sm:px-6 lg:px-10 pt-4 sm:pt-6">
-      <div className="relative h-[280px] sm:h-[360px] md:h-[420px] lg:h-[480px] w-full overflow-hidden rounded-[20px] sm:rounded-[28px] shadow-sm">
-        <Image
-          src="/rent/rent-hero-bg.png"
-          alt="Browse Homes, Apartments & rental with Ease"
-          fill
-          priority
-          sizes="(max-width: 1536px) 100vw, 1536px"
-          className="object-cover object-center"
-        />
-        <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-black/35 to-transparent flex items-center">
-          <div className="px-6 sm:px-12 lg:px-16 max-w-2xl">
-            <h1 className="text-[28px] sm:text-[42px] lg:text-[52px] font-extrabold leading-[1.12] text-white tracking-tight drop-shadow-xs">
-              Browse Homes,<br />
-              Apartments &amp; rental<br />
-              with Ease
-            </h1>
-            <p className="mt-3 sm:mt-4 max-w-[420px] text-[13.5px] sm:text-[15.5px] leading-relaxed text-white/95 font-medium drop-shadow-xs">
-              Explore rentals that match your space, style, and way of living.
-            </p>
-          </div>
-        </div>
-      </div>
-    </section>
   );
 }
 
@@ -289,271 +265,216 @@ function ListingHeading() {
 
 function FilterForm({
   paramsObj,
-  onSubmit,
+  categories,
+  navigate,
 }: {
   paramsObj: Record<string, string>;
-  onSubmit: (e: React.FormEvent<HTMLFormElement>) => void;
-  onCurrencyChange: (currency: string) => void;
+  categories?: { id: string; name: string }[];
+  navigate: (patch: Record<string, string>, options?: { replace?: boolean }) => void;
 }) {
-  const { t, href } = useI18n();
-  const { data: categories } = useCategories();
-  const [advancedOpen, setAdvancedOpen] = useState(false);
+  const { t } = useI18n();
 
-  const minCapacityVal = paramsObj.MinCapacity || "";
-  const categoryIdParam = paramsObj.CategoryId || paramsObj.categoryId || "";
-  const cityVal = categoryIdParam;
   const propertyTypeVal = paramsObj.PropertyType || paramsObj.propertyType || "";
+  const locationVal = paramsObj.location || paramsObj.Area || "";
+  const minRoomsVal = paramsObj.MinRooms || "";
   const minPriceVal = paramsObj.MinPrice || "";
   const maxPriceVal = paramsObj.MaxPrice || "";
   const searchTermVal = paramsObj.SearchTerm || "";
 
-  const isAvailableVal = paramsObj.IsAvailable === "true";
-  const hasSeaViewVal = paramsObj.HasSeaView === "true";
-  const hasPoolViewVal = paramsObj.HasPoolView === "true";
-  const hasGardenViewVal = paramsObj.HasGardenView === "true";
-  const hasMountainViewVal = paramsObj.HasMountainView === "true";
-  const hasCityViewVal = paramsObj.HasCityView === "true";
-
   const fromVal = paramsObj.from || "";
   const toVal = paramsObj.to || "";
-  const [fromDate, setFromDate] = useState(fromVal);
-  const [toDate, setToDate] = useState(toVal);
-  const [prevFrom, setPrevFrom] = useState(fromVal);
-  const [prevTo, setPrevTo] = useState(toVal);
 
-  if (prevFrom !== fromVal || prevTo !== toVal) {
-    setPrevFrom(fromVal);
-    setPrevTo(toVal);
-    setFromDate(fromVal);
-    setToDate(toVal);
+  // Debounced search so typing doesn't fire a request per keystroke.
+  const [term, setTerm] = useState(searchTermVal);
+  const [debouncedTerm, setDebouncedTerm] = useState(searchTermVal);
+  const [lastUrlTerm, setLastUrlTerm] = useState(searchTermVal);
+
+  // React's documented "adjust state when props change" pattern — keeps the box in
+  // sync with Back/forward navigation without a setState-in-effect.
+  if (searchTermVal !== lastUrlTerm) {
+    setLastUrlTerm(searchTermVal);
+    setTerm(searchTermVal);
+    setDebouncedTerm(searchTermVal);
   }
 
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedTerm(term), 350);
+    return () => clearTimeout(timer);
+  }, [term]);
+
+  useEffect(() => {
+    if (debouncedTerm === searchTermVal) return;
+    navigate({ SearchTerm: debouncedTerm }, { replace: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [debouncedTerm]);
+
   const todayString = new Date().toISOString().split("T")[0];
-  const minCheckOutDate = fromDate
+  const minCheckOutDate = fromVal
     ? (() => {
-        const next = new Date(fromDate);
+        const next = new Date(fromVal);
         next.setDate(next.getDate() + 1);
         return next.toISOString().split("T")[0];
       })()
     : todayString;
 
-  const handleFromChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const val = e.target.value;
-    setFromDate(val);
-    if (val && toDate && toDate <= val) {
-      const next = new Date(val);
-      next.setDate(next.getDate() + 1);
-      setToDate(next.toISOString().split("T")[0]);
-    }
-  };
-
-  const handleClearFormDates = () => {
-    setFromDate("");
-    setToDate("");
-  };
-
-  const checkboxes = [
-    { name: "isAvailable", label: t("rent.availableNow"), defaultChecked: isAvailableVal },
-    { name: "hasSeaView", label: t("rent.seaView"), defaultChecked: hasSeaViewVal },
-    { name: "hasPoolView", label: t("rent.poolView"), defaultChecked: hasPoolViewVal },
-    { name: "hasGardenView", label: t("rent.gardenView"), defaultChecked: hasGardenViewVal },
-    { name: "hasMountainView", label: t("rent.mountainView"), defaultChecked: hasMountainViewVal },
-    { name: "hasCityView", label: t("rent.cityView"), defaultChecked: hasCityViewVal },
-  ];
+  const labelCls = "mb-1.5 block text-[11.5px] font-semibold text-[#656566]";
 
   return (
-    <form onSubmit={onSubmit} className="rounded-2xl border border-[#e2e8e6] bg-white p-5 shadow-xs">
-      {/* Search Input at Top */}
-      <div>
-        <input
-          type="text"
-          name="searchTerm"
-          defaultValue={searchTermVal}
-          placeholder="Search"
-          className="w-full rounded-xl border border-[#e2e8e6] bg-[#fbfdfc] px-3.5 py-2.5 text-[13px] text-[#183640] placeholder-[#8a9a94] outline-none transition focus:border-[#2C798B] focus:bg-white"
-        />
-      </div>
+    <div className="rounded-2xl border border-[#e2e8e6] bg-white p-5 shadow-xs">
+      {/* Search */}
+      <input
+        type="text"
+        value={term}
+        onChange={(e) => setTerm(e.target.value)}
+        placeholder={t("rent.searchPlaceholder") || "Search properties"}
+        aria-label={t("rent.searchPlaceholder") || "Search properties"}
+        className="w-full rounded-xl border border-[#e2e8e6] bg-[#fbfdfc] px-3.5 py-2.5 text-[13px] text-[#183640] outline-none transition placeholder-[#8a9a94] focus:border-[#2C798B] focus:bg-white"
+      />
 
       <div className="mt-4 flex flex-col gap-4">
-        {/* DATES OF STAY Box */}
+        {/* Property Type */}
+        <div>
+          <span className={labelCls}>{t("rent.propertyType") || "Property Type"}</span>
+          <select
+            value={propertyTypeVal}
+            onChange={(e) => navigate({ PropertyType: e.target.value })}
+            className="w-full rounded-xl border border-[#e2e8e6] bg-[#fbfdfc] px-3 py-2 text-[12.5px] text-[#183640] outline-none focus:border-[#2C798B]"
+          >
+            <option value="">{t("rent.allTypes") || "All Types"}</option>
+            <option value={PropertyType.Apartment}>{t("rent.apartment") || "Apartment"}</option>
+            <option value={PropertyType.Villa}>{t("rent.villa") || "Villa"}</option>
+            <option value={PropertyType.Studio}>{t("rent.studio") || "Studio"}</option>
+            <option value={PropertyType.Chalet}>{t("rent.chalet") || "Chalet"}</option>
+            <option value={PropertyType.TwinHouse}>{t("rent.twinHouse") || "Twin House"}</option>
+          </select>
+        </div>
+
+        {/* Location — sends the area name, which the filter endpoint supports */}
+        <div>
+          <span className={labelCls}>{t("rent.location") || "Location"}</span>
+          <select
+            value={locationVal}
+            onChange={(e) => navigate({ location: e.target.value })}
+            className="w-full rounded-xl border border-[#e2e8e6] bg-[#fbfdfc] px-3 py-2 text-[12.5px] text-[#183640] outline-none focus:border-[#2C798B]"
+          >
+            <option value="">{t("rent.anyLocation") || "All Locations"}</option>
+            {categories?.map((cat) => (
+              <option key={cat.id} value={cat.name}>{cat.name}</option>
+            ))}
+          </select>
+        </div>
+
+        {/* Rooms — typed number, sent as the server's MinRooms */}
+        <div>
+          <label htmlFor="rent-min-rooms" className={labelCls}>
+            {t("rent.rooms")}
+          </label>
+          <input
+            id="rent-min-rooms"
+            type="number"
+            inputMode="numeric"
+            min="0"
+            step="1"
+            value={minRoomsVal}
+            onChange={(e) => {
+              const raw = e.target.value;
+              // Allow clearing, but never send a negative or fractional value.
+              const n = Number(raw);
+              if (raw !== "" && (!Number.isFinite(n) || n < 0)) return;
+              navigate({ MinRooms: raw === "" ? "" : String(Math.floor(n)) });
+            }}
+            placeholder="0"
+            className="w-full rounded-xl border border-[#e2e8e6] bg-[#fbfdfc] px-3 py-2 text-[12.5px] text-[#183640] outline-none transition focus:border-[#2C798B]"
+          />
+        </div>
+
+        {/* Dates of stay */}
         <div className="rounded-xl border border-[#e2e8e6] bg-[#fbfdfc] p-3.5">
           <div className="mb-2 flex items-center justify-between">
             <span className="text-[11px] font-bold uppercase tracking-wider text-[#718288]">
-              DATES OF STAY
+              {t("rent.datesOfStay") || "Dates of stay"}
             </span>
-            {(fromDate || toDate) && (
+            {(fromVal || toVal) && (
               <button
                 type="button"
-                onClick={handleClearFormDates}
+                onClick={() => navigate({ from: "", to: "" })}
                 className="text-[11px] font-medium text-[#c94a4a] hover:underline"
               >
-                {t("common.clearDates")}
+                {t("common.clearDates") || "Clear"}
               </button>
             )}
           </div>
           <div className="flex flex-col gap-2">
             <label className="block">
-              <span className="mb-1 block text-[11px] font-medium text-[#718288]">Check-In Date</span>
+              <span className="mb-1 block text-[11px] font-medium text-[#718288]">
+                {t("rent.checkIn") || "Check-In Date"}
+              </span>
               <input
                 type="date"
-                name="from"
-                value={fromDate}
+                value={fromVal}
                 min={todayString}
-                onChange={handleFromChange}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  const nextTo = toVal && toVal <= val
+                    ? (() => {
+                        const d = new Date(val);
+                        d.setDate(d.getDate() + 1);
+                        return d.toISOString().split("T")[0];
+                      })()
+                    : toVal;
+                  navigate({ from: val, to: val ? nextTo : "" });
+                }}
                 className="w-full rounded-lg border border-[#e2e8e6] bg-white px-3 py-1.5 text-[12px] text-[#183640] outline-none focus:border-[#2C798B]"
               />
             </label>
             <label className="block">
-              <span className="mb-1 block text-[11px] font-medium text-[#718288]">Check-Out Date</span>
+              <span className="mb-1 block text-[11px] font-medium text-[#718288]">
+                {t("rent.checkOut") || "Check-Out Date"}
+              </span>
               <input
                 type="date"
-                name="to"
-                value={toDate}
+                value={toVal}
                 min={minCheckOutDate}
-                onChange={(e) => setToDate(e.target.value)}
+                onChange={(e) => navigate({ to: e.target.value })}
                 className="w-full rounded-lg border border-[#e2e8e6] bg-white px-3 py-1.5 text-[12px] text-[#183640] outline-none focus:border-[#2C798B]"
               />
             </label>
           </div>
         </div>
 
-        {/* Property Type row with For Rent pill */}
+        {/* Price — USD only */}
         <div>
-          <span className="mb-1.5 block text-[11.5px] font-semibold text-[#656566]">Property Type</span>
-          <div className="flex items-center gap-2">
-            <select
-              name="propertyType"
-              defaultValue={propertyTypeVal}
-              className="flex-1 rounded-xl border border-[#e2e8e6] bg-[#fbfdfc] px-3 py-2 text-[12.5px] text-[#183640] outline-none focus:border-[#2C798B]"
-            >
-              <option value="">All Types</option>
-              <option value={PropertyType.Villa}>Villa</option>
-              <option value={PropertyType.Apartment}>Apartment</option>
-              <option value={PropertyType.Studio}>Studio</option>
-              <option value={PropertyType.Chalet}>Chalet</option>
-              <option value={PropertyType.TwinHouse}>Twin House</option>
-            </select>
-            <span className="shrink-0 rounded-full border border-[#d5dedb] px-3 py-1.5 text-[11.5px] font-medium text-[#183640]">
-              For Rent
-            </span>
-          </div>
-        </div>
-
-        {/* Location row with For Sale pill */}
-        <div>
-          <span className="mb-1.5 block text-[11.5px] font-semibold text-[#656566]">Location</span>
-          <div className="flex items-center gap-2">
-            <select
-              name="city"
-              defaultValue={cityVal}
-              className="flex-1 rounded-xl border border-[#e2e8e6] bg-[#fbfdfc] px-3 py-2 text-[12.5px] text-[#183640] outline-none focus:border-[#2C798B]"
-            >
-              <option value="">All Locations</option>
-              {categories?.map((cat) => (
-                <option key={cat.id} value={cat.id}>{cat.name}</option>
-              ))}
-            </select>
-            <Link
-              href={href("/buy")}
-              className="shrink-0 rounded-full border border-[#d5dedb] px-3 py-1.5 text-[11.5px] font-medium text-[#183640] transition hover:border-[#2C798B] hover:bg-[#2C798B] hover:text-white"
-            >
-              For Sale
-            </Link>
-          </div>
-        </div>
-
-        {/* Rooms row with All pill */}
-        <div>
-          <span className="mb-1.5 block text-[11.5px] font-semibold text-[#656566]">Rooms</span>
-          <div className="flex items-center gap-2">
-            <select
-              name="minCapacity"
-              defaultValue={minCapacityVal}
-              className="flex-1 rounded-xl border border-[#e2e8e6] bg-[#fbfdfc] px-3 py-2 text-[12.5px] text-[#183640] outline-none focus:border-[#2C798B]"
-            >
-              <option value="">All</option>
-              <option value="1">1</option>
-              <option value="2">2</option>
-              <option value="3">3</option>
-              <option value="4">4+</option>
-            </select>
-            <span className="shrink-0 rounded-full border border-[#d5dedb] px-4 py-1.5 text-[11.5px] font-medium text-[#183640]">
-              All
-            </span>
-          </div>
-        </div>
-
-        {/* Min Price / Max Price + Search Button */}
-        <div>
-          <div className="grid grid-cols-[1fr_1fr_auto] items-end gap-2">
+          <div className="grid grid-cols-2 items-end gap-2">
             <div>
-              <span className="mb-1 block text-[11px] font-semibold text-[#656566]">Min Price</span>
+              <span className={labelCls}>{t("rent.minPrice") || "Min Price"}</span>
               <input
                 type="number"
-                name="minPrice"
-                defaultValue={minPriceVal}
-                placeholder="0.0 EG"
+                value={minPriceVal}
+                onChange={(e) => navigate({ MinPrice: e.target.value })}
+                placeholder="0"
                 min="0"
                 className="w-full rounded-lg border border-[#e2e8e6] bg-[#fbfdfc] px-2.5 py-1.5 text-[12px] text-[#142d38] outline-none focus:border-[#2C798B]"
               />
             </div>
             <div>
-              <span className="mb-1 block text-[11px] font-semibold text-[#656566]">Max Price</span>
+              <span className={labelCls}>{t("rent.maxPrice") || "Max Price"}</span>
               <input
                 type="number"
-                name="maxPrice"
-                defaultValue={maxPriceVal}
-                placeholder="0.0 EG"
+                value={maxPriceVal}
+                onChange={(e) => navigate({ MaxPrice: e.target.value })}
+                placeholder="0"
                 min="0"
                 className="w-full rounded-lg border border-[#e2e8e6] bg-[#fbfdfc] px-2.5 py-1.5 text-[12px] text-[#142d38] outline-none focus:border-[#2C798B]"
               />
             </div>
-            <button
-              type="submit"
-              className="h-[34px] shrink-0 rounded-lg bg-[#71a8b7] px-3.5 text-[12.5px] font-semibold text-white shadow-xs transition hover:bg-[#5b95a4]"
-            >
-              Search
-            </button>
           </div>
-        </div>
-
-        {/* Advanced Accordion Toggle */}
-        <div className="border-t border-[#f0f0f0] pt-2">
-          <button
-            type="button"
-            onClick={() => setAdvancedOpen(!advancedOpen)}
-            className="flex w-full items-center justify-between py-1.5 text-[12px] font-medium text-[#718288] hover:text-[#183640]"
-          >
-            <span className="flex items-center gap-1.5">
-              <svg className="size-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <line x1="4" y1="21" x2="4" y2="14" /><line x1="4" y1="10" x2="4" y2="3" /><line x1="12" y1="21" x2="12" y2="12" /><line x1="12" y1="8" x2="12" y2="3" /><line x1="20" y1="21" x2="20" y2="16" /><line x1="20" y1="12" x2="20" y2="3" />
-              </svg>
-              Advanced
-            </span>
-            <svg className={`size-3.5 transition-transform duration-200 ${advancedOpen ? "rotate-180" : ""}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <polyline points="6 9 12 15 18 9" />
-            </svg>
-          </button>
-          {advancedOpen && (
-            <div className="mt-2 flex flex-col gap-2 pt-2">
-              {checkboxes.map(({ name, label, defaultChecked }) => (
-                <label key={name} className="flex cursor-pointer items-center gap-2 text-[12.5px] text-[#414847]">
-                  <input
-                    type="checkbox"
-                    name={name}
-                    defaultChecked={defaultChecked}
-                    className="size-3.5 rounded border-[#d0d0d0] accent-[#2C798B]"
-                  />
-                  {label}
-                </label>
-              ))}
-            </div>
-          )}
+          <p className="mt-1.5 text-[11px] text-[#8a9a94]">USD</p>
         </div>
       </div>
-    </form>
+    </div>
   );
 }
+
 
 function PropertyGrid({ paramsObj }: { paramsObj: Record<string, string> }) {
   const router = useRouter();
@@ -564,11 +485,10 @@ function PropertyGrid({ paramsObj }: { paramsObj: Record<string, string> }) {
   const { data: currencies = [] } = useCurrencies({ isActive: true });
   const selectedCurrency = (paramsObj.Currency || "USD").toUpperCase();
   const apiParams = useMemo(
-    () => buildRentApiParams(paramsObj, selectedCurrency, currencies),
-    [currencies, paramsObj, selectedCurrency],
+    () => buildRentApiParams(paramsObj),
+    [paramsObj],
   );
-  const { data, isLoading } = usePublicRentProperties({ ...apiParams, pageNumber, pageSize });
-  const minCapacity = Math.max(0, Number(paramsObj.MinCapacity || paramsObj.minCapacity || 0) || 0);
+  const searchTerm = (paramsObj.SearchTerm || paramsObj.search || "").trim();
 
   const hasDateFilter = Boolean(paramsObj.from && paramsObj.to);
   const {
@@ -577,6 +497,21 @@ function PropertyGrid({ paramsObj }: { paramsObj: Record<string, string> }) {
   } = useInHouseBookings(
     hasDateFilter ? { from: paramsObj.from, to: paramsObj.to } : {}
   );
+
+  // `SearchTerm` is only honoured by `/api/properties/search` — the filter endpoint
+  // ignores it, which made search silently return the unfiltered list.
+  const { data: searchData, isLoading: searchLoading } = useSearchProperties({
+    SearchTerm: searchTerm,
+    PageNumber: pageNumber,
+    PageSize: pageSize,
+  });
+  const { data: listData, isLoading: listLoading } = usePublicRentProperties(
+    { ...apiParams, pageNumber, pageSize },
+    { enabled: !searchTerm }
+  );
+
+  const data = searchTerm ? searchData : listData;
+  const isLoading = searchTerm ? searchLoading : listLoading;
 
   const items = data?.items;
   const totalPages = data?.totalPages || 1;
@@ -590,9 +525,11 @@ function PropertyGrid({ paramsObj }: { paramsObj: Record<string, string> }) {
   };
 
   const filteredRawItems = useMemo(() => {
-    const rawItems = (items || []).filter((item) => !minCapacity || Number(item.capacity || 0) >= minCapacity);
+    const rawItems = items || [];
     if (!hasDateFilter) return rawItems;
-    if (!inHouseData?.units) return [];
+    // Fall back to the unfiltered list when availability hasn't loaded — the old
+    // `return []` blanked the entire grid if this request was slow or failed.
+    if (!inHouseData?.units?.length) return rawItems;
 
     const availableUnitIds = new Set(
       inHouseData.units
@@ -635,7 +572,7 @@ function PropertyGrid({ paramsObj }: { paramsObj: Record<string, string> }) {
 
       return isAvailable;
     });
-  }, [hasDateFilter, inHouseData, items, minCapacity]);
+  }, [hasDateFilter, inHouseData, items]);
 
   const sortedRawItems = useMemo(() => {
     return [...filteredRawItems].sort((a, b) => {
@@ -651,9 +588,6 @@ function PropertyGrid({ paramsObj }: { paramsObj: Record<string, string> }) {
     if (hasDateFilter) {
       detailParams.set("checkIn", paramsObj.from);
       detailParams.set("checkOut", paramsObj.to);
-    }
-    if (minCapacity) {
-      detailParams.set("person", String(minCapacity));
     }
     detailParams.set("id", rentItem.id);
     detailParams.set("Currency", selectedCurrency);
@@ -718,7 +652,7 @@ function PropertyGrid({ paramsObj }: { paramsObj: Record<string, string> }) {
         )}
 
         {isGridLoading ? (
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-3">
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {Array.from({ length: 6 }).map((_, idx) => (
               <div key={idx} className="h-[380px] animate-pulse rounded-[20px] bg-white shadow-xs" />
             ))}
@@ -746,7 +680,7 @@ function PropertyGrid({ paramsObj }: { paramsObj: Record<string, string> }) {
             variants={{ hidden: { opacity: 0 }, visible: { opacity: 1, transition: { staggerChildren: 0.06 } } }}
             initial="hidden"
             animate="visible"
-            className="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-3"
+            className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3"
           >
             {properties.map((property) => (
               <PropertyCard key={property.id} property={property} />
