@@ -1,6 +1,11 @@
 import axios from "axios";
 import { API_BASE_URL } from "@/lib/api/config";
-import { useAuthStore } from "@/lib/stores/authStore";
+import {
+  useAuthStore,
+  getCookie,
+  ACCESS_TOKEN_COOKIE,
+  REFRESH_TOKEN_COOKIE,
+} from "@/lib/stores/authStore";
 import type { RefreshTokenResponse } from "@/lib/types/auth";
 import { defaultLocale, getPathLocale, isLocale } from "@/lib/i18n/config";
 
@@ -40,7 +45,7 @@ function writeHeader(headers: unknown, name: string, value: string) {
 }
 
 axiosInstance.interceptors.request.use((config) => {
-  const token = useAuthStore.getState().accessToken;
+  const token = useAuthStore.getState().accessToken || getCookie(ACCESS_TOKEN_COOKIE);
   const explicitLocale =
     readHeader(config.headers, "Accept-Language") || readHeader(config.headers, "X-Locale");
   const pathLocale =
@@ -98,26 +103,19 @@ axiosInstance.interceptors.response.use(
     // can ever trigger a secondary refresh attempt.
     originalRequest._retry = true;
 
-    const { accessToken, refreshToken, setAuth, clearAuth } =
-      useAuthStore.getState();
+    const store = useAuthStore.getState();
+    const accessToken = store.accessToken || getCookie(ACCESS_TOKEN_COOKIE);
+    const refreshToken = store.refreshToken || getCookie(REFRESH_TOKEN_COOKIE);
+    const { setAuth, clearAuth } = store;
 
     // Check if the store token was already refreshed by another concurrent request or tab
-    const authHeader =
-      originalRequest.headers?.Authorization ||
-      originalRequest.headers?.authorization;
-    const sentToken =
-      typeof authHeader === "string"
-        ? authHeader.replace(/^Bearer\s+/i, "")
-        : null;
+    const authHeader = readHeader(originalRequest.headers, "Authorization");
+    const sentToken = authHeader ? authHeader.replace(/^Bearer\s+/i, "") : null;
 
     if (accessToken && sentToken && accessToken !== sentToken) {
       // The token in store is already newer than the one that failed on this request.
       // Retry immediately with the new token without hitting the refresh endpoint again.
-      if (originalRequest.headers?.set) {
-        originalRequest.headers.set("Authorization", `Bearer ${accessToken}`);
-      } else {
-        originalRequest.headers.Authorization = `Bearer ${accessToken}`;
-      }
+      writeHeader(originalRequest.headers, "Authorization", `Bearer ${accessToken}`);
       return axiosInstance(originalRequest);
     }
 
@@ -127,10 +125,14 @@ axiosInstance.interceptors.response.use(
       return Promise.reject(error);
     }
 
-    // No refresh token — nothing we can do, go to login
-    if (!refreshToken || !accessToken) {
+    // No refresh token available — nothing we can do, clear auth and send admin users to login
+    if (!refreshToken) {
       clearAuth();
-      if (typeof window !== "undefined" && window.location.pathname !== "/admin/login") {
+      if (
+        typeof window !== "undefined" &&
+        window.location.pathname.startsWith("/admin") &&
+        window.location.pathname !== "/admin/login"
+      ) {
         window.location.href = "/admin/login";
       }
       return Promise.reject(error);
@@ -142,10 +144,8 @@ axiosInstance.interceptors.response.use(
         failedQueue.push({ resolve, reject });
       })
         .then((token) => {
-          if (originalRequest.headers?.set) {
-            originalRequest.headers.set("Authorization", `Bearer ${token}`);
-          } else {
-            originalRequest.headers.Authorization = `Bearer ${token}`;
+          if (token && typeof token === "string") {
+            writeHeader(originalRequest.headers, "Authorization", `Bearer ${token}`);
           }
           return axiosInstance(originalRequest);
         })
@@ -155,11 +155,15 @@ axiosInstance.interceptors.response.use(
     isRefreshing = true;
 
     try {
+      const cleanBase = API_BASE_URL.replace(/\/+$/, "");
       // Use bare axios (not the instance) so this call bypasses the interceptor
       // and cannot trigger another refresh loop.
+      // NOTE: Do NOT send the expired Authorization header here. Sending an expired
+      // bearer token causes ASP.NET Core auth middleware to reject the request with 401
+      // before it reaches the refresh endpoint.
       const { data } = await axios.post<RefreshTokenResponse>(
-        `${API_BASE_URL}/api/auth/refresh-token`,
-        { accessToken, refreshToken },
+        `${cleanBase}/api/auth/refresh-token`,
+        { accessToken: accessToken || "", refreshToken },
         {
           headers: {
             "Content-Type": "application/json",
@@ -183,11 +187,7 @@ axiosInstance.interceptors.response.use(
 
         processQueue(null, newAccessToken);
 
-        if (originalRequest.headers?.set) {
-          originalRequest.headers.set("Authorization", `Bearer ${newAccessToken}`);
-        } else {
-          originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
-        }
+        writeHeader(originalRequest.headers, "Authorization", `Bearer ${newAccessToken}`);
         return axiosInstance(originalRequest);
       } else {
         throw new Error(data.message ?? "Token refresh failed");
@@ -195,7 +195,11 @@ axiosInstance.interceptors.response.use(
     } catch (refreshError) {
       processQueue(refreshError, null);
       clearAuth();
-      if (typeof window !== "undefined" && window.location.pathname !== "/admin/login") {
+      if (
+        typeof window !== "undefined" &&
+        window.location.pathname.startsWith("/admin") &&
+        window.location.pathname !== "/admin/login"
+      ) {
         window.location.href = "/admin/login";
       }
       return Promise.reject(refreshError);

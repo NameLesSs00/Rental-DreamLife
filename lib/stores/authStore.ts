@@ -36,7 +36,13 @@ function setCookie(name: string, value: string, expiresAt: string) {
   document.cookie = `${name}=${encodeURIComponent(value)}; expires=${expires}; path=/; SameSite=Lax`;
 }
 
-function deleteCookie(name: string) {
+export function getCookie(name: string): string | null {
+  if (typeof document === "undefined") return null;
+  const match = document.cookie.match(new RegExp(`(?:^|;\\s*)${name}=([^;]*)`));
+  return match ? decodeURIComponent(match[1]) : null;
+}
+
+export function deleteCookie(name: string) {
   if (typeof document === "undefined") return;
   document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/`;
 }
@@ -53,11 +59,10 @@ export const useAuthStore = create<AuthState>()(
 
       setAuth: ({ accessToken, refreshToken, expiresAt, profile }: SetAuthPayload) => {
         // Persist tokens to cookies so proxy.ts can read them server-side.
-        // Access token cookie expiry mirrors the JWT expiry exactly.
-        setCookie(ACCESS_TOKEN_COOKIE, accessToken, expiresAt);
-        
-        // Refresh token expires in 7 days
+        // Keep both cookies for 7 days so the expired JWT string remains
+        // available for the client to send to POST /api/auth/refresh-token.
         const refreshExpiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
+        setCookie(ACCESS_TOKEN_COOKIE, accessToken, refreshExpiresAt);
         setCookie(REFRESH_TOKEN_COOKIE, refreshToken, refreshExpiresAt);
 
         set({

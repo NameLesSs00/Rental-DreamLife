@@ -6,7 +6,12 @@ import Image from "next/image";
 import Link from "next/link";
 import Logo from "@/components/Logo";
 import { useLogin } from "@/lib/hooks/useAuth";
-import { useAuthStore } from "@/lib/stores/authStore";
+import {
+  useAuthStore,
+  getCookie,
+  ACCESS_TOKEN_COOKIE,
+  REFRESH_TOKEN_COOKIE,
+} from "@/lib/stores/authStore";
 import axiosInstance from "@/lib/api/axiosInstance";
 
 function LoginForm() {
@@ -22,11 +27,12 @@ function LoginForm() {
 
   useEffect(() => {
     let mounted = true;
-    if (accessToken) {
-      router.replace("/admin/dashboard");
-      return;
-    }
-    if (refreshToken && !accessToken) {
+
+    // Check store or fallback cookies (in case Zustand hydration is still settling)
+    const effectiveToken = accessToken || getCookie(ACCESS_TOKEN_COOKIE);
+    const effectiveRefresh = refreshToken || getCookie(REFRESH_TOKEN_COOKIE);
+
+    if (effectiveToken || effectiveRefresh) {
       axiosInstance
         .get("/api/auth/profile")
         .then(() => {
@@ -37,6 +43,7 @@ function LoginForm() {
         });
       return;
     }
+
     setIsCheckingAuth(false);
     return () => {
       mounted = false;

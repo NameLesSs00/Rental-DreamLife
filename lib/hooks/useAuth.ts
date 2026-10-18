@@ -3,7 +3,12 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import axiosInstance from "@/lib/api/axiosInstance";
-import { useAuthStore } from "@/lib/stores/authStore";
+import {
+  useAuthStore,
+  getCookie,
+  ACCESS_TOKEN_COOKIE,
+  REFRESH_TOKEN_COOKIE,
+} from "@/lib/stores/authStore";
 import type {
   LoginRequest,
   LoginResponse,
@@ -114,7 +119,13 @@ export function useChangePassword() {
 // ─── Profile ──────────────────────────────────────────────────────────────────
 
 export function useProfile() {
-  const { accessToken, profile } = useAuthStore();
+  const { accessToken, refreshToken, profile } = useAuthStore();
+  const hasToken = Boolean(
+    accessToken ||
+      refreshToken ||
+      (typeof document !== "undefined" &&
+        (getCookie(ACCESS_TOKEN_COOKIE) || getCookie(REFRESH_TOKEN_COOKIE)))
+  );
 
   return useQuery({
     queryKey: ["auth", "profile"],
@@ -124,10 +135,9 @@ export function useProfile() {
       );
       return data.data;
     },
-    // Gate on accessToken, NOT profile — after a hard refresh the store
-    // is empty but the cookie (and therefore the token) may still be valid.
-    // The request interceptor will attach the token from the store when it runs.
-    enabled: !!accessToken,
+    // Gate on accessToken OR refreshToken — if accessToken expired,
+    // the refresh token allows axiosInstance to silently refresh.
+    enabled: hasToken,
     staleTime: 5 * 60 * 1000, // 5 minutes
     placeholderData: profile ?? undefined,
   });
