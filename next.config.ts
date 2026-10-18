@@ -7,6 +7,8 @@ const nextConfig: NextConfig = {
     memoryBasedWorkersCount: true,
   },
   images: {
+    unoptimized: true,
+    qualities: [75, 95],
     remotePatterns: [
       {
         protocol: "https",
@@ -15,6 +17,11 @@ const nextConfig: NextConfig = {
       },
       {
         protocol: "https",
+        hostname: "rentall.runasp.net",
+        pathname: "/**",
+      },
+      {
+        protocol: "http",
         hostname: "rentall.runasp.net",
         pathname: "/**",
       },

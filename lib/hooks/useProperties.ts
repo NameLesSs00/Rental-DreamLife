@@ -651,31 +651,36 @@ export function usePropertyDailyPrices({
   return useQuery({
     queryKey: [KEY, propertyId, "daily-prices", startDate, endDate, currency],
     queryFn: async () => {
-      const { data } = await axiosInstance.get<PropertyApiResponse<PropertyDailyPricesData>>(
-        `/api/properties/${propertyId}/daily-prices`,
-        { params: { startDate, endDate, Currency: currency } }
-      );
-      const raw = data.data ?? { propertyId, prices: [] };
-      const prices = (raw.prices ?? []).map((item) => {
-        const amount =
-          typeof item.price === "number" && !isNaN(item.price)
-            ? item.price
-            : typeof item.priceInfo?.amount === "number"
-            ? item.priceInfo.amount
-            : typeof item.priceInfo?.baseAmount === "number"
-            ? item.priceInfo.baseAmount
-            : 0;
+      try {
+        const { data } = await axiosInstance.get<PropertyApiResponse<PropertyDailyPricesData>>(
+          `/api/properties/${propertyId}/daily-prices`,
+          { params: { startDate, endDate, Currency: currency } }
+        );
+        const raw = data.data ?? { propertyId, prices: [] };
+        const prices = (raw.prices ?? []).map((item) => {
+          const amount =
+            typeof item.price === "number" && !isNaN(item.price)
+              ? item.price
+              : typeof item.priceInfo?.amount === "number"
+              ? item.priceInfo.amount
+              : typeof item.priceInfo?.baseAmount === "number"
+              ? item.priceInfo.baseAmount
+              : 0;
+          return {
+            ...item,
+            price: amount,
+          };
+        });
         return {
-          ...item,
-          price: amount,
+          ...raw,
+          prices,
         };
-      });
-      return {
-        ...raw,
-        prices,
-      };
+      } catch {
+        return { propertyId, prices: [] };
+      }
     },
     enabled: !!propertyId,
+    retry: false,
     staleTime: 30 * 1000,
   });
 }
@@ -699,11 +704,9 @@ export function usePropertyDailyPriceForDate(
           params: currency ? { Currency: currency } : undefined,
         });
         return data?.data ?? null;
-      } catch (err: any) {
-        if (err?.response?.status === 404) {
-          return null;
-        }
-        throw err;
+      } catch {
+        // Return null on 404 or any server failure so the page falls back cleanly to basePrice
+        return null;
       }
     },
     enabled: Boolean(propertyId && date),

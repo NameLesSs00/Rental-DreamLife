@@ -7,7 +7,7 @@ import { motion, useMotionValue, animate } from "framer-motion";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useProperties } from "@/lib/hooks/useProperties";
 import { useCurrencies } from "@/lib/hooks/useCurrency";
-import { API_BASE_URL } from "@/lib/api/config";
+import { resolveApiImageUrl } from "@/lib/utils/imageUrl";
 import { PropertyListItem } from "@/lib/types/property";
 import type { Currency } from "@/lib/types/currency";
 import { slugify } from "@/lib/utils/slugify";
@@ -324,11 +324,7 @@ function PropertyCard({
     area?: number | null;
   };
 
-  const imageUrl = property.coverImageUrl
-    ? property.coverImageUrl.startsWith("http")
-      ? property.coverImageUrl
-      : `${API_BASE_URL}/${property.coverImageUrl}`
-    : FALLBACK_IMAGE;
+  const imageUrl = resolveApiImageUrl(property.coverImageUrl) || FALLBACK_IMAGE;
 
   const location = property.city
     ? property.country

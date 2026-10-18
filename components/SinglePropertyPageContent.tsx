@@ -84,10 +84,15 @@ function getApiErrorMessage(error: unknown, fallback: string) {
 }
 
 function resolveApiImageUrl(url?: string | null) {
-  if (!url || url.trim() === "") return "";
+  if (!url || typeof url !== "string") return "";
   const trimmed = url.trim();
-  if (trimmed.startsWith("http") || trimmed.startsWith("/")) return trimmed;
-  return `${API_BASE_URL}/${trimmed.replace(/^\/+/, "")}`;
+  if (!trimmed) return "";
+  if (/^https?:\/\//i.test(trimmed)) {
+    return trimmed.replace(/([^:]\/)\/+/g, "$1");
+  }
+  const cleanBase = API_BASE_URL.replace(/\/+$/, "");
+  const cleanPath = trimmed.replace(/^\/+/, "");
+  return `${cleanBase}/${cleanPath}`;
 }
 
 function normalizeLookupKey(value: string) {

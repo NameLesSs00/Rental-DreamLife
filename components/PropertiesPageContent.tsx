@@ -3,7 +3,7 @@
 import { usePublicRentProperties, useSearchProperties } from "@/lib/hooks/useProperties";
 import { PropertyType, type PropertyListItem } from "@/lib/types/property";
 import { slugify } from "@/lib/utils/slugify";
-import { API_BASE_URL } from "@/lib/api/config";
+import { resolveApiImageUrl } from "@/lib/utils/imageUrl";
 import { useCategories } from "@/lib/hooks/useCategory";
 import { useCurrencies } from "@/lib/hooks/useCurrency";
 import { formatPriceForCurrency } from "@/lib/utils/currency";
@@ -961,7 +961,7 @@ function PropertyGrid({ paramsObj }: { paramsObj: Record<string, string> }) {
       size: sizeStr,
       propertyType: typeName,
       priceLabel: formatPriceForCurrency(rentItem.basePriceInfo, rentItem.basePrice, selectedCurrency, currencies),
-      image: rentItem.coverImageUrl ? (rentItem.coverImageUrl.startsWith("http") ? rentItem.coverImageUrl : `${API_BASE_URL}/${rentItem.coverImageUrl}`) : "/rent/property-card.png",
+      image: resolveApiImageUrl(rentItem.coverImageUrl) || "/rent/property-card.png",
       url,
       isFeatured: Boolean(rentItem.isFeatured),
     };

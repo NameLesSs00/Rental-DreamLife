@@ -15,7 +15,7 @@ import {
 import { usePropertyBuyingCategories } from "@/lib/hooks/usePropertyBuyingCategory";
 import { useGroupedAmenities, type AmenityGroup } from "@/lib/hooks/useGroupedAmenities";
 import { useCurrencies } from "@/lib/hooks/useCurrency";
-import { API_BASE_URL } from "@/lib/api/config";
+import { resolveApiImageUrl } from "@/lib/utils/imageUrl";
 import type { PropertyBuying, PropertyBuyingListItem } from "@/lib/types/propertyBuying";
 import { slugify } from "@/lib/utils/slugify";
 import { formatPriceForCurrency, formatPriceInfo } from "@/lib/utils/currency";
@@ -84,7 +84,7 @@ export default function SingleBuyPropertyPageContent({ id }: { id: string }) {
     currencies,
   );
 
-  const galleryImages = (property.images || []).sort((a, b) => a.displayOrder - b.displayOrder).map((img) => ({ src: `${API_BASE_URL}/${img.imageUrl}`, alt: property.title }));
+  const galleryImages = (property.images || []).sort((a, b) => a.displayOrder - b.displayOrder).map((img) => ({ src: resolveApiImageUrl(img.imageUrl), alt: property.title }));
   if (galleryImages.length === 0) galleryImages.push({ src: "/rent/property-card.png", alt: "Placeholder" });
 
   return (
@@ -405,9 +405,7 @@ function RelatedPropertyCard({
   property: PropertyBuyingListItem;
   url: string;
 }) {
-  const image = property.coverImageUrl
-    ? `${API_BASE_URL}/${property.coverImageUrl}`
-    : "/rent/property-card.png";
+  const image = resolveApiImageUrl(property.coverImageUrl) || "/rent/property-card.png";
 
   const location = [property.areaName?.trim(), property.city?.trim()]
     .filter(Boolean)
