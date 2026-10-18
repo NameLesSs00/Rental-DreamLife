@@ -40,18 +40,43 @@ export function usePropertyBuyings(params: {
   });
 }
 
-// GET /api/public/property-buyings
-export function usePublicBuyProperties(params: {
+export interface PublicPropertyBuyingsQuery {
   pageNumber?: number;
   pageSize?: number;
+  sortBy?: string;
+  ascending?: boolean;
   search?: string;
+  city?: string;
+  area?: string;
+  propertyType?: number;
   propertyTypeId?: number;
+  bedrooms?: number;
+  bathrooms?: number;
+  minPrice?: number;
+  maxPrice?: number;
+  isFeatured?: boolean;
   Currency?: string;
-} = {}) {
+}
+
+// GET /api/property-buyings/public
+export function usePublicBuyProperties(
+  params: PublicPropertyBuyingsQuery = {},
+  locale?: string
+) {
   return useQuery({
-    queryKey: ["propertyBuyings", "public", params],
+    queryKey: ["propertyBuyings", "public", params, locale],
     queryFn: async () => {
-      const { data } = await api.get<PropertyBuyingApiResponse<PaginatedPropertyBuyingResponse<PropertyBuyingListItem>>>("/api/public/property-buyings", { params });
+      const queryParams = {
+        ...params,
+        propertyType: params.propertyType ?? params.propertyTypeId,
+      };
+      const { data } = await api.get<PropertyBuyingApiResponse<PaginatedPropertyBuyingResponse<PropertyBuyingListItem>>>(
+        "/api/property-buyings/public",
+        {
+          params: queryParams,
+          headers: locale ? { "Accept-Language": locale, "X-Locale": locale } : undefined,
+        }
+      );
       return data.data;
     },
     // Don't retry on 4xx — bad request won't fix itself on retry
@@ -60,6 +85,23 @@ export function usePublicBuyProperties(params: {
       if (typeof status === "number" && status >= 400 && status < 500) return false;
       return failureCount < 2;
     },
+  });
+}
+
+// GET /api/property-buyings/public/{id}/related
+export function useRelatedPropertyBuyings(id: string, locale?: string) {
+  return useQuery({
+    queryKey: ["propertyBuying", "related", id, locale],
+    queryFn: async () => {
+      const { data } = await api.get<PropertyBuyingApiResponse<PropertyBuyingListItem[]>>(
+        `/api/property-buyings/public/${id}/related`,
+        {
+          headers: locale ? { "Accept-Language": locale, "X-Locale": locale } : undefined,
+        }
+      );
+      return data.data ?? [];
+    },
+    enabled: Boolean(id),
   });
 }
 

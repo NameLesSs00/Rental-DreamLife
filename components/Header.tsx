@@ -124,7 +124,8 @@ export default function Header() {
     { href: "/", label: t("nav.items.home") },
     { href: "/rent", label: t("nav.items.rent") },
     { href: "/buy", label: t("nav.items.buy") },
-    { href: "/transfer", label: t("nav.items.transfer") },
+    // HIDDEN FOR THIS VERSION: Transfer navigation link - uncomment to re-enable
+    // { href: "/transfer", label: t("nav.items.transfer") },
     { href: "/about", label: t("nav.items.about") },
     { href: "/contact", label: t("nav.items.contact") },
   ];
@@ -276,10 +277,13 @@ export default function Header() {
             })}
           </motion.nav>
 
+          {/* HIDDEN FOR THIS VERSION: Desktop Currency switcher & Language selector - uncomment to re-enable */}
+          {/*
           <motion.div variants={headerItemMotion} className="hidden shrink-0 items-center gap-2.5 justify-end lg:flex xl:gap-3">
             <CurrencySwitcher />
             <LanguageSwitcher locale={locale} publicPathname={publicPathname} queryString={queryString} />
           </motion.div>
+          */}
 
           {/* Mobile hamburger button */}
           <motion.button
@@ -366,6 +370,8 @@ export default function Header() {
                   </motion.div>
                 );
               })}
+              {/* HIDDEN FOR THIS VERSION: Mobile Language selector & Currency switcher - uncomment to re-enable */}
+              {/*
               <motion.div variants={dropdownItemMotion} className="mt-4 space-y-3 border-t border-[#1F4D3D]/10 pt-4">
                 <div>
                   <p className="px-1 pb-1.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-[#8a9a94]">
@@ -385,6 +391,7 @@ export default function Header() {
                   <CurrencySwitcher variant="mobile" onCloseMenu={closeMenu} />
                 </div>
               </motion.div>
+              */}
             </nav>
           </motion.div>
         )}

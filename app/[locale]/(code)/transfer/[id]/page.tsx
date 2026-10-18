@@ -41,8 +41,11 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
 }
 
 export default async function SingleTransferPage({ params }: { params: Promise<{ locale: string; id: string }> }) {
+  // HIDDEN FOR THIS VERSION: Transfer routes are disabled - comment out notFound() below to re-enable
+  notFound();
+
   const { locale: rawLocale, id } = await params;
-  const locale: Locale = isLocale(rawLocale) ? rawLocale : "en";
+  const locale = (isLocale(rawLocale) ? rawLocale : "en") as Locale;
   const journeyId = await getJourneyIdBySlug(id, locale);
   
   if (!journeyId) {

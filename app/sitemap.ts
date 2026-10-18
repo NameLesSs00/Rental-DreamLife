@@ -5,7 +5,8 @@ import { locales, localizePath } from "@/lib/i18n/config";
 const routes = [
   { path: "/", priority: 1, changeFrequency: "weekly" },
   { path: "/rent", priority: 0.95, changeFrequency: "daily" },
-  { path: "/transfer", priority: 0.85, changeFrequency: "weekly" },
+  // HIDDEN FOR THIS VERSION: Transfer route in sitemap - uncomment to re-enable
+  // { path: "/transfer", priority: 0.85, changeFrequency: "weekly" },
   { path: "/blogs", priority: 0.75, changeFrequency: "weekly" },
   { path: "/about", priority: 0.7, changeFrequency: "monthly" },
   { path: "/contact", priority: 0.7, changeFrequency: "monthly" },

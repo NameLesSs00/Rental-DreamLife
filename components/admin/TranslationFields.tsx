@@ -39,7 +39,11 @@ export default function TranslationFields({
       </legend>
 
       <div className="mt-3 grid gap-3">
-        {adminTranslationLocales.map((locale) => {
+        {/* HIDDEN FOR THIS VERSION: Multi-language translation fields (Arabic, German, French, Russian) in admin forms.
+            Only English is displayed for this version. Remove .filter() below to re-enable all languages. */}
+        {adminTranslationLocales
+          .filter((locale: Locale): locale is Locale => locale === "en")
+          .map((locale) => {
           const inputId = `${label.replace(/\s+/g, "-").toLowerCase()}-${locale}`;
           const missingRequired = required && locale === "en" && !value[locale].trim();
 

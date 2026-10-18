@@ -118,9 +118,45 @@ export default function PropertyImageGallery({
       .filter(Boolean);
     const overflow = images.length - tiles.length;
 
+    // ── Single image: it takes the whole grid (no empty right-hand column). ──
+    if (tiles.length === 1) {
+      return (
+        <div className={`w-full ${className}`}>
+          <button
+            type="button"
+            onClick={() => {
+              setActiveIndex(0);
+              setIsOpen(true);
+            }}
+            className="group relative block w-full cursor-pointer overflow-hidden rounded-2xl bg-[#e8eeec] shadow-sm select-none aspect-[16/10] sm:aspect-auto sm:h-[420px] lg:h-[480px]"
+          >
+            <Image
+              src={tiles[0].src}
+              alt={tiles[0].alt || ""}
+              fill
+              priority
+              sizes="(max-width: 640px) 100vw, 90vw"
+              className="object-cover transition-transform duration-500 group-hover:scale-[1.03]"
+            />
+          </button>
+
+          {isOpen && (
+            <LightboxModal
+              images={images}
+              activeIndex={activeIndex}
+              setActiveIndex={setActiveIndex}
+              handlePrev={handlePrev}
+              handleNext={handleNext}
+              onClose={() => setIsOpen(false)}
+            />
+          )}
+        </div>
+      );
+    }
+
     return (
       <div className={`w-full ${className}`}>
-        <div className="grid gap-3 sm:grid-cols-[1.62fr_1fr] sm:gap-4">
+        <div className="grid gap-3 sm:grid-cols-[1.62fr_1fr] sm:grid-rows-2 sm:h-[420px] lg:h-[480px] sm:gap-4">
           {tiles.map((image, i) => (
             <button
               key={image.src + i}
@@ -131,8 +167,8 @@ export default function PropertyImageGallery({
               }}
               className={`group relative cursor-pointer overflow-hidden rounded-2xl bg-[#e8eeec] shadow-sm select-none ${
                 i === 0
-                  ? "aspect-[16/10] sm:row-span-2 sm:aspect-auto sm:h-full sm:min-h-[320px]"
-                  : "hidden aspect-[16/9] sm:aspect-auto sm:block"
+                  ? "aspect-[16/10] sm:aspect-auto sm:row-span-2 sm:h-full sm:min-h-0"
+                  : "hidden sm:block sm:aspect-auto sm:h-full"
               }`}
             >
               <Image
@@ -149,8 +185,21 @@ export default function PropertyImageGallery({
                     <circle cx="8.5" cy="8.5" r="1.5" />
                     <path d="m21 15-3.5-3.5L6 23" />
                   </svg>
-                  {images.length}
+                  {images.length} {images.length === 1 ? "Photo" : "Photos"}
                 </span>
+              )}
+              {i === 2 && overflow > 0 && (
+                <div className="absolute inset-0 flex items-center justify-center bg-black/45 backdrop-blur-[2px] transition group-hover:bg-black/55">
+                  <span className="flex items-center gap-2 rounded-full bg-white/95 px-4 py-2 text-[13px] font-bold text-[#183c2f] shadow-lg">
+                    <svg className="size-4 text-[#2C798B]" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
+                      <rect x="3" y="3" width="7" height="7" rx="1" />
+                      <rect x="14" y="3" width="7" height="7" rx="1" />
+                      <rect x="14" y="14" width="7" height="7" rx="1" />
+                      <rect x="3" y="14" width="7" height="7" rx="1" />
+                    </svg>
+                    +{overflow} more
+                  </span>
+                </div>
               )}
             </button>
           ))}
@@ -160,34 +209,28 @@ export default function PropertyImageGallery({
           <button
             type="button"
             onClick={() => setIsOpen(true)}
-            className="mt-3 w-full rounded-xl border border-[#dfe8e4] bg-white py-2.5 text-[13px] font-semibold text-[#183c2f] transition hover:border-[#2C798B]"
+            className="mt-3 flex sm:hidden w-full items-center justify-center gap-2 rounded-xl border border-[#dfe8e4] bg-white py-2.5 text-[13px] font-semibold text-[#183c2f] transition hover:border-[#2C798B]"
           >
-            +{overflow}
+            <svg className="size-4 text-[#2C798B]" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
+              <rect x="3" y="3" width="7" height="7" rx="1" />
+              <rect x="14" y="3" width="7" height="7" rx="1" />
+              <rect x="14" y="14" width="7" height="7" rx="1" />
+              <rect x="3" y="14" width="7" height="7" rx="1" />
+            </svg>
+            View all {images.length} photos
           </button>
         )}
 
-        <AnimatePresence>
-          {isOpen && (
-            <motion.div
-              key="mosaic-lightbox"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="fixed inset-0 z-[100] flex flex-col bg-black/95 animate-in fade-in duration-200 select-none"
-              onClick={() => setIsOpen(false)}
-            >
-              <div className="relative flex-1 p-4 lg:px-24">
-                <Image
-                  src={activeImage.src}
-                  alt={activeImage.alt || ""}
-                  fill
-                  sizes="100vw"
-                  className="object-contain"
-                />
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+        {isOpen && (
+          <LightboxModal
+            images={images}
+            activeIndex={activeIndex}
+            setActiveIndex={setActiveIndex}
+            handlePrev={handlePrev}
+            handleNext={handleNext}
+            onClose={() => setIsOpen(false)}
+          />
+        )}
       </div>
     );
   }
@@ -214,17 +257,19 @@ export default function PropertyImageGallery({
         {/* Subtle gradient overlay for controls legibility */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/35 via-transparent to-black/20 pointer-events-none" />
 
-        {/* Counter Badge (Top Left) */}
-        <div className="absolute left-3.5 top-3.5 z-10 flex items-center gap-1.5 rounded-full bg-black/60 px-3 py-1 text-[12px] font-semibold text-white backdrop-blur-md">
-          <svg className="size-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
-            <rect x="3" y="3" width="18" height="18" rx="2" />
-            <circle cx="8.5" cy="8.5" r="1.5" />
-            <path d="M21 15l-5-5L5 21" />
-          </svg>
-          <span>
-            {activeIndex + 1} / {images.length}
-          </span>
-        </div>
+        {/* Counter Badge (Top Left) - meaningless with a single photo. */}
+        {images.length > 1 && (
+          <div className="absolute left-3.5 top-3.5 z-10 flex items-center gap-1.5 rounded-full bg-black/60 px-3 py-1 text-[12px] font-semibold text-white backdrop-blur-md">
+            <svg className="size-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
+              <rect x="3" y="3" width="18" height="18" rx="2" />
+              <circle cx="8.5" cy="8.5" r="1.5" />
+              <path d="M21 15l-5-5L5 21" />
+            </svg>
+            <span>
+              {activeIndex + 1} / {images.length}
+            </span>
+          </div>
+        )}
 
         {/* Fullscreen Expand Button (Top Right) */}
         <button
@@ -270,18 +315,20 @@ export default function PropertyImageGallery({
           </button>
         )}
 
-        {/* Bottom Bar: View All Photos Pill */}
-        <div className="absolute bottom-3.5 right-3.5 z-10">
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-black/65 px-3.5 py-1.5 text-[12px] font-semibold text-white shadow backdrop-blur-md transition group-hover:bg-black/85">
-            <svg className="size-4 text-[#2C798B]" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
-              <rect x="3" y="3" width="7" height="7" rx="1" />
-              <rect x="14" y="3" width="7" height="7" rx="1" />
-              <rect x="14" y="14" width="7" height="7" rx="1" />
-              <rect x="3" y="14" width="7" height="7" rx="1" />
-            </svg>
-            <span>All {images.length} Photos</span>
-          </span>
-        </div>
+        {/* Bottom Bar: View All Photos Pill — pointless with a single photo. */}
+        {images.length > 1 && (
+          <div className="absolute bottom-3.5 right-3.5 z-10">
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-black/65 px-3.5 py-1.5 text-[12px] font-semibold text-white shadow backdrop-blur-md transition group-hover:bg-black/85">
+              <svg className="size-4 text-[#2C798B]" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
+                <rect x="3" y="3" width="7" height="7" rx="1" />
+                <rect x="14" y="3" width="7" height="7" rx="1" />
+                <rect x="14" y="14" width="7" height="7" rx="1" />
+                <rect x="3" y="14" width="7" height="7" rx="1" />
+              </svg>
+              <span>All {images.length} Photos</span>
+            </span>
+          </div>
+        )}
       </div>
 
       {/* ─── On-Page Thumbnail Filmstrip ─── */}
@@ -347,85 +394,119 @@ export default function PropertyImageGallery({
 
       {/* ─── Full-Screen Modal Lightbox ─── */}
       {isOpen && (
-        <div className="fixed inset-0 z-[100] flex flex-col bg-black/95 animate-in fade-in duration-200 select-none">
-          {/* Header */}
-          <div className="flex h-16 items-center justify-between px-4 lg:px-8">
-            <div className="text-[14px] font-medium text-white/75">
-              Photo {activeIndex + 1} of {images.length}
-            </div>
-            <button
-              type="button"
-              onClick={() => setIsOpen(false)}
-              className="grid size-10 place-items-center rounded-full text-white/70 transition-colors hover:bg-white/10 hover:text-white"
-            >
-              <svg className="size-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-          </div>
+        <LightboxModal
+          images={images}
+          activeIndex={activeIndex}
+          setActiveIndex={setActiveIndex}
+          handlePrev={handlePrev}
+          handleNext={handleNext}
+          onClose={() => setIsOpen(false)}
+        />
+      )}
+    </div>
+  );
+}
 
-          {/* Main Modal Image Area */}
-          <div className="relative flex-1 p-4 lg:px-24">
-            {/* Modal Prev Button */}
-            <button
-              type="button"
-              onClick={handlePrev}
-              className="absolute left-4 top-1/2 z-10 -translate-y-1/2 grid size-12 place-items-center rounded-full bg-black/50 text-white transition-colors hover:bg-black/80 active:scale-95 lg:left-8"
-            >
-              <svg className="size-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-              </svg>
-            </button>
+function LightboxModal({
+  images,
+  activeIndex,
+  setActiveIndex,
+  handlePrev,
+  handleNext,
+  onClose,
+}: {
+  images: GalleryImage[];
+  activeIndex: number;
+  setActiveIndex: (index: number) => void;
+  handlePrev: (e?: React.MouseEvent) => void;
+  handleNext: (e?: React.MouseEvent) => void;
+  onClose: () => void;
+}) {
+  return (
+    <div className="fixed inset-0 z-[100] flex flex-col bg-black/95 animate-in fade-in duration-200 select-none">
+      {/* Header */}
+      <div className="flex h-16 items-center justify-between px-4 lg:px-8">
+        <div className="text-[14px] font-medium text-white/75">
+          Photo {activeIndex + 1} of {images.length}
+        </div>
+        <button
+          type="button"
+          onClick={onClose}
+          className="grid size-10 place-items-center rounded-full text-white/70 transition-colors hover:bg-white/10 hover:text-white"
+        >
+          <svg className="size-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
 
-            {/* Modal Next Button */}
-            <button
-              type="button"
-              onClick={handleNext}
-              className="absolute right-4 top-1/2 z-10 -translate-y-1/2 grid size-12 place-items-center rounded-full bg-black/50 text-white transition-colors hover:bg-black/80 active:scale-95 lg:right-8"
-            >
-              <svg className="size-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-              </svg>
-            </button>
+      {/* Main Modal Image Area */}
+      <div className="relative flex-1 p-4 lg:px-24">
+        {/* Modal Prev Button */}
+        {images.length > 1 && (
+          <button
+            type="button"
+            onClick={handlePrev}
+            className="absolute left-4 top-1/2 z-10 -translate-y-1/2 grid size-12 place-items-center rounded-full bg-black/50 text-white transition-colors hover:bg-black/80 active:scale-95 lg:left-8"
+          >
+            <svg className="size-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+            </svg>
+          </button>
+        )}
 
-            {/* Active Modal Image */}
-            <div className="relative h-full w-full">
-              <Image
-                key={images[activeIndex].src}
-                src={images[activeIndex].src}
-                alt={images[activeIndex].alt}
-                fill
-                className="object-contain animate-in fade-in duration-300"
-                sizes="100vw"
-                quality={90}
-                priority
-              />
-            </div>
-          </div>
+        {/* Modal Next Button */}
+        {images.length > 1 && (
+          <button
+            type="button"
+            onClick={handleNext}
+            className="absolute right-4 top-1/2 z-10 -translate-y-1/2 grid size-12 place-items-center rounded-full bg-black/50 text-white transition-colors hover:bg-black/80 active:scale-95 lg:right-8"
+          >
+            <svg className="size-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+            </svg>
+          </button>
+        )}
 
-          {/* Modal Thumbnail Strip */}
-          <div className="h-24 px-4 pb-4 lg:px-8 lg:pb-8 flex justify-center">
-            <div className="flex items-center gap-2 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-              {images.map((image, idx) => (
-                <button
-                  key={image.src + idx}
-                  type="button"
-                  onClick={() => setActiveIndex(idx)}
-                  className={`relative h-16 w-24 shrink-0 overflow-hidden rounded-lg transition-all duration-200 ${idx === activeIndex
+        {/* Active Modal Image */}
+        <div className="relative h-full w-full">
+          <Image
+            key={images[activeIndex]?.src}
+            src={images[activeIndex]?.src || ""}
+            alt={images[activeIndex]?.alt || "Property photo"}
+            fill
+            className="object-contain animate-in fade-in duration-300"
+            sizes="100vw"
+            quality={90}
+            priority
+          />
+        </div>
+      </div>
+
+      {/* Modal Thumbnail Strip */}
+      {images.length > 1 && (
+        <div className="h-24 px-4 pb-4 lg:px-8 lg:pb-8 flex justify-center">
+          <div className="flex items-center gap-2 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            {images.map((image, idx) => (
+              <button
+                key={image.src + idx}
+                type="button"
+                onClick={() => setActiveIndex(idx)}
+                className={`relative h-16 w-24 shrink-0 overflow-hidden rounded-lg transition-all duration-200 ${
+                  idx === activeIndex
                     ? "ring-2 ring-white ring-offset-2 ring-offset-black scale-105"
                     : "opacity-40 hover:opacity-100"
-                    }`}
-                >
-                  <Image
-                    src={image.src}
-                    alt={image.alt}
-                    fill
-                    sizes="96px"
-                    className="object-cover"
-                  />
-                </button>
-              ))}
-            </div>
+                }`}
+              >
+                <Image
+                  src={image.src}
+                  alt={image.alt || `Photo ${idx + 1}`}
+                  fill
+                  sizes="96px"
+                  className="object-cover"
+                />
+              </button>
+            ))}
           </div>
         </div>
       )}

@@ -2,30 +2,28 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { useEffect, useMemo } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import PropertyImageGallery from "./PropertyImageGallery";
 import ScrollAnimation from "./ScrollAnimation";
 import ContactForm from "./ContactForm";
 import DynamicAmenityIcon from "./DynamicAmenityIcon";
-import { usePublicPropertyBuyingById } from "@/lib/hooks/usePropertyBuying";
+import {
+  usePublicPropertyBuyingById,
+  useRelatedPropertyBuyings,
+} from "@/lib/hooks/usePropertyBuying";
 import { usePropertyBuyingCategories } from "@/lib/hooks/usePropertyBuyingCategory";
 import { useGroupedAmenities, type AmenityGroup } from "@/lib/hooks/useGroupedAmenities";
 import { useCurrencies } from "@/lib/hooks/useCurrency";
 import { API_BASE_URL } from "@/lib/api/config";
-import type { PropertyBuying, PropertyBuyingSection } from "@/lib/types/propertyBuying";
-import type { PropertyBuyingCategory } from "@/lib/types/propertyBuyingCategory";
-import { formatPriceForCurrency } from "@/lib/utils/currency";
+import type { PropertyBuying, PropertyBuyingListItem } from "@/lib/types/propertyBuying";
+import { slugify } from "@/lib/utils/slugify";
+import { formatPriceForCurrency, formatPriceInfo } from "@/lib/utils/currency";
 import { useI18n } from "./I18nProvider";
 import { useHeaderStore } from "@/lib/headerStore";
-import { useEffect } from "react";
 import CurrencySelect from "./CurrencySelect";
 import { useSelectedCurrency } from "@/lib/hooks/useSelectedCurrency";
 
-
-type QuickFact = {
-  label: string;
-  icon: string;
-};
 
 const propertyTypeNames: Record<number, string> = {
   1: "Apartment",
@@ -43,12 +41,14 @@ const propertyTypeNames: Record<number, string> = {
 };
 
 export default function SingleBuyPropertyPageContent({ id }: { id: string }) {
-  const { locale, t } = useI18n();
+  const { locale, t, href } = useI18n();
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const [selectedCurrency, setSelectedCurrency] = useSelectedCurrency(searchParams.get("Currency"));
   const { data: property, isLoading } = usePublicPropertyBuyingById(id, locale, selectedCurrency);
+  const { data: relatedProperties = [] } = useRelatedPropertyBuyings(id, locale);
+  const displayedRelated = useMemo(() => relatedProperties.slice(0, 3), [relatedProperties]);
   const { data: categories = [] } = usePropertyBuyingCategories(locale);
   const { data: currencies = [] } = useCurrencies({ isActive: true });
   const setPageEntity = useHeaderStore((state) => state.setPageEntity);
@@ -88,14 +88,10 @@ export default function SingleBuyPropertyPageContent({ id }: { id: string }) {
   if (galleryImages.length === 0) galleryImages.push({ src: "/rent/property-card.png", alt: "Placeholder" });
 
   return (
-    <main className="overflow-hidden bg-white font-[var(--font-poppins)] text-[#183c2f]">
+    <main className="overflow-hidden bg-[#F3F0E9] font-[var(--font-poppins)] text-[#183c2f]">
       <section className="px-5 pb-12 pt-6 lg:px-20 lg:pb-4 lg:pt-10">
         <div className="mx-auto w-full max-w-[1282px]">
-          <ScrollAnimation delay={0}>
-            <PropertyHeader property={property} />
-          </ScrollAnimation>
-
-          <div className="mt-5 min-w-0 lg:mt-6">
+          <div className="min-w-0">
             <ScrollAnimation delay={0} className="min-w-0">
               <PropertyImageGallery
                 images={galleryImages}
@@ -104,6 +100,11 @@ export default function SingleBuyPropertyPageContent({ id }: { id: string }) {
               />
             </ScrollAnimation>
           </div>
+
+          {/* Title sits BELOW the gallery, per the Figma layout. */}
+          <ScrollAnimation delay={0.05}>
+            <PropertyTitle property={property} />
+          </ScrollAnimation>
 
           <div className="mt-8 grid gap-8 lg:mt-10 lg:grid-cols-[minmax(0,1.72fr)_minmax(0,1fr)] lg:gap-10">
             {/* ── Left column ── */}
@@ -143,24 +144,23 @@ export default function SingleBuyPropertyPageContent({ id }: { id: string }) {
           <ContactForm defaultSubject={t("buy.contactSubject", { title: property.title, propertyNumber: property.propertyNumber })} />
         </div>
       </section>
+
+      {/* Related Properties Section (Max 3) — last section on page */}
+      <RelatedPropertiesSection properties={displayedRelated} href={href} />
     </main>
   );
 }
 
-function PropertyHeader({ property }: { property: PropertyBuying }) {
+/**
+ * Property title, rendered directly under the gallery.
+ * Figma: Poppins / Medium (500) / 45px / line-height 25px / letter-spacing 0%.
+ */
+function PropertyTitle({ property }: { property: PropertyBuying }) {
   return (
-    <header>
-      <h1 className="text-[26px] font-bold leading-tight text-[#183c2f] lg:text-[40px] lg:leading-[1.15]">
+    <header className="mt-8 lg:mt-10">
+      <h1 className="text-[28px] font-medium leading-[32px] tracking-[0%] text-[#183c2f] lg:text-[45px] lg:leading-[25px]">
         {property.title}
       </h1>
-      <p className="mt-2.5 flex items-center gap-1.5 text-[12px] leading-6 text-[#8a9a94] lg:text-[15px]">
-        <Image src="/homepage/properties/icons/location.svg" alt="" width={24} height={24} className="size-6" />
-        <span className="truncate">
-          {[property.address?.street, property.address?.area, property.address?.city, property.address?.country]
-            .filter(Boolean)
-            .join(", ")}
-        </span>
-      </p>
     </header>
   );
 }
@@ -171,7 +171,7 @@ function DescriptionSection({ text }: { text: string }) {
   return (
     <section>
       <SectionTitle>{t("buy.aboutProperty")}</SectionTitle>
-      <p className="mt-[15px] whitespace-pre-line text-[14px] leading-[1.9] text-[#656566] lg:text-[16px] lg:leading-[23px]">
+      <p className="mt-5 whitespace-pre-line text-[14px] leading-[1.9] text-[#656566] lg:mt-7 lg:text-[16px] lg:leading-[23px]">
         {text || t("buy.noDescription")}
       </p>
     </section>
@@ -189,9 +189,9 @@ function AmenitiesSection({ groups }: { groups: AmenityGroup[] }) {
   if (groups.length === 0) return null;
 
   return (
-    <section className="mt-7 rounded-2xl border border-[#dfe8e4] bg-white p-5 shadow-[0_2px_12px_rgba(24,60,47,0.03)] sm:p-6">
-      <div className="flex items-center gap-2">
-        <Image src="/icons/amenities/amenities-title.svg" alt="" width={22} height={22} className="object-contain" />
+    <section className="mt-5 rounded-2xl border border-[#dfe8e4] bg-white px-5 pb-5 pt-3.5 shadow-[0_2px_12px_rgba(24,60,47,0.03)] sm:px-6 sm:pb-6 sm:pt-4">
+      <div className="flex items-center gap-3">
+        <Image src="/icons/amenities/amenities-title.svg" alt="" width={26} height={26} className="object-contain" />
         <SectionTitle>{t("buy.moreAmenities")}</SectionTitle>
       </div>
       <div className="mt-5 grid gap-6">
@@ -283,12 +283,15 @@ function PropertyInformationCard({
         />
       </div>
 
+      {/* HIDDEN FOR THIS VERSION: Currency converter select - uncomment to re-enable */}
+      {/*
       <CurrencySelect
         value={selectedCurrency}
         onChange={onCurrencyChange}
         className="mt-4 w-full"
         selectClassName="h-10 w-full rounded-xl border border-[#dfe8e4] bg-white px-3 text-[13px] text-[#414847] outline-none transition focus:border-[#2C798B]"
       />
+      */}
     </article>
   );
 }
@@ -296,10 +299,8 @@ function PropertyInformationCard({
 function SpecChip({ label, icon }: { label: string; icon?: string }) {
   return (
     <span className="inline-flex items-center gap-1.5 text-[12px] text-[#40544c]">
-      {icon ? (
+      {icon && (
         <Image src={icon} alt="" width={15} height={15} className="size-[15px] object-contain opacity-70" />
-      ) : (
-        <span className="size-[15px] rounded-[3px] border border-[#9aa8a3]" />
       )}
       <span className="whitespace-nowrap">{label}</span>
     </span>
@@ -341,6 +342,166 @@ function BasicAmenitiesCard({
 }
 
 
+/**
+ * Section headings ("About Property", "More Amenities") use the same type
+ * scale as the property title.
+ * Figma: Poppins / Medium (500) / 45px / line-height 25px / letter-spacing 0%.
+ */
 function SectionTitle({ children }: { children: React.ReactNode }) {
-  return <h2 className="text-[20px] font-semibold leading-7 text-[#101d28]">{children}</h2>;
+  return (
+    <h2 className="text-[18px] font-medium leading-[32px] tracking-[0%] text-[#183c2f] lg:text-[25px] lg:leading-[25px]">
+      {children}
+    </h2>
+  );
+}
+
+function RelatedPropertiesSection({
+  properties,
+  href,
+}: {
+  properties: PropertyBuyingListItem[];
+  href: (path: string) => string;
+}) {
+  if (properties.length === 0) return null;
+
+  return (
+    <section className="border-t border-[#e8eeea] bg-[#f8faf9] px-5 py-14 sm:px-8 lg:px-20 lg:py-20">
+      <div className="mx-auto w-full max-w-[1282px]">
+        <div className="mb-8 flex flex-col items-center justify-between gap-3 text-center sm:flex-row sm:text-left">
+          <div>
+            <h2 className="text-[24px] font-bold text-[#142d38] sm:text-[30px]">
+              Related <span className="text-[#3ca3b5]">Properties</span>
+            </h2>
+            <p className="mt-1 text-[13.5px] text-[#718288]">
+              Explore similar homes and investment opportunities
+            </p>
+          </div>
+          <Link
+            href={href("/buy")}
+            className="inline-flex items-center gap-1.5 rounded-full border border-[#2C798B] px-5 py-2 text-[13px] font-semibold text-[#2C798B] transition hover:bg-[#2C798B] hover:text-white"
+          >
+            View all properties &rarr;
+          </Link>
+        </div>
+
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          {properties.map((item) => (
+            <RelatedPropertyCard
+              key={item.id}
+              property={item}
+              url={href(`/buy/${slugify(item.title)}?id=${item.id}`)}
+            />
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function RelatedPropertyCard({
+  property,
+  url,
+}: {
+  property: PropertyBuyingListItem;
+  url: string;
+}) {
+  const image = property.coverImageUrl
+    ? `${API_BASE_URL}/${property.coverImageUrl}`
+    : "/rent/property-card.png";
+
+  const location = [property.areaName?.trim(), property.city?.trim()]
+    .filter(Boolean)
+    .join(", ") || "Hurghada, Egypt";
+
+  const typeName = propertyTypeNames[property.propertyTypeId] || "Apartment";
+
+  const formattedPrice = formatPriceInfo(
+    property.priceInfo,
+    property.price,
+    property.priceInfo?.currency || property.currency || "USD"
+  );
+
+  return (
+    <article className="group flex flex-col overflow-hidden rounded-[20px] bg-white shadow-[0_4px_20px_rgba(0,0,0,0.06)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_12px_28px_rgba(0,0,0,0.12)]">
+      {/* Top Image + Badges */}
+      <Link
+        href={url}
+        className="relative block aspect-[16/11] w-full overflow-hidden rounded-t-[20px] bg-[#e6edea]"
+      >
+        <Image
+          src={image}
+          alt={property.title}
+          fill
+          sizes="(min-width: 1280px) 25vw, (min-width: 768px) 33vw, 100vw"
+          className="object-cover object-center transition-transform duration-500 group-hover:scale-105"
+        />
+        <div className="absolute right-3.5 top-3.5 flex items-center gap-1.5">
+          {property.isFeatured && (
+            <span className="inline-flex items-center rounded-full bg-[#183640]/85 px-2.5 py-1 text-[11px] font-medium text-white backdrop-blur-xs">
+              Featured
+            </span>
+          )}
+          <span className="inline-flex items-center rounded-full bg-[#3da5b6]/85 px-3 py-1 text-[11px] font-medium text-white backdrop-blur-xs">
+            For Sale
+          </span>
+        </div>
+      </Link>
+
+      {/* Card Info */}
+      <div className="flex flex-1 flex-col p-4 sm:p-5">
+        <Link href={url} className="hover:underline">
+          <h4 className="line-clamp-1 text-[17px] font-bold text-[#142d38] sm:text-[18px]">
+            {property.title}
+          </h4>
+        </Link>
+
+        {/* Location Row */}
+        <div className="mt-1.5 flex items-center gap-1.5 text-[12.5px] text-[#718288]">
+          <Image
+            src="/homepage/properties/icons/location.svg"
+            alt=""
+            width={14}
+            height={14}
+            className="size-3.5 shrink-0"
+          />
+          <span className="line-clamp-1">{location}</span>
+        </div>
+
+        {/* Type & Size Row */}
+        <div className="mt-2.5 flex items-center justify-between text-[13px] text-[#718288]">
+          <span>{typeName}</span>
+          <span>{property.area ? `${property.area} m²` : "N/A"}</span>
+        </div>
+
+        {/* Price & Beds/Baths Row */}
+        <div className="mt-3 flex items-center justify-between pt-1">
+          <span className="text-[17px] font-bold text-[#142d38] sm:text-[18px]">
+            {formattedPrice}
+          </span>
+          <div className="flex items-center gap-3 text-[13px] text-[#718288]">
+            <span className="flex items-center gap-1">
+              <span>{property.bathrooms || 1}</span>
+              <Image
+                src="/homepage/properties/icons/bath.svg"
+                alt=""
+                width={15}
+                height={15}
+                className="size-[15px] opacity-70"
+              />
+            </span>
+            <span className="flex items-center gap-1">
+              <span>{property.bedrooms || 1}</span>
+              <Image
+                src="/homepage/properties/icons/bed.svg"
+                alt=""
+                width={15}
+                height={15}
+                className="size-[15px] opacity-70"
+              />
+            </span>
+          </div>
+        </div>
+      </div>
+    </article>
+  );
 }

@@ -1,10 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
-import type {
-  PropertyBuying,
-  PropertyBuyingSection,
-} from "@/lib/types/propertyBuying";
+import type { PropertyBuying } from "@/lib/types/propertyBuying";
 import type { PropertyBuyingCategory } from "@/lib/types/propertyBuyingCategory";
 
 export type AmenityItem = {

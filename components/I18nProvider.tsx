@@ -5,7 +5,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { localizePath, type Locale } from "@/lib/i18n/config";
 import type { Messages } from "@/lib/i18n/messages";
 
-type TranslationParams = Record<string, string | number>;
+type TranslationParams = Record<string, string | number | undefined> & { defaultValue?: string };
 
 type I18nContextValue = {
   locale: Locale;
@@ -39,8 +39,13 @@ export default function I18nProvider({
 
   function t(key: string, params?: TranslationParams) {
     const value = getNestedValue(messages, key);
-    const template = typeof value === "string" ? value : key;
-    return interpolate(template, params);
+    if (typeof value === "string") {
+      return interpolate(value, params);
+    }
+    if (params && typeof params.defaultValue === "string") {
+      return interpolate(params.defaultValue, params);
+    }
+    return interpolate(key, params);
   }
 
   function tArray<T = unknown>(key: string) {

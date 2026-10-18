@@ -9,6 +9,7 @@ interface PropertyBookingCardProps {
   propertyId: string;
   propertyName: string;
   basePrice: number;
+  nightPrice?: number;
   currencyCode?: string;
   capacity: number;
   rating?: number;
@@ -49,6 +50,7 @@ interface PropertyBookingCardProps {
 export default function PropertyBookingCard({
   idPrefix,
   basePrice,
+  nightPrice,
   currencyCode = "USD",
   capacity,
   rating = 0,
@@ -74,50 +76,48 @@ export default function PropertyBookingCard({
   onScrollToCalendar,
 }: PropertyBookingCardProps) {
   const { t, href } = useI18n();
-  const isFormValid =
-    !isPending &&
-    !isPriceUnavailable &&
-    bookingForm.fullName.trim() !== "" &&
-    bookingForm.email.trim() !== "" &&
-    bookingForm.phone.trim() !== "" &&
-    Boolean(checkIn) &&
-    Boolean(checkOut) &&
-    checkOut > checkIn &&
-    bookingForm.person <= capacity &&
-    hasAcceptedRules;
+  const bookPropertyTitle =
+    t("booking.bookTheProperty", { defaultValue: "Book The Property" }) !== "booking.bookTheProperty"
+      ? t("booking.bookTheProperty", { defaultValue: "Book The Property" })
+      : "Book The Property";
+
+  const displayedPrice = nightPrice ?? basePrice;
 
   return (
     <div
       id={idPrefix ? `booking-card-${idPrefix}` : "booking-card"}
-      className="scroll-mt-24 rounded-2xl border border-[#dfe8e4] bg-white p-4 shadow-[0_4px_24px_rgba(24,60,47,0.06)] transition hover:shadow-[0_8px_32px_rgba(24,60,47,0.1)] sm:p-5"
+      className="scroll-mt-24 rounded-2xl border border-[#dfe8e4] bg-white p-4 shadow-[0_4px_24px_rgba(24,60,47,0.06)] sm:p-5"
     >
+      {/* ─── Top Title: Book The Property ─── */}
+      <div className="mb-3">
+        <h3 className="text-[18px] font-bold text-[#183c2f]">
+          {bookPropertyTitle}
+        </h3>
+      </div>
+
       {/* ─── Card Header: Price & Rating ─── */}
-      <div className="flex items-baseline justify-between border-b border-[#edf2ef] pb-3.5">
+      <div className="flex items-baseline justify-between border-b border-[#edf2ef] pb-2.5">
         <div>
-          <span className="text-[26px] font-bold text-[#183c2f] lg:text-[28px]">
-            {formatCurrency(basePrice, currencyCode)}
+          <span className="text-[22px] font-bold text-[#183c2f] lg:text-[24px]">
+            {formatCurrency(displayedPrice, currencyCode)}
           </span>
-          <span className="text-[13px] font-medium text-[#667c74]"> / {t("common.night")}</span>
+          <span className="text-[12px] font-medium text-[#667c74]"> / {t("common.night")}</span>
         </div>
 
         {totalReviews > 0 ? (
-          <div className="flex items-center gap-1.5 text-[13px] font-semibold text-[#183c2f]">
+          <div className="flex items-center gap-1 text-[12px] font-semibold text-[#183c2f]">
             <span className="text-[#2C798B]">★</span>
             <span>{rating.toFixed(1)}</span>
-            <span className="text-[12px] font-normal text-[#8a9a94]">
+            <span className="text-[11px] font-normal text-[#8a9a94]">
               ({totalReviews})
             </span>
           </div>
-        ) : (
-          <span className="inline-flex items-center gap-1 rounded-full bg-[#f4f7f5] px-2.5 py-1 text-[11px] font-semibold text-[#2C798B]">
-            ★ New
-          </span>
-        )}
+        ) : null}
       </div>
 
-      <form onSubmit={onSubmitBooking} className="mt-3.5 space-y-3.5">
+      <form onSubmit={onSubmitBooking} className="mt-3 space-y-2.5">
         {/* ─── Date Picker Box ─── */}
-        <div className="rounded-xl border border-[#dfe8e4] bg-[#fbfdfc] p-3 transition focus-within:border-[#2C798B]">
+        <div className="rounded-xl border border-[#dfe8e4] bg-[#fbfdfc] p-2.5 transition focus-within:border-[#2C798B]">
           <div className="grid grid-cols-2 gap-2">
             <div>
               <label className="block text-[10px] font-bold uppercase tracking-wider text-[#667c74]">
@@ -128,10 +128,10 @@ export default function PropertyBookingCard({
                 min={todayString}
                 value={checkIn}
                 onChange={(e) => onCheckInChange(e.target.value)}
-                className="mt-1 w-full bg-transparent text-[13px] font-semibold text-[#183c2f] outline-none cursor-pointer"
+                className="mt-0.5 w-full bg-transparent text-[12.5px] font-semibold text-[#183c2f] outline-none cursor-pointer"
               />
             </div>
-            <div className="border-l border-[#dfe8e4] pl-2.5">
+            <div className="border-l border-[#dfe8e4] pl-2">
               <label className="block text-[10px] font-bold uppercase tracking-wider text-[#667c74]">
                 {t("booking.checkout")}
               </label>
@@ -140,20 +140,20 @@ export default function PropertyBookingCard({
                 min={checkIn || todayString}
                 value={checkOut}
                 onChange={(e) => onCheckOutChange(e.target.value)}
-                className="mt-1 w-full bg-transparent text-[13px] font-semibold text-[#183c2f] outline-none cursor-pointer"
+                className="mt-0.5 w-full bg-transparent text-[12.5px] font-semibold text-[#183c2f] outline-none cursor-pointer"
               />
             </div>
           </div>
 
-          <div className="mt-2.5 flex items-center justify-between border-t border-[#edf2ef] pt-2 text-[11px]">
-            <span className="text-[#667c74]">
+          <div className="mt-2 flex items-center justify-between border-t border-[#edf2ef] pt-1.5 text-[10.5px]">
+            <span className="text-[#667c74] truncate">
               {checkIn && checkOut
                 ? t("booking.selectedRange", { count: nights, label: nights === 1 ? t("common.night") : t("common.nights") })
                 : checkIn
                   ? t("booking.selectCheckout")
                   : t("booking.selectDates")}
             </span>
-            <div className="flex items-center gap-2">
+            <div className="flex shrink-0 items-center gap-1.5">
               {onScrollToCalendar && (
                 <button
                   type="button"
@@ -181,7 +181,7 @@ export default function PropertyBookingCard({
 
         {/* ─── Guests Selector ─── */}
         <div>
-          <label className="block text-[12px] font-semibold text-[#183c2f]">
+          <label className="block text-[11px] font-semibold text-[#183c2f]">
             {t("common.guests")}
           </label>
           <select
@@ -192,7 +192,7 @@ export default function PropertyBookingCard({
                 person: Number(e.target.value),
               }))
             }
-            className="mt-1.5 h-11 w-full rounded-xl border border-[#dfe8e4] bg-white px-3.5 text-[14px] text-[#183c2f] outline-none transition focus:border-[#2C798B] focus:ring-1 focus:ring-[#2C798B]"
+            className="mt-1 h-8.5 w-full rounded-lg border border-[#dfe8e4] bg-white px-2.5 text-[12.5px] text-[#183c2f] outline-none transition focus:border-[#2C798B]"
           >
             {Array.from(
               { length: Math.max(1, capacity) },
@@ -207,9 +207,9 @@ export default function PropertyBookingCard({
         </div>
 
         {/* ─── Guest Contact Fields ─── */}
-        <div className="space-y-3 pt-1">
+        <div className="space-y-2">
           <div>
-            <label className="block text-[12px] font-semibold text-[#183c2f]">
+            <label className="block text-[11px] font-semibold text-[#183c2f]">
               {t("booking.fullName")} <span className="text-red-500">*</span>
             </label>
             <input
@@ -219,53 +219,52 @@ export default function PropertyBookingCard({
               onChange={(e) =>
                 setBookingForm((prev) => ({ ...prev, fullName: e.target.value }))
               }
-              className="mt-1.5 h-11 w-full rounded-xl border border-[#dfe8e4] bg-white px-3.5 text-[14px] text-[#183c2f] outline-none transition placeholder:text-[#aab4b0] focus:border-[#2C798B] focus:ring-1 focus:ring-[#2C798B]"
+              className="mt-1 h-8.5 w-full rounded-lg border border-[#dfe8e4] bg-white px-2.5 text-[12.5px] text-[#183c2f] outline-none transition placeholder:text-[#aab4b0] focus:border-[#2C798B]"
             />
           </div>
 
-          <div>
-            <label className="block text-[12px] font-semibold text-[#183c2f]">
-              {t("booking.email")} <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="email"
-              placeholder={t("booking.emailPlaceholder")}
-              value={bookingForm.email}
-              onChange={(e) =>
-                setBookingForm((prev) => ({ ...prev, email: e.target.value }))
-              }
-              className="mt-1.5 h-11 w-full rounded-xl border border-[#dfe8e4] bg-white px-3.5 text-[14px] text-[#183c2f] outline-none transition placeholder:text-[#aab4b0] focus:border-[#2C798B] focus:ring-1 focus:ring-[#2C798B]"
-            />
-          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            <div>
+              <label className="block text-[11px] font-semibold text-[#183c2f]">
+                {t("booking.email")} <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="email"
+                placeholder={t("booking.emailPlaceholder")}
+                value={bookingForm.email}
+                onChange={(e) =>
+                  setBookingForm((prev) => ({ ...prev, email: e.target.value }))
+                }
+                className="mt-1 h-8.5 w-full rounded-lg border border-[#dfe8e4] bg-white px-2.5 text-[12.5px] text-[#183c2f] outline-none transition placeholder:text-[#aab4b0] focus:border-[#2C798B]"
+              />
+            </div>
 
-          <div>
-            <label className="block text-[12px] font-semibold text-[#183c2f]">
-              {t("booking.phone")} <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="tel"
-              placeholder={t("booking.phonePlaceholder")}
-              value={bookingForm.phone}
-              onChange={(e) =>
-                setBookingForm((prev) => ({
-                  ...prev,
-                  phone: e.target.value.replace(/[^\d+]/g, ""),
-                }))
-              }
-              className="mt-1.5 h-11 w-full rounded-xl border border-[#dfe8e4] bg-white px-3.5 text-[14px] text-[#183c2f] outline-none transition placeholder:text-[#aab4b0] focus:border-[#2C798B] focus:ring-1 focus:ring-[#2C798B]"
-            />
+            <div>
+              <label className="block text-[11px] font-semibold text-[#183c2f]">
+                {t("booking.phone")} <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="tel"
+                placeholder={t("booking.phonePlaceholder")}
+                value={bookingForm.phone}
+                onChange={(e) =>
+                  setBookingForm((prev) => ({
+                    ...prev,
+                    phone: e.target.value.replace(/[^\d+]/g, ""),
+                  }))
+                }
+                className="mt-1 h-8.5 w-full rounded-lg border border-[#dfe8e4] bg-white px-2.5 text-[12.5px] text-[#183c2f] outline-none transition placeholder:text-[#aab4b0] focus:border-[#2C798B]"
+              />
+            </div>
           </div>
         </div>
 
         {/* ─── Price Breakdown Summary ─── */}
-        <div className="rounded-xl border border-[#edf2ef] bg-[#fbfdfc] p-4">
-          <h4 className="text-[11px] font-bold uppercase tracking-wider text-[#183c2f]">
-            {t("booking.priceSummary")}
-          </h4>
-          <dl className="mt-2.5 space-y-2 text-[13px]">
+        <div className="rounded-lg border border-[#edf2ef] bg-[#fbfdfc] p-2.5">
+          <dl className="space-y-1.5 text-[12px]">
             <div className="flex justify-between text-[#667c74]">
               <span>
-                {formatCurrency(basePrice, currencyCode)} × {nights || 0}{" "}
+                {formatCurrency(displayedPrice, currencyCode)} × {nights || 0}{" "}
                 {nights === 1 ? t("common.night") : t("common.nights")}
               </span>
               <span className="font-semibold text-[#183c2f]">
@@ -274,9 +273,9 @@ export default function PropertyBookingCard({
                   : formatCurrency(estimatedTotal, currencyCode)}
               </span>
             </div>
-            <div className="flex justify-between border-t border-[#edf2ef] pt-2 text-[14px]">
+            <div className="flex justify-between border-t border-[#edf2ef] pt-1.5 text-[13px]">
               <span className="font-bold text-[#183c2f]">{t("common.total")}</span>
-              <span className="text-[17px] font-bold text-[#2C798B]">
+              <span className="text-[15px] font-bold text-[#2C798B]">
                 {isCheckingPrice && checkIn && checkOut
                   ? t("common.checking")
                   : formatCurrency(estimatedTotal, currencyCode)}
@@ -284,7 +283,7 @@ export default function PropertyBookingCard({
             </div>
           </dl>
           {!checkIn || !checkOut ? (
-            <p className="mt-2 text-[11px] text-[#8a9a94]">
+            <p className="mt-1.5 text-[10.5px] text-[#8a9a94]">
               {t("booking.selectDatesPrice")}
             </p>
           ) : null}
@@ -292,55 +291,58 @@ export default function PropertyBookingCard({
 
         {/* Alerts & Errors */}
         {isPriceUnavailable && (
-          <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-[12px] leading-relaxed text-amber-700">
+          <div className="rounded-lg border border-amber-200 bg-amber-50 px-2.5 py-1.5 text-[11.5px] leading-relaxed text-amber-700">
             {t("booking.pricingMissing", { dates: missingDates.length ? missingDates.join(", ") : t("booking.selectDates") })}
           </div>
         )}
 
         {formError && (
-          <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-[12px] leading-relaxed text-red-600">
+          <div className="rounded-lg border border-red-200 bg-red-50 px-2.5 py-1.5 text-[11.5px] leading-relaxed text-red-600">
             {formError}
           </div>
         )}
 
-        {/* House Rules Acceptance
-        <label className="flex items-start gap-2.5 text-[12px] leading-5 text-[#656566] cursor-pointer">
+        {/* House Rules Agreement Checkbox (saved for later use)
+        <label className="flex items-start gap-2 cursor-pointer text-[11.5px] text-[#556960] select-none py-0.5">
           <input
             type="checkbox"
             checked={hasAcceptedRules}
             onChange={(e) => setHasAcceptedRules(e.target.checked)}
-            className="mt-0.5 size-4 rounded accent-[#2C798B] cursor-pointer"
+            className="mt-0.5 size-3.5 rounded border-[#dfe8e4] text-[#2C798B] focus:ring-[#2C798B] cursor-pointer"
           />
-          <span>
+          <span className="leading-tight">
             {t("booking.rulesAgreement")}{" "}
-            <Link
-              href={href("/house-rules")}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="font-medium text-[#2C798B] underline hover:text-[#183c2f]"
+            <a
+              href="#terms-and-conditions"
+              onClick={(e) => {
+                e.stopPropagation();
+                const el = document.getElementById("terms-and-conditions");
+                if (el) el.scrollIntoView({ behavior: "smooth" });
+              }}
+              className="text-[#2C798B] underline font-medium hover:text-[#183c2f]"
             >
-              {t("common.houseRules")}
-            </Link>
-            .
+              {t("terms.houseRules", { defaultValue: "house rules & policies" })}
+            </a>
           </span>
-        </label> */}
+        </label>
+        */}
 
         {/* Submit CTA Button */}
         <button
           type="submit"
-          disabled={!isFormValid}
-          className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-[#2C798B] text-[15px] font-semibold text-white shadow-md transition-all hover:bg-[#183640] hover:shadow-lg active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-60"
+          disabled={isPending}
+          className="flex h-10 w-full items-center justify-center gap-2 rounded-xl bg-[#2C798B] text-[13.5px] font-semibold text-white shadow-sm transition-all hover:bg-[#183640] hover:shadow active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-60"
         >
           {isPending ? (
             <>
-              <span className="size-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+              <span className="size-3.5 animate-spin rounded-full border-2 border-white/30 border-t-white" />
               <span>{t("common.processing")}</span>
             </>
           ) : (
             <>
               <span>{t("booking.bookPaypal")}</span>
               <svg
-                className="size-4"
+                className="size-3.5"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -357,10 +359,10 @@ export default function PropertyBookingCard({
         </button>
 
         {/* Trust Badges */}
-        <div className="space-y-2 border-t border-[#edf2ef] pt-3.5 text-[12px] text-[#667c74]">
-          <div className="flex items-center gap-2">
+        <div className="border-t border-[#edf2ef] pt-2 text-[11px] text-[#667c74]">
+          <div className="flex items-center gap-1.5">
             <svg
-              className="size-4 text-[#2C798B] shrink-0"
+              className="size-3.5 text-[#2C798B] shrink-0"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"

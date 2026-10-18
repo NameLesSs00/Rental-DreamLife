@@ -13,6 +13,8 @@ import {
   useCheckPropertyDailyPrices,
   usePropertyById,
   usePropertyAvailability,
+  usePropertyDailyPrices,
+  usePropertyDailyPriceForDate,
 } from "@/lib/hooks/useProperties";
 import { API_BASE_URL } from "@/lib/api/config";
 import { useCreateRentBooking } from "@/lib/hooks/useBooking";
@@ -23,6 +25,7 @@ import { useLandmarks } from "@/lib/hooks/useAttributeGroupItem";
 import type { Property, PropertyCategoryGroup } from "@/lib/types/property";
 import type { PropertyCategory, PropertyCategoryItem } from "@/lib/types/propertyCategory";
 import type { AttributeGroupItem } from "@/lib/types/attributeGroupItem";
+import type { PriceInfo } from "@/lib/types/currency";
 import { useReviews, usePropertyAverageRating, useCreateReview } from "@/lib/hooks/useReview";
 import { savePaymentBookingContext } from "@/lib/utils/paymentBookingContext";
 import { formatCurrency, formatPriceInfo, getPriceInfoAmount, getPriceInfoCurrency } from "@/lib/utils/currency";
@@ -184,7 +187,7 @@ function PropertyDetailView({
   const [checkIn, setCheckIn] = useState("");
   const [checkOut, setCheckOut] = useState("");
   const [formError, setFormError] = useState("");
-  const [hasAcceptedRules, setHasAcceptedRules] = useState(false);
+  const [hasAcceptedRules, setHasAcceptedRules] = useState(true);
   const [bookingForm, setBookingForm] = useState({
     fullName: "",
     email: "",
@@ -301,6 +304,37 @@ function PropertyDetailView({
   const { data: availabilityData } = usePropertyAvailability(propertyId, startDate, endDate);
   const bookings = (availabilityData?.bookingCalendar || []) as BookingCalendarItem[];
 
+  // ─── Real Per-Night Price from Daily Prices API ───
+  const effectivePriceDate = checkIn || todayString;
+  const { data: singleDailyPrice } = usePropertyDailyPriceForDate(propertyId, effectivePriceDate, selectedCurrency);
+  const { data: dailyPricesData } = usePropertyDailyPrices({
+    propertyId,
+    startDate,
+    endDate,
+    currency: selectedCurrency,
+  });
+
+  const dailyPricesByDate = useMemo(() => {
+    const map = new Map<string, { date: string; price?: number; priceInfo?: PriceInfo | null }>();
+    (dailyPricesData?.prices || []).forEach((item) => {
+      if (item.date) {
+        map.set(item.date, item);
+      }
+    });
+    return map;
+  }, [dailyPricesData]);
+
+  const singlePriceInfo = singleDailyPrice?.priceInfo;
+  const rangePriceItem = dailyPricesByDate.get(effectivePriceDate);
+  const activePriceInfo = singlePriceInfo || rangePriceItem?.priceInfo || property.basePriceInfo || null;
+
+  const activeNightPrice = useMemo(() => {
+    if (singlePriceInfo?.amount != null) return singlePriceInfo.amount;
+    if (rangePriceItem?.priceInfo?.amount != null) return rangePriceItem.priceInfo.amount;
+    if (typeof rangePriceItem?.price === "number" && rangePriceItem.price > 0) return rangePriceItem.price;
+    return basePrice;
+  }, [singlePriceInfo, rangePriceItem, basePrice]);
+
   const isDateBooked = (dateString: string) => {
     const overlappingBooking = bookings.find((booking) => dateString >= booking.from && dateString < booking.to);
     return Boolean(overlappingBooking && overlappingBooking.isBookable === false);
@@ -389,7 +423,12 @@ function PropertyDetailView({
       else if (isBooked) status = "booked";
       else if (isToday) status = "today";
 
-      return { day: i + 1, date: dateString, status };
+      const priceItem = dailyPricesByDate.get(dateString);
+      const price = priceItem
+        ? formatPriceInfo(priceItem.priceInfo, priceItem.price, currencyCode)
+        : undefined;
+
+      return { day: i + 1, date: dateString, status, price };
     });
   };
 
@@ -404,7 +443,7 @@ function PropertyDetailView({
         };
       }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [monthsToShow, bookings, todayString],
+    [monthsToShow, bookings, todayString, dailyPricesByDate],
   );
 
   useEffect(() => {
@@ -430,7 +469,7 @@ function PropertyDetailView({
   }, [checkDailyPrices, checkIn, checkOut, propertyId, resetPriceCheck]);
 
   const nights = checkIn && checkOut ? getNights(checkIn, checkOut) : 0;
-  const estimatedTotal = checkIn && checkOut && priceCheck?.isPriceAvailable ? priceCheck.totalPrice * conversionRate : nights * basePrice;
+  const estimatedTotal = checkIn && checkOut && priceCheck?.isPriceAvailable ? priceCheck.totalPrice * conversionRate : nights * activeNightPrice;
   const missingDates = priceCheck?.missingDates || [];
   const isPriceUnavailable = Boolean(checkIn && checkOut && priceCheck && !priceCheck.isPriceAvailable);
 
@@ -438,25 +477,56 @@ function PropertyDetailView({
     e.preventDefault();
     setFormError("");
 
-    if (!bookingForm.fullName.trim() || !bookingForm.email.trim() || !bookingForm.phone.trim()) {
-      setFormError(t("booking.errors.contact"));
-      return;
-    }
-
     if (!checkIn || !checkOut) {
-      setFormError(t("booking.errors.dates"));
+      const message = t("booking.errors.dates");
+      setFormError(message);
+      toast.error(message);
       return;
     }
 
     if (checkOut <= checkIn) {
-      setFormError(t("booking.errors.checkoutAfter"));
+      const message = t("booking.errors.checkoutAfter");
+      setFormError(message);
+      toast.error(message);
+      return;
+    }
+
+    if (!bookingForm.fullName.trim()) {
+      const message = t("booking.errors.nameRequired", { defaultValue: "Please enter your full name." });
+      setFormError(message);
+      toast.error(message);
+      return;
+    }
+
+    if (!bookingForm.email.trim()) {
+      const message = t("booking.errors.emailRequired", { defaultValue: "Please enter your email address." });
+      setFormError(message);
+      toast.error(message);
+      return;
+    }
+
+    if (!bookingForm.phone.trim()) {
+      const message = t("booking.errors.phoneRequired", { defaultValue: "Please enter your phone number." });
+      setFormError(message);
+      toast.error(message);
       return;
     }
 
     if (bookingForm.person > capacity) {
-      setFormError(t("booking.errors.capacity", { count: capacity }));
+      const message = t("booking.errors.capacity", { count: capacity });
+      setFormError(message);
+      toast.error(message);
       return;
     }
+
+    /* Optional house rules check (commented out for later use):
+    if (!hasAcceptedRules) {
+      const message = t("booking.errors.rulesRequired", { defaultValue: "Please agree to the house rules and cancellation policy to proceed." });
+      setFormError(message);
+      toast.error(message);
+      return;
+    }
+    */
 
     try {
       const latestAvailability = await checkAvailabilityRange({ propertyId, startDate: checkIn, endDate: checkOut });
@@ -582,127 +652,75 @@ function PropertyDetailView({
     }
   });
 
-  const quickFacts = [
-    { label: property.propertyTypeName || t("property.quickType"), icon: "/homepage/properties/icons/size.svg" },
-    { label: `${property.capacity || 2} ${t("property.guests")}`, icon: "/billing/icons/tenant.svg" },
-    { label: `${property.bedroomNo || 1} ${Number(property.bedroomNo || 1) === 1 ? t("property.bedroom") : t("property.bedrooms")}`, icon: "/homepage/properties/icons/bed.svg" },
-  ];
-
-  const priceDetails: DetailRow[] = [
-    [t("property.pricePerNight"), `${formatPriceInfo(property.basePriceInfo, property.basePrice)} / ${t("common.night")}`],
-  ];
-
-  const locationDetails: DetailRow[] = [
-    [t("property.city"), property.address?.city || t("property.unknown")],
-    [t("property.area"), property.address?.area || t("property.unknown")],
-    [t("property.availabilityLabel"), property.isAvailable ? t("property.available") : t("property.notAvailable")],
-  ];
+  const basicAmenities: { name: string; icon: string | null }[] = [];
   const amenityCategories = getPropertyCategoryGroupsFromValues(property, includeCategories, includeItems);
+  amenityCategories.forEach((cat) => {
+    cat.items.forEach((item) => {
+      if (basicAmenities.length < 6) {
+        const categoryKey = normalizeLookupKey(cat.categoryName);
+        const itemKey = normalizeLookupKey(item);
+        const icon = itemIconByCategoryAndName.get(`${categoryKey}::${itemKey}`) ?? itemIconByName.get(itemKey) ?? null;
+        basicAmenities.push({ name: item, icon });
+      }
+    });
+  });
+
   const selectedLandmarks = getPropertyLandmarks(property, landmarkItems);
 
   return (
-    <main className="bg-white pb-24 font-[var(--font-poppins)] text-[#183c2f] lg:pb-12">
+    <main className="bg-[#F3F0E9] pb-24 font-[var(--font-poppins)] text-[#183c2f] lg:pb-12">
       <section className="px-4 pb-12 pt-5 sm:px-6 lg:px-16 lg:pb-8 lg:pt-10">
         <div className="mx-auto w-full max-w-[1282px]">
-          {/* ─── Top Breadcrumbs & Header ─── */}
-          <ScrollAnimation delay={0}>
-            <PropertyHeader property={property} />
+          {/* ─── Top Mosaic Gallery (Above Title, per Figma design) ─── */}
+          <div className="min-w-0">
+            <ScrollAnimation delay={0} className="min-w-0">
+              <PropertyImageGallery images={galleryImages} variant="mosaic" className="mx-auto max-w-[1282px]" />
+            </ScrollAnimation>
+          </div>
+
+          {/* ─── Property Title & Subtitle Directly Under Gallery ─── */}
+          <ScrollAnimation delay={0.05}>
+            <header className="mt-8 lg:mt-10">
+              <h1 className="text-[28px] font-medium leading-[32px] tracking-[0%] text-[#183c2f] lg:text-[45px] lg:leading-[35px]">
+                {property.name}
+              </h1>
+              <p className="mt-2.5 text-[14px] text-[#718288] lg:text-[16px]">
+                {property.description
+                  ? property.description.split("\n")[0].slice(0, 100)
+                  : t("property.tagline", { defaultValue: "Enjoy a luxurious place You can relax and unwind there." })}
+              </p>
+            </header>
           </ScrollAnimation>
 
-          {/* ─── Desktop 2-Column Grid / Mobile Stacking ─── */}
-          <div className="mt-6 lg:grid lg:grid-cols-[minmax(0,1fr)_380px] xl:grid-cols-[minmax(0,1fr)_420px] lg:gap-10 xl:gap-12 lg:items-start">
-            {/* ─── Left Column: Main Showcase ─── */}
+          {/* ─── Top 2-Column Section on Desktop: Left Showcase & Right Sticky Booking Card ─── */}
+          <div className="mt-8 grid gap-8 lg:mt-10 lg:grid-cols-[minmax(0,1.72fr)_380px] xl:grid-cols-[minmax(0,1.72fr)_420px] lg:gap-10 xl:gap-12 lg:items-start">
+            {/* ─── Left Column: Overview & About Property ─── */}
             <div className="min-w-0 space-y-7">
-              {/* Photo Gallery & Quick Facts */}
-              <ScrollAnimation delay={0} className="min-w-0">
-                <PropertyImageGallery images={galleryImages} />
-                <QuickFacts facts={quickFacts} />
+              {/* 1. Property Overview Cards (Price/Specs Box & Basic Amenities Box) */}
+              <ScrollAnimation delay={0.05}>
+                <PropertyOverviewCard
+                  property={property}
+                  basicAmenities={basicAmenities}
+                  activePriceInfo={activePriceInfo}
+                  activeNightPrice={activeNightPrice}
+                  currencyCode={currencyCode}
+                />
               </ScrollAnimation>
 
-              {/* Description */}
+              {/* 2. Description (About Property) */}
               <ScrollAnimation delay={0.05}>
                 <DescriptionSection text={property.description} />
               </ScrollAnimation>
-
-              {/* Details Cards */}
-              <ScrollAnimation delay={0.05}>
-                <DetailsCards prices={priceDetails} location={locationDetails} />
-              </ScrollAnimation>
-
-              {/* Amenities */}
-              <ScrollAnimation delay={0.05}>
-                <AmenitiesSection
-                  categories={amenityCategories}
-                  categoryIconByName={categoryIconByName}
-                  itemIconByName={itemIconByName}
-                  itemIconByCategoryAndName={itemIconByCategoryAndName}
-                />
-              </ScrollAnimation>
-
-              {/* Info Area (Landmarks) */}
-              {selectedLandmarks.length > 0 && (
-                <ScrollAnimation delay={0.05}>
-                  <LandmarksSection landmarks={selectedLandmarks} />
-                </ScrollAnimation>
-              )}
-
-              {/* Interactive Calendar */}
-              <ScrollAnimation delay={0.05}>
-                <AvailabilityCalendarSection
-                  checkIn={checkIn}
-                  checkOut={checkOut}
-                  onSelectDate={selectDate}
-                  onClearDates={clearDates}
-                  months={months}
-                  monthsToShow={monthsToShow}
-                  setMonthsToShow={setMonthsToShow}
-                  nights={nights}
-                />
-              </ScrollAnimation>
-
-              {/* Mobile Booking Section: Placed immediately after Availability & Dates on screens < lg */}
-              <div className="mt-7 lg:hidden" id="booking-card-mobile">
-                <PropertyBookingCard
-                  idPrefix="mobile"
-                  propertyId={property.id}
-                  propertyName={property.name}
-                  basePrice={basePrice}
-                  currencyCode={currencyCode}
-                  capacity={capacity}
-                  rating={averageRating}
-                  totalReviews={totalReviews}
-                  todayString={todayString}
-                  checkIn={checkIn}
-                  checkOut={checkOut}
-                  nights={nights}
-                  onCheckInChange={handleCheckInChange}
-                  onCheckOutChange={handleCheckOutChange}
-                  onClearDates={clearDates}
-                  bookingForm={bookingForm}
-                  setBookingForm={setBookingForm}
-                  hasAcceptedRules={hasAcceptedRules}
-                  setHasAcceptedRules={setHasAcceptedRules}
-                  formError={formError}
-                  isPending={isPending}
-                  isCheckingPrice={isCheckingPrice}
-                  isPriceUnavailable={isPriceUnavailable}
-                  estimatedTotal={estimatedTotal}
-                  missingDates={missingDates}
-                  onSubmitBooking={submitBooking}
-                  onScrollToCalendar={scrollToCalendar}
-                />
-              </div>
-
-
             </div>
 
-            {/* ─── Right Column: Sticky Booking Sidebar on Desktop (hidden on mobile) ─── */}
-            <aside className="hidden lg:block lg:sticky lg:top-20 lg:max-h-[calc(100dvh-5.5rem)] lg:overflow-y-auto [scrollbar-width:thin] [scrollbar-color:#2C798B_transparent] self-start pr-1">
+            {/* ─── Right Column: Sticky Booking Sidebar on Desktop / Stacked on Mobile ─── */}
+            <aside className="min-w-0 lg:sticky lg:top-24 self-start">
               <PropertyBookingCard
-                idPrefix="desktop"
+                idPrefix="main"
                 propertyId={property.id}
                 propertyName={property.name}
                 basePrice={basePrice}
+                nightPrice={activeNightPrice}
                 currencyCode={currencyCode}
                 capacity={capacity}
                 rating={averageRating}
@@ -729,12 +747,51 @@ function PropertyDetailView({
               />
             </aside>
           </div>
+
+          {/* ─── Full-Width Widgets: More Amenities, Terms & Conditions, Landmarks & Availability Calendar ─── */}
+          <div className="mt-10 space-y-9 lg:mt-12 lg:space-y-10">
+            {/* 3. More Amenities (Full Width) */}
+            <ScrollAnimation delay={0.05}>
+              <AmenitiesSection
+                categories={amenityCategories}
+                categoryIconByName={categoryIconByName}
+                itemIconByName={itemIconByName}
+                itemIconByCategoryAndName={itemIconByCategoryAndName}
+              />
+            </ScrollAnimation>
+
+            {/* 4. Terms & Conditions (Full Width) */}
+            <ScrollAnimation delay={0.05}>
+              <TermsAndConditionsSection property={property} />
+            </ScrollAnimation>
+
+            {/* 5. Info Area (Landmarks - Full Width) */}
+            {selectedLandmarks.length > 0 && (
+              <ScrollAnimation delay={0.05}>
+                <LandmarksSection landmarks={selectedLandmarks} />
+              </ScrollAnimation>
+            )}
+
+            {/* 6. Interactive Calendar (Full Width) */}
+            <ScrollAnimation delay={0.05}>
+              <AvailabilityCalendarSection
+                checkIn={checkIn}
+                checkOut={checkOut}
+                onSelectDate={selectDate}
+                onClearDates={clearDates}
+                months={months}
+                monthsToShow={monthsToShow}
+                setMonthsToShow={setMonthsToShow}
+                nights={nights}
+              />
+            </ScrollAnimation>
+          </div>
         </div>
       </section>
 
-      {/* ─── Reviews & Ratings Section (Full Width) ─── */}
-      <section className="bg-[#f8faf9] py-16 sm:py-24">
-        <div className="mx-auto max-w-[1282px] px-4 sm:px-6 lg:px-8">
+      {/* ─── Reviews & Ratings Section (Figma 2-Column Section at Bottom) ─── */}
+      <section className="py-12 sm:py-16">
+        <div className="mx-auto max-w-[1282px] px-4 sm:px-6 lg:px-16">
           <ScrollAnimation delay={0.05}>
             <ReviewsSection propertyId={property.id} propertyName={property.name} />
           </ScrollAnimation>
@@ -746,7 +803,7 @@ function PropertyDetailView({
         <div className="mx-auto flex max-w-[1282px] items-center justify-between gap-4">
           <div>
             <div className="flex items-baseline gap-1">
-              <span className="text-[18px] font-bold text-[#183c2f]">{formatCurrency(basePrice, currencyCode)}</span>
+              <span className="text-[18px] font-bold text-[#183c2f]">{formatCurrency(activeNightPrice, currencyCode)}</span>
               <span className="text-[12px] text-[#667c74]">/ {t("common.night")}</span>
             </div>
             <p className="text-[11px] font-medium text-[#8a9a94]">
@@ -763,7 +820,7 @@ function PropertyDetailView({
           <button
             type="button"
             onClick={() => {
-              const el = document.getElementById("booking-card-mobile") || document.getElementById("booking-card");
+              const el = document.getElementById("booking-card-main") || document.getElementById("booking-card-mobile") || document.getElementById("booking-card");
               if (el) {
                 el.scrollIntoView({ behavior: "smooth", block: "start" });
               }
@@ -778,54 +835,96 @@ function PropertyDetailView({
   );
 }
 
-function PropertyHeader({ property }: { property: Property }) {
-  const { t, href } = useI18n();
+function PropertyOverviewCard({
+  property,
+  basicAmenities,
+  activePriceInfo,
+  activeNightPrice,
+  currencyCode,
+}: {
+  property: Property;
+  basicAmenities: { name: string; icon: string | null }[];
+  activePriceInfo?: PriceInfo | null;
+  activeNightPrice?: number;
+  currencyCode?: string;
+}) {
+  const { t } = useI18n();
+
+  const locationText =
+    [property.address?.street, property.address?.area, property.address?.city, property.address?.country]
+      .filter(Boolean)
+      .join(", ") || "Hurghada, Egypt";
+
+  const displayedPrice = activeNightPrice ?? getPriceInfoAmount(property.basePriceInfo, property.basePrice || 0);
 
   return (
-    <header>
-      <nav className="flex items-center gap-1.5 text-[13px] leading-6 text-[#8a9a94] lg:text-[14px]">
-        <Link href={href("/")} className="hover:text-[#183c2f] transition flex items-center gap-1">
-          <span className="relative grid size-4 place-items-center">
-            <Image src="/single-property/icon-home.svg" alt="" fill sizes="16px" className="object-contain" />
-          </span>
-          <span>{t("common.home")}</span>
-        </Link>
-        <span>&gt;</span>
-        <Link href={href("/rent")} className="hover:text-[#183c2f] transition">
-          {t("property.vacationHomes")}
-        </Link>
-        <span>&gt;</span>
-        <span className="truncate font-medium text-[#183c2f] max-w-[180px] sm:max-w-none">
-          {property.name}
-        </span>
-      </nav>
+    <div className={`grid gap-4 sm:gap-5 ${basicAmenities.length > 0 ? "md:grid-cols-2 md:items-stretch" : "grid-cols-1"}`}>
+      {/* ─── Box 1: Price, Location & Specs ─── */}
+      <article className="flex flex-col justify-between rounded-2xl border border-[#dfe8e4] bg-white p-5 shadow-[0_2px_12px_rgba(24,60,47,0.03)] sm:p-6">
+        <div>
+          <div className="flex flex-wrap items-baseline justify-between gap-2">
+            <div className="flex items-baseline gap-1.5">
+              <p className="text-[24px] font-bold text-[#183c2f] lg:text-[28px]">
+                {formatPriceInfo(activePriceInfo, displayedPrice, currencyCode)}
+              </p>
+              <span className="text-[13px] text-[#667c74]">/ {t("common.night")}</span>
+            </div>
+            <p className="text-[13px] text-[#667c74]">
+              {property.size ? `${property.size} m²` : "175 m²"}
+            </p>
+          </div>
 
-      <div className="mt-3 lg:mt-4">
-        <h1 className="text-[22px] font-bold leading-tight text-[#183c2f] sm:text-[28px] lg:text-[34px]">
-          {property.name}
-        </h1>
-        <p className="mt-1.5 flex items-center gap-1.5 text-[13px] leading-6 text-[#667c74] lg:text-[15px]">
-          <Image src="/homepage/properties/icons/location.svg" alt="" width={20} height={20} className="size-5 shrink-0" />
-          <span className="truncate">
-            {[property.address?.street, property.address?.area, property.address?.city, property.address?.country]
-              .filter(Boolean)
-              .join(", ") || "Hurghada, Egypt"}
-          </span>
-        </p>
-      </div>
-    </header>
-  );
-}
+          <p className="mt-2.5 flex items-start gap-2 text-[12.5px] leading-5 text-[#667c74]">
+            <Image
+              src="/homepage/properties/icons/location.svg"
+              alt=""
+              width={16}
+              height={16}
+              className="mt-0.5 size-4 shrink-0"
+            />
+            <span className="min-w-0 break-words">{locationText}</span>
+          </p>
+        </div>
 
-function QuickFacts({ facts }: { facts: QuickFact[] }) {
-  return (
-    <div className="mt-3.5 flex flex-wrap items-center gap-x-6 gap-y-2.5 rounded-xl border border-[#dfe8e4] bg-[#fbfdfc] px-4 py-3 text-[13px] text-[#40544c] lg:text-[14px]">
-      {facts.map((fact) => (
-        <span key={fact.label} className="inline-flex items-center gap-2 font-medium">
-          <Image src={fact.icon} alt="" width={18} height={18} className="size-[18px] object-contain" />
-          {fact.label}
-        </span>
-      ))}
+        <div className="mt-4 flex flex-wrap gap-x-4 gap-y-2 border-t border-[#eef2f0] pt-3 text-[12px] text-[#40544c]">
+          <span className="inline-flex items-center gap-1.5">
+            <Image src="/homepage/properties/icons/size.svg" alt="" width={15} height={15} className="size-[15px] opacity-70" />
+            <span>{property.propertyTypeName || "Villa"}</span>
+          </span>
+          <span className="inline-flex items-center gap-1.5">
+            <Image src="/billing/icons/tenant.svg" alt="" width={15} height={15} className="size-[15px] opacity-70" />
+            <span>{property.capacity || 2} {t("property.guests")}</span>
+          </span>
+          <span className="inline-flex items-center gap-1.5">
+            <Image src="/homepage/properties/icons/bed.svg" alt="" width={15} height={15} className="size-[15px] opacity-70" />
+            <span>{property.bedroomNo || 1} {Number(property.bedroomNo || 1) === 1 ? t("property.bedroom") : t("property.bedrooms")}</span>
+          </span>
+          <span className="inline-flex items-center gap-1.5">
+            <Image src="/homepage/properties/icons/bath.svg" alt="" width={15} height={15} className="size-[15px] opacity-70" />
+            <span>{property.bathroomNo || 1} {Number(property.bathroomNo || 1) === 1 ? t("buy.bathroom", { defaultValue: "Bathroom" }) : t("buy.bathrooms", { defaultValue: "Bathrooms" })}</span>
+          </span>
+        </div>
+      </article>
+
+      {/* ─── Box 2: Basic Amenities in its own box ─── */}
+      {basicAmenities.length > 0 && (
+        <article className="flex flex-col justify-center rounded-2xl border border-[#dfe8e4] bg-white p-5 shadow-[0_2px_12px_rgba(24,60,47,0.03)] sm:p-6">
+          <div className="grid grid-cols-2 gap-x-5 gap-y-3.5 w-full">
+            {basicAmenities.map((amenity, i) => (
+              <div key={i} className="flex items-center gap-2.5 min-w-0">
+                {amenity.icon ? (
+                  <DynamicAmenityIcon icon={amenity.icon} width={18} height={18} className="size-[18px] shrink-0 object-contain text-[#2C798B]" />
+                ) : (
+                  <Image src="/icons/amenities/amenities-title.svg" alt="" width={18} height={18} className="size-[18px] shrink-0" />
+                )}
+                <span className="text-[12.5px] font-medium leading-snug text-[#344840] break-words">
+                  {amenity.name}
+                </span>
+              </div>
+            ))}
+          </div>
+        </article>
+      )}
     </div>
   );
 }
@@ -834,42 +933,12 @@ function DescriptionSection({ text }: { text: string }) {
   const { t } = useI18n();
 
   return (
-    <section className="rounded-2xl border border-[#dfe8e4] bg-white p-5 sm:p-6 shadow-[0_2px_12px_rgba(24,60,47,0.03)]">
-      <SectionTitle>{t("property.description")}</SectionTitle>
-      <p className="mt-3.5 text-[14px] leading-[1.8] text-[#556960] sm:text-[15px]">
+    <section>
+      <SectionTitle>{t("buy.aboutProperty", { defaultValue: "About Property" })}</SectionTitle>
+      <p className="mt-5 whitespace-pre-line text-[14px] leading-[1.9] text-[#656566] lg:mt-7 lg:text-[16px] lg:leading-[25px]">
         {text || t("property.noDescription")}
       </p>
     </section>
-  );
-}
-
-function DetailsCards({ prices, location }: { prices: DetailRow[]; location: DetailRow[] }) {
-  const { t } = useI18n();
-
-  return (
-    <section className="grid gap-4 sm:grid-cols-2">
-      <InfoCard title={t("property.priceDetails")} icon="/billing/icons/cash.svg" rows={prices} />
-      <InfoCard title={t("property.location")} icon="/billing/icons/location.svg" rows={location} />
-    </section>
-  );
-}
-
-function InfoCard({ title, icon, rows }: { title: string; icon: string; rows: string[][] }) {
-  return (
-    <article className="rounded-2xl border border-[#dfe8e4] bg-white p-5 shadow-[0_2px_12px_rgba(24,60,47,0.03)]">
-      <h2 className="flex items-center gap-2 text-[12px] font-bold uppercase leading-4 tracking-[0.05em] text-[#183c2f]">
-        <Image src={icon} alt="" width={20} height={20} className="size-5 object-contain" />
-        {title}
-      </h2>
-      <dl className="mt-4 grid gap-3 text-[14px] leading-[22px]">
-        {rows.map(([label, value]) => (
-          <div key={label} className="flex items-center justify-between gap-4">
-            <dt className="text-[#667c74]">{label}</dt>
-            <dd className="whitespace-nowrap font-medium text-[#101d28]">{value}</dd>
-          </div>
-        ))}
-      </dl>
-    </article>
   );
 }
 
@@ -886,14 +955,16 @@ function AmenitiesSection({
 }) {
   const { t } = useI18n();
 
+  if (!categories || categories.length === 0) return null;
+
   return (
-    <section className="rounded-2xl border border-[#dfe8e4] bg-white p-5 sm:p-6 shadow-[0_2px_12px_rgba(24,60,47,0.03)]">
-      <div className="flex items-center gap-2">
-        <Image src="/icons/amenities/amenities-title.svg" alt="" width={22} height={22} className="object-contain" />
-        <SectionTitle>{t("property.amenities")}</SectionTitle>
+    <section className="rounded-2xl border border-[#dfe8e4] bg-white px-5 pb-5 pt-3.5 shadow-[0_2px_12px_rgba(24,60,47,0.03)] sm:px-6 sm:pb-6 sm:pt-4">
+      <div className="flex items-center gap-3">
+        <Image src="/icons/amenities/amenities-title.svg" alt="" width={26} height={26} className="object-contain" />
+        <SectionTitle>{t("buy.moreAmenities", { defaultValue: "More Amenities" })}</SectionTitle>
       </div>
       <div className="mt-5 grid gap-6">
-        {categories?.map((cat) => (
+        {categories.map((cat) => (
           <div key={cat.categoryName}>
             <h3 className="inline-flex min-h-9 items-center gap-2 rounded-lg bg-[#f5f7f6] px-3 text-[14px] font-semibold text-[#183c2f]">
               <DynamicAmenityIcon
@@ -904,7 +975,7 @@ function AmenitiesSection({
               />
               {cat.categoryName}
             </h3>
-            <ul className="mt-3 grid gap-x-4 gap-y-2.5 text-[14px] leading-5 text-[#556960] sm:grid-cols-2 md:grid-cols-3">
+            <ul className="mt-3 grid gap-x-4 gap-y-2.5 text-[14px] leading-5 text-[#556960] sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
               {cat.items?.map((item, index) => {
                 const categoryKey = normalizeLookupKey(cat.categoryName);
                 const itemKey = normalizeLookupKey(item);
@@ -925,6 +996,70 @@ function AmenitiesSection({
             </ul>
           </div>
         ))}
+      </div>
+    </section>
+  );
+}
+
+function TermsAndConditionsSection({ property }: { property: Property }) {
+  const { t } = useI18n();
+  const listing = property.listingDetails;
+
+  return (
+    <section className="rounded-2xl border border-[#dfe8e4] bg-white p-5 shadow-[0_2px_12px_rgba(24,60,47,0.03)] sm:p-6">
+      <div className="flex items-center gap-3">
+        <svg className="size-6 text-[#2C798B]" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+        </svg>
+        <SectionTitle>{t("property.termsAndConditions", { defaultValue: "Terms & Conditions" })}</SectionTitle>
+      </div>
+
+      <div className="mt-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        {/* House Rules */}
+        <div>
+          <h3 className="text-[14px] font-bold text-[#183c2f]">{t("property.houseRules", { defaultValue: "House Rules" })}</h3>
+          <ul className="mt-3 space-y-2.5 text-[13px] text-[#556960]">
+            <li className="flex items-center gap-2">
+              <span className="grid size-4 place-items-center rounded-full bg-[#e8f4f0] text-[11px] font-bold text-[#2C798B]">✓</span>
+              <span>{t("property.smokingAllowed", { defaultValue: "Smoking Allowed" })}</span>
+            </li>
+            <li className="flex items-center gap-2">
+              <span className="grid size-4 place-items-center rounded-full bg-[#e8f4f0] text-[11px] font-bold text-[#2C798B]">✓</span>
+              <span>{t("property.petsAllowed", { defaultValue: "Pets Allowed" })}</span>
+            </li>
+            <li className="flex items-center gap-2">
+              <span className="grid size-4 place-items-center rounded-full bg-[#e8f4f0] text-[11px] font-bold text-[#2C798B]">✓</span>
+              <span>{t("property.partyAllowed", { defaultValue: "Party Allowed" })}</span>
+            </li>
+            <li className="flex items-center gap-2">
+              <span className="grid size-4 place-items-center rounded-full bg-[#e8f4f0] text-[11px] font-bold text-[#2C798B]">✓</span>
+              <span>{t("property.childrenAllowed", { defaultValue: "Children Allowed" })}</span>
+            </li>
+          </ul>
+        </div>
+
+        {/* Cancellation Policy */}
+        <div>
+          <h3 className="text-[14px] font-bold text-[#183c2f]">{t("property.cancellationPolicy", { defaultValue: "Cancellation Policy" })}</h3>
+          <p className="mt-3 text-[13px] leading-relaxed text-[#556960]">
+            {listing?.cancellation || property.rulesCancellation || t("property.cancellationDefault", { defaultValue: "Free cancellation for 48 hours. Contact the owner to cancel the booking." })}
+          </p>
+        </div>
+
+        {/* Other Rules */}
+        <div>
+          <h3 className="text-[14px] font-bold text-[#183c2f]">{t("property.otherRules", { defaultValue: "Other Rules" })}</h3>
+          <p className="mt-3 text-[13px] leading-relaxed text-[#556960]">
+            {property.notes || t("property.otherRulesDefault", { defaultValue: "No parties or events. Self check-in with the lockbox." })}
+          </p>
+          {(listing?.checkInHour || listing?.checkOutHour) && (
+            <p className="mt-2 text-[12px] font-medium text-[#718288]">
+              {listing?.checkInHour ? `Check-in: ${listing.checkInHour}` : ""}
+              {listing?.checkInHour && listing?.checkOutHour ? " • " : ""}
+              {listing?.checkOutHour ? `Check-out: ${listing.checkOutHour}` : ""}
+            </p>
+          )}
+        </div>
       </div>
     </section>
   );
@@ -988,17 +1123,17 @@ function AvailabilityCalendarSection({
     >
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between border-b border-[#edf2ef] pb-4">
         <div>
-          <h2 className="flex items-center gap-2 text-[17px] font-bold text-[#183c2f]">
+          <div className="flex items-center gap-3">
             <span
               aria-hidden="true"
-              className="size-[18px] bg-[#d6a85c]"
+              className="size-6 bg-[#2C798B]"
               style={{
                 WebkitMask: "url('/billing/icons/calendar.svg') center / contain no-repeat",
                 mask: "url('/billing/icons/calendar.svg') center / contain no-repeat",
               }}
             />
-            {t("property.availability")}
-          </h2>
+            <SectionTitle>{t("property.availability", { defaultValue: "Availability" })}</SectionTitle>
+          </div>
           <p className="mt-1 text-[13px] text-[#667c74]">
             {checkIn && checkOut
               ? t("property.selectedRange", { checkIn, checkOut, nights, nightLabel: nights === 1 ? t("common.night") : t("common.nights") })
@@ -1168,124 +1303,115 @@ function ReviewsSection({ propertyId, propertyName }: { propertyId: string; prop
   const reviews = reviewsData?.items ?? [];
   const average = averageData?.averageRating ?? 0;
   const totalReviews = averageData?.totalReviews ?? reviews.length;
+  const [displayCount, setDisplayCount] = useState(3);
 
-  const counts: Record<number, number> = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
-  reviews.forEach((r) => {
-    const score = Math.min(5, Math.max(1, Math.round(r.rate)));
-    counts[score] = (counts[score] || 0) + 1;
-  });
-
-  const ratingBars = [5, 4, 3, 2, 1].map((score) => {
-    const count = counts[score] || 0;
-    const pct = totalReviews > 0 ? (count / totalReviews) * 100 : 0;
-    return { score, pct: `${pct.toFixed(0)}%`, count };
-  });
+  const visibleReviews = reviews.slice(0, displayCount);
 
   return (
-    <section className="space-y-6">
-      <div className="rounded-2xl border border-[#dfe8e4] bg-white p-5 sm:p-7 shadow-[0_2px_12px_rgba(24,60,47,0.03)]">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <h2 className="text-[18px] font-bold text-[#183c2f] sm:text-[22px]">{t("reviews.sectionTitle")}</h2>
-          <a
-            href="#add-review-section"
-            className="inline-flex h-9 items-center justify-center gap-2 rounded-full bg-[#2C798B] px-5 text-[12px] font-semibold text-white shadow-sm transition hover:bg-[#183c2f] hover:shadow sm:w-auto"
-          >
-            <span>★</span>
-            <span>{t("reviews.writeReview")}</span>
-          </a>
+    <div className="grid gap-8 lg:grid-cols-[1.2fr_1fr] lg:gap-10 lg:items-start">
+      {/* ─── Left Column: Reviews & comments ─── */}
+      <div className="min-w-0">
+        <div className="flex items-center gap-2.5">
+          <svg className="size-6 text-[#2C798B]" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+          </svg>
+          <SectionTitle>{t("reviews.sectionTitle", { defaultValue: "Reviews & comments" })}</SectionTitle>
         </div>
 
-        <div className="mt-5 grid gap-6 border-b border-[#edf2ef] pb-6 sm:grid-cols-[minmax(10rem,0.4fr)_1fr] sm:items-center">
-          <div className="text-center sm:text-left rtl:sm:text-right">
-            <div className="inline-flex items-center gap-2.5">
-              <span className="text-[44px] font-bold leading-none text-[#183c2f] sm:text-[54px]">
-                {totalReviews > 0 ? average.toFixed(1) : t("reviews.newBadge")}
-              </span>
-              <span className="text-[28px] leading-none text-[#2C798B]">★</span>
-            </div>
-            <p className="mt-2.5 inline-flex items-center gap-2 rounded-full bg-[#f4f7f5] px-4 py-1.5 text-[12px] font-medium text-[#40544c]">
-              {totalReviews > 0
-                ? totalReviews === 1
-                  ? t("reviews.verifiedReview", { count: 1 })
-                  : t("reviews.verifiedReviews", { count: totalReviews })
-                : t("reviews.noReviewsYet")}
-            </p>
-          </div>
-
-          <div className="grid gap-2">
-            {ratingBars.map((bar) => (
-              <div key={bar.score} className="grid grid-cols-[2.5rem_1fr_2rem] items-center gap-3 text-[12px] text-[#656566]">
-                <span className="font-medium">{bar.score} ★</span>
-                <span className="h-2 overflow-hidden rounded-full bg-[#eef2f0]">
-                  <span
-                    className="block h-full rounded-full bg-[#2C798B] transition-all duration-500"
-                    style={{ width: bar.pct }}
-                  />
+        {/* Rating summary - only shown when there are real reviews */}
+        {totalReviews > 0 && (
+          <div className="mt-4 flex items-center gap-3">
+            <span className="text-[20px] font-bold text-[#183c2f] sm:text-[22px]">
+              {average.toFixed(1)} out of 5
+            </span>
+            <div className="flex text-[#2C798B] text-[18px]">
+              {[1, 2, 3, 4, 5].map((star) => (
+                <span
+                  key={star}
+                  className={star <= Math.round(average) ? "text-[#2C798B]" : "text-[#d1dcd6]"}
+                >
+                  ★
                 </span>
-                <span className="text-right rtl:text-left text-[11px] text-[#8a9a94]">{bar.count}</span>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Reviews List */}
-        <div className="mt-6">
+        <div className="mt-6 space-y-4">
           {isLoadingReviews ? (
             <div className="flex h-28 items-center justify-center">
               <span className="size-6 animate-spin rounded-full border-2 border-[#183c2f] border-t-transparent" />
             </div>
           ) : reviews.length === 0 ? (
-            <div className="rounded-xl bg-[#f8faf9] p-6 text-center">
-              <p className="text-[14px] font-semibold text-[#183c2f]">
-                {t("reviews.emptyTitle")}
-              </p>
-              <p className="mt-1 text-[13px] text-[#667c74]">
-                {t("reviews.emptySubtitle")}
-              </p>
+            <div className="rounded-2xl border border-[#dfe8e4] bg-white p-6 text-center shadow-xs">
+              <p className="text-[14px] font-semibold text-[#183c2f]">{t("reviews.emptyTitle")}</p>
+              <p className="mt-1 text-[13px] text-[#667c74]">{t("reviews.emptySubtitle")}</p>
             </div>
           ) : (
-            <div className="grid gap-3.5 sm:grid-cols-2">
-              {reviews.map((review) => (
+            visibleReviews.map((review) => {
+              const initial = (review.customerName || "G").charAt(0).toUpperCase();
+              return (
                 <article
                   key={review.id}
-                  className="flex flex-col justify-between rounded-xl border border-[#dfe8e4] bg-[#fbfdfc] p-5 shadow-sm transition hover:border-[#2C798B]/60 hover:shadow"
+                  className="rounded-2xl border border-[#dfe8e4] bg-white p-5 shadow-[0_2px_10px_rgba(24,60,47,0.02)] transition hover:border-[#2C798B]/50"
                 >
-                  <div>
-                    <div className="flex items-start justify-between gap-3">
-                      <div>
-                        <h3 className="text-[15px] font-semibold text-[#183c2f]">
+                  <div className="flex items-start gap-3.5">
+                    <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-[#e8eeec] text-[14px] font-bold text-[#183c2f]">
+                      {initial}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex flex-wrap items-center justify-between gap-1">
+                        <h4 className="text-[15px] font-bold text-[#183c2f]">
                           {review.customerName || t("reviews.verifiedGuest")}
-                        </h3>
-                        <p className="text-[12px] text-[#8a9a94]">
+                        </h4>
+                        <span className="text-[12px] text-[#8a9a94]">
                           {new Date(review.createdAtUtc).toLocaleDateString(locale === "ar" ? "ar-EG" : locale, {
                             month: "short",
                             day: "numeric",
                             year: "numeric",
                           })}
-                        </p>
+                        </span>
                       </div>
-                      <span className="inline-flex items-center gap-1 rounded-full bg-[#fef9ec] px-2.5 py-1 text-[13px] font-bold text-[#2C798B]">
-                        ★ {review.rate}
-                      </span>
+                      <p className="mt-2 text-[13.5px] leading-relaxed text-[#556960] whitespace-pre-wrap">
+                        {review.comment}
+                      </p>
+                      <div className="mt-2 flex text-[#2C798B] text-[14px]">
+                        {[1, 2, 3, 4, 5].map((star) => (
+                          <span key={star} className={star <= review.rate ? "text-[#2C798B]" : "text-[#d1dcd6]"}>
+                            ★
+                          </span>
+                        ))}
+                      </div>
                     </div>
-                    <p className="mt-3 text-[14px] leading-relaxed text-[#40544c] whitespace-pre-wrap">
-                      {review.comment}
-                    </p>
                   </div>
-                  {review.bookingNumber && (
-                    <p className="mt-4 border-t border-[#edf2ef] pt-2.5 text-[11px] font-medium text-[#8a9a94]">
-                      {t("reviews.stayVerified", { bookingNumber: review.bookingNumber })}
-                    </p>
-                  )}
                 </article>
-              ))}
-            </div>
+              );
+            })
           )}
         </div>
+
+        {reviews.length > visibleReviews.length && (
+          <div className="mt-5 text-center">
+            <button
+              type="button"
+              onClick={() => setDisplayCount((prev) => prev + 3)}
+              className="inline-flex items-center gap-1.5 text-[13.5px] font-semibold text-[#2C798B] transition hover:text-[#183c2f]"
+            >
+              <span>Load more</span>
+              <svg className="size-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+          </div>
+        )}
       </div>
 
-      <AddReviewForm propertyName={propertyName} />
-    </section>
+      {/* ─── Right Column: Share your opinion ─── */}
+      <div className="min-w-0">
+        <AddReviewForm propertyName={propertyName} />
+      </div>
+    </div>
   );
 }
 
@@ -1364,11 +1490,10 @@ function AddReviewForm({ propertyName }: { propertyName: string }) {
   };
 
   return (
-    <section id="add-review-section" className="scroll-mt-24 rounded-2xl border border-[#dfe8e4] bg-white p-5 sm:p-7 shadow-[0_2px_12px_rgba(24,60,47,0.03)]">
-      <h2 className="text-[18px] font-bold leading-snug text-[#183c2f] sm:text-[20px]">{t("reviews.formTitle")}</h2>
-      <p className="mt-2 text-[14px] leading-relaxed text-[#656566]">
-        {t("reviews.formDescription", { propertyName })}
-      </p>
+    <section id="add-review-section" className="scroll-mt-24 rounded-2xl border border-[#dfe8e4] bg-white p-5 shadow-[0_2px_12px_rgba(24,60,47,0.03)] sm:p-7">
+      <h3 className="text-[20px] font-bold text-[#183c2f] sm:text-[22px]">
+        {t("reviews.shareOpinion", { defaultValue: "Share your opinion" })}
+      </h3>
 
       {errorMessage && (
         <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50/90 p-4 text-[14px] text-amber-900">
@@ -1393,29 +1518,13 @@ function AddReviewForm({ propertyName }: { propertyName: string }) {
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="mt-6 grid gap-5">
+      <form onSubmit={handleSubmit} className="mt-5 space-y-4">
+        {/* Your Rating */}
         <div>
-          <label className="block text-[14px] font-medium text-[#183c2f]">
-            {t("reviews.bookingNumberLabel")} <span className="text-red-500">*</span>
+          <label className="block text-[13px] font-semibold text-[#183c2f]">
+            {t("reviews.yourRating", { defaultValue: "Your Rating" })}
           </label>
-          <input
-            type="text"
-            value={bookingNumber}
-            onChange={(e) => setBookingNumber(e.target.value)}
-            placeholder={t("reviews.bookingNumberPlaceholder")}
-            required
-            className="mt-2 h-11 w-full rounded-xl border border-[#dfe8e4] bg-white px-4 text-[14px] text-[#183c2f] outline-none transition placeholder:text-[#aab4b0] focus:border-[#2C798B] focus:ring-2 focus:ring-[#2C798B]/10 sm:max-w-md"
-          />
-          <p className="mt-1 text-[12px] text-[#8a9a94]">
-            {t("reviews.bookingNumberHint")}
-          </p>
-        </div>
-
-        <div>
-          <label className="block text-[14px] font-medium text-[#183c2f]">
-            {t("reviews.ratingLabel")} <span className="text-red-500">*</span>
-          </label>
-          <div className="mt-2 flex items-center gap-3">
+          <div className="mt-1.5 flex items-center gap-3">
             <div className="flex items-center gap-1">
               {[1, 2, 3, 4, 5].map((star) => (
                 <button
@@ -1424,60 +1533,74 @@ function AddReviewForm({ propertyName }: { propertyName: string }) {
                   onClick={() => setRate(star)}
                   onMouseEnter={() => setHoverRate(star)}
                   onMouseLeave={() => setHoverRate(null)}
-                  className="p-1 text-[26px] leading-none transition hover:scale-110 focus:outline-none"
+                  className="p-1 text-[24px] leading-none transition hover:scale-110 focus:outline-none"
                   aria-label={`Rate ${star} star`}
                 >
-                  <span
-                    className={
-                      star <= (hoverRate ?? rate) ? "text-[#2C798B]" : "text-[#d1dcd6]"
-                    }
-                  >
+                  <span className={star <= (hoverRate ?? rate) ? "text-[#2C798B]" : "text-[#d1dcd6]"}>
                     ★
                   </span>
                 </button>
               ))}
             </div>
-            <span className="text-[13px] font-medium text-[#656566]">
+            <span className="text-[12.5px] font-medium text-[#656566]">
               {ratingDescriptions[hoverRate ?? rate]}
             </span>
           </div>
         </div>
 
+        {/* Booking Number / Name input */}
         <div>
-          <label className="block text-[14px] font-medium text-[#183c2f]">
-            {t("reviews.feedbackLabel")} <span className="text-red-500">*</span>
+          <label className="block text-[13px] font-semibold text-[#183c2f]">
+            {t("reviews.nameOptional", { defaultValue: "Booking Number" })} <span className="text-red-500">*</span>
+          </label>
+          <input
+            type="text"
+            value={bookingNumber}
+            onChange={(e) => setBookingNumber(e.target.value)}
+            placeholder={t("reviews.bookingNumberPlaceholder", { defaultValue: "Enter your booking number" })}
+            required
+            className="mt-1.5 h-11 w-full rounded-xl border border-[#dfe8e4] bg-[#fbfdfc] px-4 text-[13.5px] text-[#183c2f] outline-none transition placeholder:text-[#aab4b0] focus:border-[#2C798B] focus:bg-white"
+          />
+        </div>
+
+        {/* Review comment */}
+        <div>
+          <label className="block text-[13px] font-semibold text-[#183c2f]">
+            {t("reviews.yourReview", { defaultValue: "Your review" })} <span className="text-red-500">*</span>
           </label>
           <textarea
             value={comment}
             onChange={(e) => setComment(e.target.value)}
-            placeholder={t("reviews.feedbackPlaceholder")}
+            placeholder={t("reviews.feedbackPlaceholder", { defaultValue: "Write your review here...." })}
             required
             rows={4}
-            className="mt-2 w-full rounded-xl border border-[#dfe8e4] bg-white p-3.5 text-[14px] text-[#183c2f] outline-none transition placeholder:text-[#aab4b0] focus:border-[#2C798B] focus:ring-2 focus:ring-[#2C798B]/10"
+            className="mt-1.5 w-full rounded-xl border border-[#dfe8e4] bg-[#fbfdfc] p-3.5 text-[13.5px] text-[#183c2f] outline-none transition placeholder:text-[#aab4b0] focus:border-[#2C798B] focus:bg-white"
           />
         </div>
 
-        <div className="flex items-center justify-end pt-2">
-          <button
-            type="submit"
-            disabled={isPending}
-            className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-full bg-[#2C798B] px-8 text-[15px] font-semibold text-white shadow-md transition hover:bg-[#183c2f] hover:shadow-lg disabled:opacity-60 disabled:cursor-not-allowed sm:w-auto"
-          >
-            {isPending ? (
-              <>
-                <span className="size-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
-                {t("reviews.submitting")}
-              </>
-            ) : (
-              t("reviews.submit")
-            )}
-          </button>
-        </div>
+        <button
+          type="submit"
+          disabled={isPending}
+          className="mt-2 inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-[#2C798B] px-6 text-[14px] font-semibold text-white shadow-sm transition hover:bg-[#183640] disabled:opacity-60 disabled:cursor-not-allowed"
+        >
+          {isPending ? (
+            <>
+              <span className="size-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+              {t("reviews.submitting")}
+            </>
+          ) : (
+            t("reviews.submit", { defaultValue: "Submit" })
+          )}
+        </button>
       </form>
     </section>
   );
 }
 
 function SectionTitle({ children }: { children: React.ReactNode }) {
-  return <h2 className="text-[18px] font-bold leading-7 text-[#101d28] sm:text-[20px]">{children}</h2>;
+  return (
+    <h2 className="text-[18px] font-medium leading-[32px] tracking-[0%] text-[#183c2f] lg:text-[25px] lg:leading-[25px]">
+      {children}
+    </h2>
+  );
 }

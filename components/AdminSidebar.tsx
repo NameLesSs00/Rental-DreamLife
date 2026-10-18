@@ -13,8 +13,10 @@ const mainNavItems = [
   { label: "Reservations", href: "/admin/in-house", icon: "bed" },
   { label: "Reports", href: "/admin/reports", icon: "report" },
   { label: "Reviews", href: "/admin/reviews", icon: "star" },
-  { label: "Currencies", href: "/admin/currencies", icon: "currency" },
-  { label: "Transfer Bookings", href: "/admin/transfer-bookings", icon: "route" },
+  // HIDDEN FOR THIS VERSION: Currency management navigation - uncomment to re-enable
+  // { label: "Currencies", href: "/admin/currencies", icon: "currency" },
+  // HIDDEN FOR THIS VERSION: Transfer Bookings navigation - uncomment to re-enable
+  // { label: "Transfer Bookings", href: "/admin/transfer-bookings", icon: "route" },
   { label: "Properties Views", href: "/admin/properties-locations", icon: "globe" },
   { label: "Rent Properties", href: "/admin/properties", icon: "home" },
   { label: "Buy Properties", href: "/admin/property-buyings", icon: "building" },
@@ -23,8 +25,10 @@ const mainNavItems = [
   { label: "Info Area", href: "/admin/landmarks", icon: "map-pin" },
   { label: "Rent Includes Categories", href: "/admin/property-categories", icon: "tag" },
   { label: "Rent Includes Items", href: "/admin/property-items", icon: "list" },
-  { label: "Journey Locations", href: "/admin/locations", icon: "map-pin" },
-  { label: "Transfer Journeys", href: "/admin/journeys", icon: "route" },
+  // HIDDEN FOR THIS VERSION: Journey Locations navigation - uncomment to re-enable
+  // { label: "Journey Locations", href: "/admin/locations", icon: "map-pin" },
+  // HIDDEN FOR THIS VERSION: Transfer Journeys navigation - uncomment to re-enable
+  // { label: "Transfer Journeys", href: "/admin/journeys", icon: "route" },
   { label: "Admins", href: "/admin/admins", icon: "users" },
   { label: "Messages", href: "/admin/messages", icon: "mail" },
   { label: "Blog", href: "/admin/blog", icon: "book" },

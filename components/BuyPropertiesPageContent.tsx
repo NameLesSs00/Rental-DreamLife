@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { Suspense, useMemo, useState } from "react";
+import { Suspense, useMemo, useState, useTransition, useEffect, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { usePublicBuyProperties } from "@/lib/hooks/usePropertyBuying";
@@ -45,7 +45,7 @@ export default function BuyPropertiesPageContent() {
 }
 
 function BuyPropertiesPageInner() {
-  const { href, t } = useI18n();
+  const { href, t, locale } = useI18n();
   const router = useRouter();
   const searchParams = useSearchParams();
   const paramsObj = useMemo(() => Object.fromEntries(searchParams.entries()), [searchParams]);
@@ -53,22 +53,36 @@ function BuyPropertiesPageInner() {
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
 
   const searchTerm = paramsObj.search || paramsObj.SearchTerm || "";
-  const propertyTypeId = paramsObj.propertyTypeId ? Number(paramsObj.propertyTypeId) : undefined;
   const minPrice = paramsObj.minPrice ? Number(paramsObj.minPrice) : undefined;
   const maxPrice = paramsObj.maxPrice ? Number(paramsObj.maxPrice) : undefined;
   const bedrooms = paramsObj.bedrooms ? Number(paramsObj.bedrooms) : undefined;
+  const bathrooms = paramsObj.bathrooms ? Number(paramsObj.bathrooms) : undefined;
+  const isFeatured =
+    paramsObj.isFeatured === "true"
+      ? true
+      : paramsObj.isFeatured === "false"
+      ? false
+      : undefined;
 
-  const { data, isLoading, isError } = usePublicBuyProperties({
-    pageSize: 100,
-    search: searchTerm || undefined,
-    propertyTypeId,
-    Currency: selectedCurrency,
-  });
+  const { data, isLoading, isError } = usePublicBuyProperties(
+    {
+      pageSize: 100,
+      search: searchTerm || undefined,
+      bedrooms,
+      bathrooms,
+      minPrice,
+      maxPrice,
+      isFeatured,
+      Currency: selectedCurrency,
+    },
+    locale
+  );
+
+  const [isPending, startTransition] = useTransition();
 
   /**
-   * Single source of truth for applying a filter change. Every control navigates
-   * through here so results update instantly — no Search button. Empty values
-   * delete the param so filters can be cleared.
+   * Single source of truth for applying a filter change. Updates smoothly
+   * in-place without page reload or scrolling to the top.
    */
   const navigate = (patch: Record<string, string>) => {
     const next = new URLSearchParams(searchParams.toString());
@@ -78,12 +92,29 @@ function BuyPropertiesPageInner() {
     });
     next.delete("page");
     const qs = next.toString();
-    router.push(href(`/buy${qs ? `?${qs}` : ""}`));
+    const nextUrl = href(`/buy${qs ? `?${qs}` : ""}`);
+
+    startTransition(() => {
+      router.replace(nextUrl, { scroll: false });
+    });
     setMobileFiltersOpen(false);
   };
 
+  const clearAllFilters = () => {
+    const next = new URLSearchParams();
+    if (paramsObj.Currency) {
+      next.set("Currency", paramsObj.Currency);
+    }
+    const qs = next.toString();
+    const nextUrl = href(`/buy${qs ? `?${qs}` : ""}`);
 
-  // Client-side filtering for min/max price & bedrooms
+    startTransition(() => {
+      router.replace(nextUrl, { scroll: false });
+    });
+    setMobileFiltersOpen(false);
+  };
+
+  // Client-side fallback filtering for min/max price, bedrooms, bathrooms & isFeatured
   const filteredList = useMemo(() => {
     let items = [...(data?.items ?? [])];
 
@@ -96,9 +127,15 @@ function BuyPropertiesPageInner() {
     if (bedrooms !== undefined && !Number.isNaN(bedrooms)) {
       items = items.filter((item) => (item.bedrooms ?? 0) >= bedrooms);
     }
+    if (bathrooms !== undefined && !Number.isNaN(bathrooms)) {
+      items = items.filter((item) => (item.bathrooms ?? 0) >= bathrooms);
+    }
+    if (isFeatured !== undefined) {
+      items = items.filter((item) => item.isFeatured === isFeatured);
+    }
 
     return items.sort((a, b) => (b.isFeatured ? 1 : 0) - (a.isFeatured ? 1 : 0));
-  }, [data?.items, minPrice, maxPrice, bedrooms]);
+  }, [data?.items, minPrice, maxPrice, bedrooms, bathrooms, isFeatured]);
 
   if (isError) {
     return (
@@ -213,7 +250,7 @@ function BuyPropertiesPageInner() {
                   </button>
                 </div>
                 <div className="flex-1 overflow-y-auto px-5 py-4">
-                  <BuyFilterForm paramsObj={paramsObj} navigate={navigate} />
+                  <BuyFilterForm paramsObj={paramsObj} navigate={navigate} onClear={clearAllFilters} />
                 </div>
               </motion.aside>
             </motion.div>
@@ -223,12 +260,12 @@ function BuyPropertiesPageInner() {
         <div className="mt-8 flex flex-col gap-6 lg:flex-row lg:items-start lg:gap-8 xl:gap-10">
           {/* Desktop sidebar */}
           <aside className="hidden lg:sticky lg:top-8 lg:block lg:w-[340px] lg:shrink-0">
-            <BuyFilterForm paramsObj={paramsObj} navigate={navigate} />
+            <BuyFilterForm paramsObj={paramsObj} navigate={navigate} onClear={clearAllFilters} />
           </aside>
 
           {/* Property grid */}
           <div className="min-w-0 flex-1">
-            {isLoading ? (
+            {(isLoading || isPending) && filteredList.length === 0 ? (
               <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
                 {Array.from({ length: 6 }).map((_, idx) => (
                   <div key={idx} className="h-[380px] animate-pulse rounded-[20px] bg-white shadow-xs" />
@@ -240,6 +277,13 @@ function BuyPropertiesPageInner() {
                 <p className="mt-2 text-[14px] text-[#656566]">{t("buy.emptyBody")}</p>
               </div>
             ) : (
+              <div className="relative">
+                {(isLoading || isPending) && (
+                  <div className="absolute top-2 right-2 z-20 flex items-center gap-2 rounded-full border border-[#2C798B]/20 bg-white/95 px-3 py-1.5 text-[12px] font-medium text-[#2C798B] shadow-md backdrop-blur-xs">
+                    <span className="size-3 animate-spin rounded-full border-2 border-[#2C798B] border-t-transparent" />
+                    <span>{t("common.loading") || "Loading..."}</span>
+                  </div>
+                )}
               <motion.div
                 variants={{
                   hidden: { opacity: 0 },
@@ -247,7 +291,7 @@ function BuyPropertiesPageInner() {
                 }}
                 initial="hidden"
                 animate="visible"
-                className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3"
+                className={`grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 transition-opacity duration-200 ${isLoading || isPending ? "opacity-60 pointer-events-none" : ""}`}
               >
                 {filteredList.map((property) => (
                   <BuyPropertyCard
@@ -258,6 +302,7 @@ function BuyPropertiesPageInner() {
                   />
                 ))}
               </motion.div>
+              </div>
             )}
           </div>
         </div>
@@ -265,7 +310,7 @@ function BuyPropertiesPageInner() {
     </main>
   );
 }
-
+
 function ListingHeading() {
   return (
     <div className="pt-8 sm:pt-12 pb-3 text-center">
@@ -280,24 +325,69 @@ function ListingHeading() {
 function BuyFilterForm({
   paramsObj,
   navigate,
+  onClear,
 }: {
   paramsObj: Record<string, string>;
   navigate: (patch: Record<string, string>) => void;
+  onClear?: () => void;
 }) {
   const { t } = useI18n();
 
-  const propertyTypeVal = paramsObj.propertyTypeId || "";
+  const searchVal = paramsObj.search || paramsObj.SearchTerm || "";
   const roomsVal = paramsObj.bedrooms || "";
+  const bathroomsVal = paramsObj.bathrooms || "";
   const minPriceVal = paramsObj.minPrice || "";
   const maxPriceVal = paramsObj.maxPrice || "";
-  const searchVal = paramsObj.search || paramsObj.SearchTerm || "";
+  const isFeaturedVal = paramsObj.isFeatured === "true";
+
+  const hasActiveFilters = Boolean(
+    searchVal || roomsVal || bathroomsVal || minPriceVal || maxPriceVal || isFeaturedVal
+  );
 
   const labelCls = "mb-1.5 block text-[11.5px] font-semibold text-[#656566]";
 
+  const [localRooms, setLocalRooms] = useState(roomsVal);
+  const [localBaths, setLocalBaths] = useState(bathroomsVal);
+  const [localMinPrice, setLocalMinPrice] = useState(minPriceVal);
+  const [localMaxPrice, setLocalMaxPrice] = useState(maxPriceVal);
+
+  useEffect(() => {
+    setLocalRooms(roomsVal);
+    setLocalBaths(bathroomsVal);
+    setLocalMinPrice(minPriceVal);
+    setLocalMaxPrice(maxPriceVal);
+  }, [roomsVal, bathroomsVal, minPriceVal, maxPriceVal]);
+
+  const debouncerRef = useRef<NodeJS.Timeout | null>(null);
+  const handleDebouncedChange = (patch: Record<string, string>) => {
+    if (patch.bedrooms !== undefined) setLocalRooms(patch.bedrooms);
+    if (patch.bathrooms !== undefined) setLocalBaths(patch.bathrooms);
+    if (patch.minPrice !== undefined) setLocalMinPrice(patch.minPrice);
+    if (patch.maxPrice !== undefined) setLocalMaxPrice(patch.maxPrice);
+
+    if (debouncerRef.current) clearTimeout(debouncerRef.current);
+    debouncerRef.current = setTimeout(() => {
+      navigate(patch);
+    }, 350);
+  };
+
   return (
     <div className="rounded-2xl border border-[#e2e8e6] bg-white p-5 shadow-xs">
+      <div className="mb-4 flex items-center justify-between border-b border-[#f0f4f2] pb-3">
+        <h3 className="text-[15px] font-bold text-[#142d38]">{t("rent.filters") || "Filters"}</h3>
+        {hasActiveFilters && onClear && (
+          <button
+            type="button"
+            onClick={onClear}
+            className="text-[12px] font-medium text-[#2C798B] transition hover:underline"
+          >
+            Clear all
+          </button>
+        )}
+      </div>
+
       <div className="flex flex-col gap-4">
-        {/* Search */}
+        {/* 1. Search */}
         <div>
           <span className={labelCls}>{t("rent.searchPlaceholder") || "Search"}</span>
           <input
@@ -313,55 +403,51 @@ function BuyFilterForm({
           />
         </div>
 
-        {/* Property Type */}
+        {/* 2. Bedrooms */}
         <div>
-          <span className={labelCls}>{t("rent.propertyType") || "Property Type"}</span>
-          <select
-            value={propertyTypeVal}
-            onChange={(e) => navigate({ propertyTypeId: e.target.value })}
-            className="w-full rounded-xl border border-[#e2e8e6] bg-[#fbfdfc] px-3 py-2 text-[12.5px] text-[#183640] outline-none focus:border-[#2C798B]"
-          >
-            <option value="">{t("rent.allTypes") || "All Types"}</option>
-            <option value={PropertyType.Villa}>{t("rent.villa") || "Villa"}</option>
-            <option value={PropertyType.Apartment}>{t("rent.apartment") || "Apartment"}</option>
-            <option value={PropertyType.Studio}>{t("rent.studio") || "Studio"}</option>
-            <option value={PropertyType.Chalet}>{t("rent.chalet") || "Chalet"}</option>
-            <option value={PropertyType.TwinHouse}>{t("rent.twinHouse") || "Twin House"}</option>
-          </select>
-        </div>
-
-        {/* Bedrooms — typed number */}
-        <div>
-          <label htmlFor="buy-min-bedrooms" className={labelCls}>
-            {t("rent.rooms")}
+          <label htmlFor="buy-bedrooms" className={labelCls}>
+            {t("buy.bedrooms") || "Bedrooms"}
           </label>
           <input
-            id="buy-min-bedrooms"
+            id="buy-bedrooms"
             type="number"
             inputMode="numeric"
             min="0"
             step="1"
-            value={roomsVal}
-            onChange={(e) => {
-              const raw = e.target.value;
-              const n = Number(raw);
-              if (raw !== "" && (!Number.isFinite(n) || n < 0)) return;
-              navigate({ bedrooms: raw === "" ? "" : String(Math.floor(n)) });
-            }}
-            placeholder="0"
+            value={localRooms}
+            onChange={(e) => handleDebouncedChange({ bedrooms: e.target.value })}
+            placeholder="e.g. 2"
             className="w-full rounded-xl border border-[#e2e8e6] bg-[#fbfdfc] px-3 py-2 text-[12.5px] text-[#183640] outline-none transition focus:border-[#2C798B]"
           />
         </div>
 
-        {/* Price — USD only */}
+        {/* 3. Bathrooms */}
+        <div>
+          <label htmlFor="buy-bathrooms" className={labelCls}>
+            {t("buy.bathrooms") || "Bathrooms"}
+          </label>
+          <input
+            id="buy-bathrooms"
+            type="number"
+            inputMode="numeric"
+            min="0"
+            step="1"
+            value={localBaths}
+            onChange={(e) => handleDebouncedChange({ bathrooms: e.target.value })}
+            placeholder="e.g. 1"
+            className="w-full rounded-xl border border-[#e2e8e6] bg-[#fbfdfc] px-3 py-2 text-[12.5px] text-[#183640] outline-none transition focus:border-[#2C798B]"
+          />
+        </div>
+
+        {/* 4 & 5. Price (USD) — minPrice & maxPrice */}
         <div>
           <div className="grid grid-cols-2 items-end gap-2">
             <div>
               <span className={labelCls}>{t("rent.minPrice") || "Min Price"}</span>
               <input
                 type="number"
-                value={minPriceVal}
-                onChange={(e) => navigate({ minPrice: e.target.value })}
+                value={localMinPrice}
+                onChange={(e) => handleDebouncedChange({ minPrice: e.target.value })}
                 placeholder="0"
                 min="0"
                 className="w-full rounded-lg border border-[#e2e8e6] bg-[#fbfdfc] px-2.5 py-1.5 text-[12px] text-[#142d38] outline-none focus:border-[#2C798B]"
@@ -371,15 +457,31 @@ function BuyFilterForm({
               <span className={labelCls}>{t("rent.maxPrice") || "Max Price"}</span>
               <input
                 type="number"
-                value={maxPriceVal}
-                onChange={(e) => navigate({ maxPrice: e.target.value })}
-                placeholder="0"
+                value={localMaxPrice}
+                onChange={(e) => handleDebouncedChange({ maxPrice: e.target.value })}
+                placeholder="No limit"
                 min="0"
                 className="w-full rounded-lg border border-[#e2e8e6] bg-[#fbfdfc] px-2.5 py-1.5 text-[12px] text-[#142d38] outline-none focus:border-[#2C798B]"
               />
             </div>
           </div>
           <p className="mt-1.5 text-[11px] text-[#8a9a94]">USD</p>
+        </div>
+
+        {/* 6. Featured Only (isFeatured) */}
+        <div className="pt-1">
+          <label className="flex cursor-pointer items-center justify-between gap-3 rounded-xl border border-[#e2e8e6] bg-[#fbfdfc] px-3 py-2.5 transition hover:bg-[#f2f7f5]">
+            <span className="flex flex-col">
+              <span className="text-[13px] font-semibold text-[#142d38]">Featured Only</span>
+              <span className="text-[11px] text-[#8a9a94]">Show featured properties first</span>
+            </span>
+            <input
+              type="checkbox"
+              checked={isFeaturedVal}
+              onChange={(e) => navigate({ isFeatured: e.target.checked ? "true" : "" })}
+              className="size-4.5 rounded text-[#2C798B] accent-[#2C798B] focus:ring-[#2C798B]"
+            />
+          </label>
         </div>
       </div>
     </div>
@@ -430,9 +532,16 @@ function BuyPropertyCard({
           sizes="(min-width: 1280px) 25vw, (min-width: 768px) 33vw, 100vw"
           className="object-cover object-center transition-transform duration-500 group-hover:scale-105"
         />
-        <span className="absolute right-3.5 top-3.5 inline-flex items-center justify-center rounded-full bg-[#3da5b6]/85 px-3 py-1 text-[11px] font-medium text-white backdrop-blur-xs">
-          For Sale
-        </span>
+        <div className="absolute right-3.5 top-3.5 flex items-center gap-1.5">
+          {property.isFeatured && (
+            <span className="inline-flex items-center gap-1 rounded-full bg-[#183640]/90 px-2.5 py-1 text-[11px] font-semibold text-white shadow-xs backdrop-blur-xs">
+            Featured
+            </span>
+          )}
+          <span className="inline-flex items-center justify-center rounded-full bg-[#3da5b6]/85 px-3 py-1 text-[11px] font-medium text-white backdrop-blur-xs">
+            For Sale
+          </span>
+        </div>
       </Link>
 
       {/* Card Info */}

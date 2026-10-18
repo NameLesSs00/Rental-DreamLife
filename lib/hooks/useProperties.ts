@@ -19,6 +19,7 @@ import type {
   PaginatedResponse,
   PropertyTypeCount,
 } from "@/lib/types/property";
+import type { PriceInfo } from "@/lib/types/currency";
 import {
   adminTranslationLocales,
   buildTranslationFromRecords,
@@ -82,8 +83,6 @@ function hasServerRentFilters(params: PropertyQueryParams) {
     "currency",
     "from",
     "to",
-    "MinCapacity",
-    "minCapacity",
     "CategoryId",
     "categoryId",
     "BedroomNo",
@@ -643,13 +642,18 @@ export function useDeletePropertyImage() {
 }
 
 // ── 6. Prices ────────────────────────────────────────────────────────────────
-export function usePropertyDailyPrices({ propertyId, startDate, endDate }: PropertyDailyPricesRequest) {
+export function usePropertyDailyPrices({
+  propertyId,
+  startDate,
+  endDate,
+  currency,
+}: PropertyDailyPricesRequest & { currency?: string }) {
   return useQuery({
-    queryKey: [KEY, propertyId, "daily-prices", startDate, endDate],
+    queryKey: [KEY, propertyId, "daily-prices", startDate, endDate, currency],
     queryFn: async () => {
       const { data } = await axiosInstance.get<PropertyApiResponse<PropertyDailyPricesData>>(
         `/api/properties/${propertyId}/daily-prices`,
-        { params: { startDate, endDate } }
+        { params: { startDate, endDate, Currency: currency } }
       );
       const raw = data.data ?? { propertyId, prices: [] };
       const prices = (raw.prices ?? []).map((item) => {
@@ -673,6 +677,38 @@ export function usePropertyDailyPrices({ propertyId, startDate, endDate }: Prope
     },
     enabled: !!propertyId,
     staleTime: 30 * 1000,
+  });
+}
+
+export function usePropertyDailyPriceForDate(
+  propertyId?: string,
+  date?: string,
+  currency?: string
+) {
+  return useQuery({
+    queryKey: [KEY, propertyId, "daily-price-single", date, currency],
+    queryFn: async () => {
+      if (!propertyId || !date) return null;
+      try {
+        const { data } = await axiosInstance.get<
+          PropertyApiResponse<{
+            date: string;
+            priceInfo: PriceInfo;
+          }>
+        >(`/api/properties/${propertyId}/daily-prices/${date}`, {
+          params: currency ? { Currency: currency } : undefined,
+        });
+        return data?.data ?? null;
+      } catch (err: any) {
+        if (err?.response?.status === 404) {
+          return null;
+        }
+        throw err;
+      }
+    },
+    enabled: Boolean(propertyId && date),
+    retry: false,
+    staleTime: 60 * 1000,
   });
 }
 

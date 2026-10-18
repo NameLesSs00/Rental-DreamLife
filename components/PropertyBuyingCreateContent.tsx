@@ -189,7 +189,7 @@ export default function PropertyBuyingCreateContent() {
               <TranslationFields label="Description" value={description} onChange={setDescription} textarea />
             </div>
 
-            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
               {/* Category is auto-assigned via useEffect — no dropdown needed */}
 
               <div>
@@ -213,10 +213,13 @@ export default function PropertyBuyingCreateContent() {
                 <label className="mb-1.5 block text-[13px] font-medium text-[#183c2f]">Price (USD)</label>
                 <input type="number" min={0} required value={formData.price} onChange={e => updateForm({ price: Number(e.target.value) })} className="w-full rounded-xl border border-[#dfe8e4] px-4 py-2.5 text-[14px] outline-none focus:border-[#2C798B] focus:ring-1 focus:ring-[#2C798B]" />
               </div>
+              {/* HIDDEN FOR THIS VERSION: Currency read-only display - uncomment to re-enable */}
+              {/*
               <div>
                 <label className="mb-1.5 block text-[13px] font-medium text-[#183c2f]">Currency</label>
                 <input value="USD" readOnly className="w-full rounded-xl border border-[#dfe8e4] bg-[#f5f7f6] px-4 py-2.5 text-[14px] text-[#667c74] outline-none" />
               </div>
+              */}
             </div>
 
             <div className="grid grid-cols-2 gap-6 sm:grid-cols-5">

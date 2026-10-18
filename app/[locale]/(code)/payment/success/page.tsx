@@ -10,6 +10,7 @@ import {
   readPaymentBookingContext,
 } from "@/lib/utils/paymentBookingContext";
 import { formatUsd } from "@/lib/utils/currency";
+import { useHydrated } from "@/lib/hooks/useHydrated";
 import Link from "next/link";
 import { useI18n } from "@/components/I18nProvider";
 
@@ -157,25 +158,30 @@ function PaymentSuccessContent() {
   const { t, tArray, href } = useI18n();
   const searchParams = useSearchParams();
   const redirectOrderId = searchParams.get("orderId") || searchParams.get("token");
-  const [captureOrderId] = useState(() => redirectOrderId || getStoredPaypalOrderId());
   const hasCapturedRef = useRef(false);
+  const hydrated = useHydrated();
 
-  const [state, setPageState] = useState<PageState>(captureOrderId ? "loading" : "error");
+  /**
+   * localStorage is unavailable on the server, so reading it during render makes
+   * the first client render differ from the SSR HTML (the server sees no order
+   * id and renders the error state, the client finds one and renders the
+   * loading state). `hydrated` is false for the SSR pass *and* the hydration
+   * pass, so both sides produce identical markup; the real values are only read
+   * on the render after that.
+   */
+  const captureOrderId = hydrated ? redirectOrderId || getStoredPaypalOrderId() : "";
+  const bookingContext = hydrated ? readPaymentBookingContext() : null;
+
+  // Only the async capture result needs state — it arrives via callbacks from an
+  // external system, which is exactly what effects are for.
   const [paymentData, setPaymentData] = useState<CapturePaymentData | null>(null);
-  const [bookingContext] = useState<PaymentBookingContext | null>(() => readPaymentBookingContext());
-  const [errorMessage, setErrorMessage] = useState<string>(
-    captureOrderId ? "" : t("payment.sessionMissing"),
-  );
+  const [captureError, setCaptureError] = useState("");
 
   const { mutate: capturePayment } = useCapturePaypalPayment();
 
   useEffect(() => {
-    if (hasCapturedRef.current) return;
+    if (!captureOrderId || hasCapturedRef.current) return;
     hasCapturedRef.current = true;
-
-    if (!captureOrderId) {
-      return;
-    }
 
     capturePayment(captureOrderId, {
       onSuccess: (res) => {
@@ -183,25 +189,26 @@ function PaymentSuccessContent() {
           localStorage.removeItem("paypal_order_id");
           clearPaymentBookingContext();
           setPaymentData(res.data);
-          setPageState("success");
         } else {
-          const errMsg = res.errors?.[0] ?? t("payment.genericFailed");
-          setErrorMessage(errMsg);
-          setPageState("error");
+          setCaptureError(res.errors?.[0] ?? t("payment.genericFailed"));
         }
       },
       onError: (err: unknown) => {
-        setErrorMessage(getErrorMessage(err) || t("payment.captureFailed"));
-        setPageState("error");
+        setCaptureError(getErrorMessage(err) || t("payment.captureFailed"));
       },
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [captureOrderId]);
+
+  // Derived, so no state has to be synchronised during render or mount.
+  const sessionMissing = hydrated && !captureOrderId;
+  const state: PageState = captureError || sessionMissing ? "error" : paymentData ? "success" : "loading";
+  const errorMessage = captureError || (sessionMissing ? t("payment.sessionMissing") : "");
 
   if (state === "loading") {
     return (
-      <main className="flex min-h-screen flex-col items-center justify-center bg-white px-4 font-[var(--font-poppins)]">
-        <div className="flex flex-col items-center gap-6 text-center">
+      <main className="min-h-screen bg-[#F3F0E9] font-[var(--font-poppins)] text-[#183c2f]">
+        <div className="flex min-h-screen flex-col items-center justify-center gap-6 px-4 text-center">
           <span className="size-16 animate-spin rounded-full border-4 border-[#dfe8e4] border-t-[#2C798B]" />
           <h1 className="text-[22px] font-semibold text-[#183c2f]">{t("payment.loadingTitle")}</h1>
           <p className="max-w-sm text-[14px] text-[#667c74]">
@@ -238,19 +245,19 @@ function PaymentSuccessContent() {
     ];
 
     return (
-      <main className="bg-white font-[var(--font-poppins)] text-[#404944]">
-        <section className="px-5 pb-[42px] pt-[58px] lg:px-0 lg:pb-[37px] lg:pt-0">
-          <div className="mx-auto flex w-full max-w-[335px] flex-col items-center lg:max-w-[700px]">
+      <main className="min-h-screen bg-[#F3F0E9] font-[var(--font-poppins)] text-[#183c2f]">
+        <section className="px-5 pb-12 pt-10 sm:px-8 lg:px-20 lg:py-20">
+          <div className="mx-auto flex w-full max-w-[700px] flex-col items-center">
             <SuccessIcon />
-            <h1 className="mt-[19.125px] text-center text-[24px] font-bold leading-[44px] tracking-[-0.03em] text-[#183c2f] lg:mt-6 lg:text-[36px]">
+            <h1 className="mt-[19.125px] text-center text-[24px] font-bold leading-[32px] tracking-[-0.03em] text-[#183c2f] lg:mt-6 lg:text-[36px] lg:leading-[42px]">
               {copy.title}
             </h1>
-            <div className="flex h-[87px] items-center justify-center lg:mt-2 lg:h-6">
-              <p className="max-w-[228px] text-center text-[12px] leading-6 lg:max-w-none lg:text-[16px]">
+            <div className="flex items-center justify-center lg:mt-2">
+              <p className="max-w-[280px] text-center text-[12px] leading-6 lg:max-w-none lg:text-[16px]">
                 {copy.message}
               </p>
             </div>
-            <section className="mt-4 flex w-full flex-col gap-[25px] rounded-xl border border-[#bfc9c3] bg-white px-[17px] pb-[34px] pt-[49px] lg:mt-12 lg:gap-8 lg:p-[49px]">
+            <section className="mt-4 flex w-full flex-col gap-[25px] rounded-2xl border border-[#dfe8e4] bg-white px-[17px] pb-[34px] pt-[49px] shadow-[0_8px_32px_rgba(31,77,61,0.06)] lg:mt-12 lg:gap-8 lg:p-[49px]">
               <dl className="grid grid-cols-2 gap-x-8 gap-y-6 lg:gap-y-12">
                 {details.map((d) => (
                   <div key={d.label} className="min-w-0">
@@ -261,7 +268,7 @@ function PaymentSuccessContent() {
                   </div>
                 ))}
               </dl>
-              <div className="h-px w-full bg-[#bfc9c3] opacity-50" />
+              <div className="h-px w-full bg-[#dfe8e4]" />
               <div className="flex w-full items-start gap-4 rounded-lg bg-[#f5f7f6] p-6 lg:gap-6">
                 <InfoIcon />
                 <div className="min-w-0">
@@ -274,7 +281,7 @@ function PaymentSuccessContent() {
             </section>
             <Link
               href={href("/")}
-              className="mt-4 flex h-12 items-center justify-center rounded-lg border border-[#2C798B] px-[33px] text-center text-[14px] font-bold leading-5 text-[#183c2f] transition hover:bg-[#f5f7f6] lg:mt-12"
+              className="mt-4 flex h-12 w-full items-center justify-center rounded-full border border-[#2C798B] px-[33px] text-center text-[14px] font-bold leading-5 text-[#183c2f] transition hover:bg-[#f5f7f6] lg:mt-12 lg:w-auto"
             >
               {t("common.backToHome")}
             </Link>
@@ -288,11 +295,11 @@ function PaymentSuccessContent() {
   const errorCopy = bookingCopy[errorKind];
 
   return (
-    <main className="bg-white font-[var(--font-poppins)] text-[#404944]">
-      <section className="px-5 pb-[42px] pt-[58px] lg:px-0 lg:pb-[37px] lg:pt-0">
-        <div className="mx-auto flex w-full max-w-[335px] flex-col items-center lg:max-w-[700px]">
+    <main className="min-h-screen bg-[#F3F0E9] font-[var(--font-poppins)] text-[#183c2f]">
+      <section className="px-5 pb-12 pt-10 sm:px-8 lg:px-20 lg:py-20">
+        <div className="mx-auto flex w-full max-w-[700px] flex-col items-center">
           <ErrorIcon />
-          <h1 className="mt-[19.125px] text-center text-[24px] font-bold leading-[44px] tracking-[-0.03em] text-[#183c2f] lg:mt-6 lg:text-[36px]">
+          <h1 className="mt-[19.125px] text-center text-[24px] font-bold leading-[32px] tracking-[-0.03em] text-[#183c2f] lg:mt-6 lg:text-[36px] lg:leading-[42px]">
             {t("payment.failedTitle")}
           </h1>
           <div className="flex items-center justify-center lg:mt-2">
@@ -301,15 +308,15 @@ function PaymentSuccessContent() {
             </p>
           </div>
           {errorMessage && (
-            <div className="mt-6 w-full rounded-xl border border-[#fecaca] bg-red-50 px-[17px] py-4 text-center text-[13px] text-red-600">
+            <div className="mt-6 w-full rounded-2xl border border-[#fecaca] bg-red-50 px-[17px] py-4 text-center text-[13px] text-red-600">
               {errorMessage}
             </div>
           )}
           <div className="mt-6 flex w-full flex-col gap-3 lg:mt-10">
-            <Link href={href(errorCopy.retryHref)} className="flex h-12 w-full items-center justify-center rounded-lg bg-[#2C798B] text-[14px] font-bold leading-5 text-white transition hover:bg-[#183640]">
+            <Link href={href(errorCopy.retryHref)} className="flex h-12 w-full items-center justify-center rounded-full bg-[#2C798B] text-[14px] font-bold leading-5 text-white transition hover:bg-[#183640]">
               {t("common.tryAgain")}
             </Link>
-            <Link href={href("/")} className="flex h-12 w-full items-center justify-center rounded-lg border border-[#2C798B] text-[14px] font-bold leading-5 text-[#183c2f] transition hover:bg-[#f5f7f6]">
+            <Link href={href("/")} className="flex h-12 w-full items-center justify-center rounded-full border border-[#2C798B] text-[14px] font-bold leading-5 text-[#183c2f] transition hover:bg-[#f5f7f6]">
               {t("common.backToHome")}
             </Link>
           </div>
@@ -322,7 +329,7 @@ function PaymentSuccessContent() {
 export default function PaymentSuccessPage() {
   return (
     <Suspense fallback={
-      <main className="flex min-h-screen items-center justify-center bg-white">
+      <main className="flex min-h-screen items-center justify-center bg-[#F3F0E9] font-[var(--font-poppins)]">
         <span className="size-10 animate-spin rounded-full border-4 border-[#dfe8e4] border-t-[#2C798B]" />
       </main>
     }>

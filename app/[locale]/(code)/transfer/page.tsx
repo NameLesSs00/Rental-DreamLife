@@ -1,3 +1,4 @@
+import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import TransferPageContent from "@/components/TransferPageContent";
 import { siteConfig } from "@/lib/site";
@@ -24,5 +25,7 @@ export async function generateMetadata({ params }: PageProps<"/[locale]/transfer
 }
 
 export default function TransferPage() {
+  // HIDDEN FOR THIS VERSION: Transfer routes are disabled - comment out notFound() below to re-enable
+  notFound();
   return <TransferPageContent />;
 }
