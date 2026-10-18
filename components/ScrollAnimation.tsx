@@ -1,6 +1,6 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 import { ReactNode } from "react";
 
 interface ScrollAnimationProps {
@@ -16,9 +16,12 @@ export default function ScrollAnimation({
   delay = 0,
   className = "",
   direction = "up",
-  distance = 30,
+  distance = 18,
 }: ScrollAnimationProps) {
+  const shouldReduceMotion = useReducedMotion();
+
   const getInitialPosition = () => {
+    if (shouldReduceMotion) return { x: 0, y: 0 };
     switch (direction) {
       case "up":
         return { y: distance, x: 0 };
@@ -37,10 +40,18 @@ export default function ScrollAnimation({
 
   return (
     <motion.div
-      initial={{ opacity: 0, ...initialPosition }}
+      initial={{ opacity: shouldReduceMotion ? 1 : 0, ...initialPosition }}
       whileInView={{ opacity: 1, x: 0, y: 0 }}
-      viewport={{ once: true, margin: "-50px" }}
-      transition={{ duration: 0.6, delay, ease: "easeOut" }}
+      viewport={{ once: true, margin: "0px 0px -25px 0px", amount: 0.05 }}
+      transition={{
+        duration: shouldReduceMotion ? 0 : 0.42,
+        delay: shouldReduceMotion ? 0 : delay,
+        ease: [0.21, 0.47, 0.32, 0.98],
+      }}
+      style={{
+        willChange: "transform, opacity",
+        transform: "translateZ(0)",
+      }}
       className={className}
     >
       {children}
