@@ -8,6 +8,7 @@ import ContactForm from "./ContactForm";
 import ContactMap from "./ContactMap";
 import { useI18n } from "./I18nProvider";
 import PageHero from "@/components/PageHero";
+import { siteConfig } from "@/lib/site";
 
 const smoothEase: [number, number, number, number] = [0.22, 1, 0.36, 1];
 
@@ -87,7 +88,7 @@ export default function ContactPageContent() {
                 {t("contact.offlineAddress") || "Address"}
               </h3>
               <p className="mt-3 text-[14px] leading-relaxed text-[#718288]">
-                {t("contact.offlineAddressVal") || "El Kawther, Hurghada"}
+                {siteConfig.address.label}
               </p>
             </motion.div>
 
@@ -104,18 +105,18 @@ export default function ContactPageContent() {
               </h3>
               <div className="mt-3 flex flex-col items-center gap-1.5 text-[14px] text-[#718288]">
                 <a
-                  href="tel:+201000555666"
+                  href={`tel:${siteConfig.phone}`}
                   className="font-medium transition hover:text-[#183640]"
                 >
-                  +20 1000555666
+                  {siteConfig.displayPhone}
                 </a>
                 <a
-                  href="https://wa.me/201234567890"
+                  href={siteConfig.whatsappUrl}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="font-medium text-[#183640] transition hover:text-[#25D366]"
                 >
-                  +20 1234567890 WhatsApp
+                  {siteConfig.displayPhone} (WhatsApp)
                 </a>
               </div>
             </motion.div>
@@ -133,10 +134,10 @@ export default function ContactPageContent() {
               </h3>
               <div className="mt-3 text-[14px] text-[#718288]">
                 <a
-                  href="mailto:Dreamlife123@gmail.com"
+                  href={`mailto:${siteConfig.email}`}
                   className="font-medium transition hover:text-[#183640]"
                 >
-                  Dreamlife123@gmail.com
+                  {siteConfig.email}
                 </a>
               </div>
             </motion.div>

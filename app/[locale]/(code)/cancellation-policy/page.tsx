@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { siteConfig } from "@/lib/site";
+import { absoluteUrl, siteConfig } from "@/lib/site";
 import { getMessages } from "@/lib/i18n/messages";
 import { isLocale, type Locale } from "@/lib/i18n/config";
 import CancellationPolicyContent from "@/components/CancellationPolicyContent";
@@ -17,12 +17,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     title: `${messages.cancellationPolicy.metadataTitle} | ${siteConfig.name}`,
     description: messages.cancellationPolicy.metadataDescription,
     alternates: {
-      canonical: `/${locale}/cancellation-policy`,
+      canonical: absoluteUrl(`/${locale}/cancellation-policy`),
     },
     openGraph: {
       title: `${messages.cancellationPolicy.metadataTitle} | ${siteConfig.name}`,
       description: messages.cancellationPolicy.metadataDescription,
-      url: `/${locale}/cancellation-policy`,
+      url: absoluteUrl(`/${locale}/cancellation-policy`),
     },
   };
 }
@@ -32,5 +32,32 @@ export default async function CancellationPolicyPage({ params }: Props) {
   const locale: Locale = isLocale(rawLocale) ? rawLocale : "en";
   const messages = getMessages(locale);
 
-  return <CancellationPolicyContent locale={locale} messages={messages} />;
+  const breadcrumbJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      {
+        "@type": "ListItem",
+        position: 1,
+        name: messages.common.home,
+        item: absoluteUrl(`/${locale}`),
+      },
+      {
+        "@type": "ListItem",
+        position: 2,
+        name: messages.cancellationPolicy.metadataTitle,
+        item: absoluteUrl(`/${locale}/cancellation-policy`),
+      },
+    ],
+  };
+
+  return (
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+      />
+      <CancellationPolicyContent locale={locale} messages={messages} />
+    </>
+  );
 }

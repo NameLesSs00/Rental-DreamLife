@@ -1,6 +1,6 @@
 {
   "common": {
-    "brand": "Hurghada Vacation Homes",
+    "brand": "Sea Key Property",
     "home": "Startseite",
     "rent": "Ferienwohnungen",
     "transfers": "Transfers",
@@ -53,7 +53,7 @@
       "contact": "Kontakt",
       "blogs": "Blog"
     },
-    "homeAria": "Hurghada Vacation Homes Startseite"
+    "homeAria": "Sea Key Property Startseite"
   },
   "footer": {
     "quickLinks": "Schnelllinks",
@@ -71,9 +71,9 @@
   "seo": {
     "homeTitle": "Ferienwohnungen und Urlaubsunterkünfte in Hurghada",
     "homeDescription": "Entdecken und buchen Sie geprüfte Ferienwohnungen, Apartments, Chalets, Studios und private Flughafentransfers in Hurghada mit lokaler Betreuung.",
-    "siteTitle": "Hurghada Vacation Homes | Ferienwohnungen in Hurghada",
+    "siteTitle": "Sea Key Property | Ferienwohnungen in Hurghada",
     "siteDescription": "Entdecken und buchen Sie geprüfte Ferienwohnungen, Apartments, Strandchalets, Studios und private Flughafentransfers in Hurghada.",
-    "ogAlt": "Ferienwohnungen von Hurghada Vacation Homes in Hurghada"
+    "ogAlt": "Ferienwohnungen von Sea Key Property in Hurghada"
   },
   "buy": {
   "basicAmenities": "Grundausstattung",
@@ -539,8 +539,8 @@
     "notifying": "Server wird benachrichtigt..."
   },
   "contact": {
-    "metadataTitle": "Hurghada Vacation Homes kontaktieren",
-    "metadataDescription": "Kontaktieren Sie Hurghada Vacation Homes in Hurghada El Kawther telefonisch oder per WhatsApp.",
+    "metadataTitle": "Sea Key Property kontaktieren",
+    "metadataDescription": "Kontaktieren Sie Sea Key Property in Hurghada El Kawther telefonisch oder per WhatsApp.",
     "title": "Kontakt",
     "body": "Haben Sie Fragen, brauchen Sie Hilfe bei der Auswahl einer Unterkunft oder möchten Sie einen Transfer organisieren? Schreiben Sie uns.",
     "getInTouch": "Kontakt aufnehmen",
@@ -684,7 +684,7 @@
   },
   "houseRules": {
     "metadataTitle": "Hausregeln",
-    "metadataDescription": "Lesen Sie die Hausregeln von Hurghada Vacation Homes zu Check-in, Besuchern, Pflege, Reinigung, Wäsche und Sicherheit.",
+    "metadataDescription": "Lesen Sie die Hausregeln von Sea Key Property zu Check-in, Besuchern, Pflege, Reinigung, Wäsche und Sicherheit.",
     "eyebrow": "Gästeinformationen",
     "intro": "Willkommen. Wir wünschen Ihnen einen angenehmen Aufenthalt. Bitte beachten Sie, dass es sich um Selbstversorger-Apartments handelt und keine Hotelservices angeboten werden.",
     "heroAlt": "Komfortable Ferienunterkunft",
@@ -777,11 +777,11 @@
   },
   "privacyPolicy": {
     "metadataTitle": "Datenschutzerklärung",
-    "metadataDescription": "Erfahren Sie, wie Hurghada Vacation Homes Ihre personenbezogenen Daten für Apartmentreservierungen, Resortsicherheit und Gästeservice erhebt und schützt.",
+    "metadataDescription": "Erfahren Sie, wie Sea Key Property Ihre personenbezogenen Daten für Apartmentreservierungen, Resortsicherheit und Gästeservice erhebt und schützt.",
     "eyebrow": "Gästeinformation & Rechtliches",
     "title": "Datenschutzerklärung",
-    "intro": "Bei Hurghada Vacation Homes respektieren wir Ihre Privatsphäre und schützen Ihre Daten gewissenhaft. Diese Richtlinie erklärt, wie wir Gästedaten im Rahmen unserer Ferienwohnungen zur Selbstverpflegung, der Einhaltung der Hausregeln und unseres Services verarbeiten.",
-    "heroAlt": "Hurghada Vacation Homes Ferienwohnung",
+    "intro": "Bei Sea Key Property respektieren wir Ihre Privatsphäre und schützen Ihre Daten gewissenhaft. Diese Richtlinie erklärt, wie wir Gästedaten im Rahmen unserer Ferienwohnungen zur Selbstverpflegung, der Einhaltung der Hausregeln und unseres Services verarbeiten.",
+    "heroAlt": "Sea Key Property Ferienwohnung",
     "card1Title": "1. Erhobene Daten",
     "card1Items": [
       [
@@ -823,11 +823,11 @@
   },
   "refundPolicy": {
     "metadataTitle": "Rückerstattungsrichtlinie",
-    "metadataDescription": "Lesen Sie die Rückerstattungsrichtlinie von Hurghada Vacation Homes zu berechtigten Stornierungen, Kautionsrückzahlungen, Wohnungsinspektionen und nicht erstattungsfähigen Leistungen.",
+    "metadataDescription": "Lesen Sie die Rückerstattungsrichtlinie von Sea Key Property zu berechtigten Stornierungen, Kautionsrückzahlungen, Wohnungsinspektionen und nicht erstattungsfähigen Leistungen.",
     "eyebrow": "Buchungsbedingungen & Transparenz",
     "title": "Rückerstattungsrichtlinie",
-    "intro": "Bei Hurghada Vacation Homes setzen wir auf faire und klare Bedingungen. Da unsere Unterkünfte exklusiv für Ihren gebuchten Zeitraum reserviert werden, gelten für Rückerstattungen folgende Regelungen.",
-    "heroAlt": "Hurghada Vacation Homes Ferienobjekt",
+    "intro": "Bei Sea Key Property setzen wir auf faire und klare Bedingungen. Da unsere Unterkünfte exklusiv für Ihren gebuchten Zeitraum reserviert werden, gelten für Rückerstattungen folgende Regelungen.",
+    "heroAlt": "Sea Key Property Ferienobjekt",
     "card1Title": "1. Berechtigte Rückerstattungsszenarien",
     "card1Items": [
       [
@@ -875,11 +875,11 @@
   },
   "cancellationPolicy": {
     "metadataTitle": "Stornierungsbedingungen",
-    "metadataDescription": "Verstehen Sie die Stornierungsrichtlinien für Hurghada Vacation Homes: Erstattungsfristen, Umbuchungen, Einhaltung der Hausregeln und Gastgeber-Garantien.",
+    "metadataDescription": "Verstehen Sie die Stornierungsrichtlinien für Sea Key Property: Erstattungsfristen, Umbuchungen, Einhaltung der Hausregeln und Gastgeber-Garantien.",
     "eyebrow": "Buchungsrichtlinien & Flexibilität",
     "title": "Stornierungsbedingungen",
     "intro": "Reisepläne können sich ändern. Um unsere Ferienwohnungen zuverlässig vorzubereiten und bereitzustellen, gelten für Stornierungen und Datumsänderungen nachstehende Bedingungen.",
-    "heroAlt": "Hurghada Vacation Homes Mietunterkunft",
+    "heroAlt": "Sea Key Property Mietunterkunft",
     "card1Title": "1. Standard-Stornierungsfristen",
     "card1Items": [
       [

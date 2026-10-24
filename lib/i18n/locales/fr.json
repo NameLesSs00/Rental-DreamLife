@@ -1,6 +1,6 @@
 {
   "common": {
-    "brand": "Hurghada Vacation Homes",
+    "brand": "Sea Key Property",
     "home": "Accueil",
     "rent": "Locations de vacances",
     "transfers": "Transferts",
@@ -53,7 +53,7 @@
       "contact": "Contact",
       "blogs": "Blogs"
     },
-    "homeAria": "Accueil Hurghada Vacation Homes"
+    "homeAria": "Accueil Sea Key Property"
   },
   "footer": {
     "quickLinks": "Liens rapides",
@@ -71,9 +71,9 @@
   "seo": {
     "homeTitle": "Locations de vacances et maisons de séjour à Hurghada",
     "homeDescription": "Découvrez et réservez des appartements, chalets, studios et transferts privés vérifiés à Hurghada avec une assistance locale 24 h/24.",
-    "siteTitle": "Hurghada Vacation Homes | Locations de vacances à Hurghada",
+    "siteTitle": "Sea Key Property | Locations de vacances à Hurghada",
     "siteDescription": "Découvrez et réservez des locations de vacances, appartements, chalets, studios et transferts privés à Hurghada avec assistance locale.",
-    "ogAlt": "Locations de vacances Hurghada Vacation Homes à Hurghada"
+    "ogAlt": "Locations de vacances Sea Key Property à Hurghada"
   },
   "buy": {
   "basicAmenities": "Équipements de base",
@@ -539,8 +539,8 @@
     "notifying": "Notification au serveur..."
   },
   "contact": {
-    "metadataTitle": "Contacter Hurghada Vacation Homes",
-    "metadataDescription": "Contactez Hurghada Vacation Homes à Hurghada El Kawther par téléphone ou WhatsApp pour vos locations et transferts.",
+    "metadataTitle": "Contacter Sea Key Property",
+    "metadataDescription": "Contactez Sea Key Property à Hurghada El Kawther par téléphone ou WhatsApp pour vos locations et transferts.",
     "title": "Contact",
     "body": "Vous avez des questions, besoin d'aide pour choisir une location ou organiser un transfert ? Envoyez-nous un message.",
     "getInTouch": "Contactez-nous",
@@ -684,7 +684,7 @@
   },
   "houseRules": {
     "metadataTitle": "Règlement intérieur",
-    "metadataDescription": "Consultez le règlement intérieur de Hurghada Vacation Homes : horaires, visiteurs, entretien, ménage, blanchisserie et consignes de sécurité.",
+    "metadataDescription": "Consultez le règlement intérieur de Sea Key Property : horaires, visiteurs, entretien, ménage, blanchisserie et consignes de sécurité.",
     "eyebrow": "Informations voyageurs",
     "intro": "Bienvenue. Nous espérons que votre séjour sera confortable et agréable. Ces logements sont indépendants et ne proposent donc pas de services hôteliers.",
     "heroAlt": "Location de vacances confortable",
@@ -777,11 +777,11 @@
   },
   "privacyPolicy": {
     "metadataTitle": "Politique de confidentialité",
-    "metadataDescription": "Découvrez comment Hurghada Vacation Homes recueille, protège et gère vos données personnelles pour la réservation d'appartements, la sécurité de la résidence et le service client.",
+    "metadataDescription": "Découvrez comment Sea Key Property recueille, protège et gère vos données personnelles pour la réservation d'appartements, la sécurité de la résidence et le service client.",
     "eyebrow": "Informations clients & Mentions légales",
     "title": "Politique de confidentialité",
-    "intro": "Chez Hurghada Vacation Homes, nous respectons votre vie privée et protégeons vos données personnelles. Cette politique détaille la collecte, l'utilisation et la sécurité des données relatives à nos appartements meublés de vacances, au respect du règlement intérieur et à nos services d'accueil.",
-    "heroAlt": "Appartement de vacances Hurghada Vacation Homes",
+    "intro": "Chez Sea Key Property, nous respectons votre vie privée et protégeons vos données personnelles. Cette politique détaille la collecte, l'utilisation et la sécurité des données relatives à nos appartements meublés de vacances, au respect du règlement intérieur et à nos services d'accueil.",
+    "heroAlt": "Appartement de vacances Sea Key Property",
     "card1Title": "1. Informations collectées",
     "card1Items": [
       [
@@ -823,11 +823,11 @@
   },
   "refundPolicy": {
     "metadataTitle": "Politique de remboursement",
-    "metadataDescription": "Consultez la politique de remboursement de Hurghada Vacation Homes : conditions d'éligibilité, état des lieux de départ, délais de restitution de caution et prestations non remboursables.",
+    "metadataDescription": "Consultez la politique de remboursement de Sea Key Property : conditions d'éligibilité, état des lieux de départ, délais de restitution de caution et prestations non remboursables.",
     "eyebrow": "Conditions de réservation & Transparence",
     "title": "Politique de remboursement",
-    "intro": "Chez Hurghada Vacation Homes, nous prônons des conditions transparentes et équitables. Nos logements étant des résidences de vacances privatisées pour vos dates, les remboursements obéissent aux règles ci-dessous.",
-    "heroAlt": "Hébergement de vacances Hurghada Vacation Homes",
+    "intro": "Chez Sea Key Property, nous prônons des conditions transparentes et équitables. Nos logements étant des résidences de vacances privatisées pour vos dates, les remboursements obéissent aux règles ci-dessous.",
+    "heroAlt": "Hébergement de vacances Sea Key Property",
     "card1Title": "1. Situations éligibles au remboursement",
     "card1Items": [
       [
@@ -875,11 +875,11 @@
   },
   "cancellationPolicy": {
     "metadataTitle": "Politique d'annulation",
-    "metadataDescription": "Comprenez les conditions d'annulation d'Hurghada Vacation Homes : fenêtres de remboursement, modifications de dates, respect du règlement et garanties de l'hôte.",
+    "metadataDescription": "Comprenez les conditions d'annulation d'Sea Key Property : fenêtres de remboursement, modifications de dates, respect du règlement et garanties de l'hôte.",
     "eyebrow": "Conditions de réservation & Flexibilité",
     "title": "Politique d'annulation",
     "intro": "Nous savons que les imprévus arrivent. Pour maintenir nos appartements prêts et disponibles pour tous nos hôtes, les annulations et modifications suivent les modalités ci-dessous.",
-    "heroAlt": "Logement à louer Hurghada Vacation Homes",
+    "heroAlt": "Logement à louer Sea Key Property",
     "card1Title": "1. Délais standards d'annulation",
     "card1Items": [
       [

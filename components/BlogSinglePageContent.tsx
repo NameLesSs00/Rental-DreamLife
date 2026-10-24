@@ -211,7 +211,7 @@ export default function BlogSinglePageContent({
               )}
             </div>
 
-            {/* Right: Sticky Sidebar for Quick Jump & DreamLife booking CTA */}
+            {/* Right: Sticky Sidebar for Quick Jump & Sea Key Property booking CTA */}
             <aside className="hidden lg:block">
               <div className="sticky top-28 space-y-6">
                 {/* Table of Contents (if sections exist) */}
@@ -234,10 +234,10 @@ export default function BlogSinglePageContent({
                   </div>
                 )}
 
-                {/* DreamLife Booking CTA Banner */}
+                {/* Sea Key Property Booking CTA Banner */}
                 <div className="overflow-hidden rounded-[20px] border border-[#2C798B]/20 bg-[#183640] p-6 text-white shadow-sm">
                   <p className="text-[11.5px] font-semibold uppercase tracking-wider text-[#79cbd8]">
-                    DreamLife Hurghada
+                    Sea Key Property
                   </p>
                   <h3 className="mt-2 text-[19px] font-bold leading-snug text-white">
                     Planning Your Trip to Hurghada?

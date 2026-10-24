@@ -3,7 +3,7 @@ import AdminDashboardContent from "../../../components/AdminDashboardContent";
 
 export const metadata: Metadata = {
   title: "Admin Dashboard",
-  description: "Hurghada Vacation Homes admin dashboard.",
+  description: "Sea Key Property admin dashboard.",
 };
 
 export default function AdminDashboardPage() {

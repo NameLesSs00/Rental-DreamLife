@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { siteConfig } from "@/lib/site";
+import { absoluteUrl, siteConfig } from "@/lib/site";
 import { getMessages } from "@/lib/i18n/messages";
 import { isLocale, type Locale } from "@/lib/i18n/config";
 import PrivacyPolicyContent from "@/components/PrivacyPolicyContent";
@@ -17,12 +17,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     title: `${messages.privacyPolicy.metadataTitle} | ${siteConfig.name}`,
     description: messages.privacyPolicy.metadataDescription,
     alternates: {
-      canonical: `/${locale}/privacy-policy`,
+      canonical: absoluteUrl(`/${locale}/privacy-policy`),
     },
     openGraph: {
       title: `${messages.privacyPolicy.metadataTitle} | ${siteConfig.name}`,
       description: messages.privacyPolicy.metadataDescription,
-      url: `/${locale}/privacy-policy`,
+      url: absoluteUrl(`/${locale}/privacy-policy`),
     },
   };
 }
@@ -32,5 +32,32 @@ export default async function PrivacyPolicyPage({ params }: Props) {
   const locale: Locale = isLocale(rawLocale) ? rawLocale : "en";
   const messages = getMessages(locale);
 
-  return <PrivacyPolicyContent locale={locale} messages={messages} />;
+  const breadcrumbJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      {
+        "@type": "ListItem",
+        position: 1,
+        name: messages.common.home,
+        item: absoluteUrl(`/${locale}`),
+      },
+      {
+        "@type": "ListItem",
+        position: 2,
+        name: messages.privacyPolicy.metadataTitle,
+        item: absoluteUrl(`/${locale}/privacy-policy`),
+      },
+    ],
+  };
+
+  return (
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+      />
+      <PrivacyPolicyContent locale={locale} messages={messages} />
+    </>
+  );
 }

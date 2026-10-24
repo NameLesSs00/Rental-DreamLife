@@ -102,7 +102,7 @@ export default function AboutPageContent() {
           >
             <Image
               src="/about/about-living-room.png"
-              alt="Hurghada Vacation Homes Living Room"
+              alt="Sea Key Property Living Room"
               fill
               sizes="(min-width: 1024px) 50vw, 100vw"
               className="object-cover object-center"

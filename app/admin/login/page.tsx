@@ -106,7 +106,7 @@ function LoginForm() {
           <div>
             <blockquote className="max-w-sm">
               <p className="text-[22px] font-semibold leading-[1.4] text-white">
-                Manage Hurghada Vacation Homes bookings, listings, transfers, and content from one focused workspace.
+                Manage Sea Key Property bookings, listings, trips, and content from one focused workspace.
               </p>
               <footer className="mt-4 flex items-center gap-3">
                 <span className="h-px w-8 bg-[#32748A]" />

@@ -5,7 +5,7 @@ import { getBlogSlug } from "@/lib/utils/blogSlug";
 
 const uuidPattern = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i;
 
-async function getPublishedBlogs(locale: Locale = defaultLocale) {
+export async function getPublishedBlogs(locale: Locale = defaultLocale) {
   try {
     const cleanBase = API_BASE_URL.replace(/\/+$/, "");
     const params = new URLSearchParams({

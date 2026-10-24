@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
-import { siteConfig } from "@/lib/site";
+import { absoluteUrl, siteConfig } from "@/lib/site";
 import { getMessages } from "@/lib/i18n/messages";
 import { isLocale, type Locale } from "@/lib/i18n/config";
 
@@ -63,12 +63,12 @@ export async function generateMetadata({ params }: PageProps<"/[locale]/house-ru
     title: messages.houseRules.metadataTitle,
     description: messages.houseRules.metadataDescription,
     alternates: {
-      canonical: `/${locale}/house-rules`,
+      canonical: absoluteUrl(`/${locale}/house-rules`),
     },
     openGraph: {
       title: `${messages.houseRules.metadataTitle} | ${siteConfig.name}`,
       description: messages.houseRules.metadataDescription,
-      url: `/${locale}/house-rules`,
+      url: absoluteUrl(`/${locale}/house-rules`),
     },
   };
 }
@@ -79,8 +79,31 @@ export default async function HouseRulesPage({ params }: PageProps<"/[locale]/ho
   const messages = getMessages(locale);
   const paidServices = messages.houseRules.paidServices;
 
+  const breadcrumbJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      {
+        "@type": "ListItem",
+        position: 1,
+        name: messages.common.home,
+        item: absoluteUrl(`/${locale}`),
+      },
+      {
+        "@type": "ListItem",
+        position: 2,
+        name: messages.houseRules.metadataTitle,
+        item: absoluteUrl(`/${locale}/house-rules`),
+      },
+    ],
+  };
+
   return (
     <main className="bg-white font-[var(--font-poppins)] text-[#183c2f]">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+      />
       <section className="relative overflow-hidden bg-[#f5f7f6] px-5 py-10 sm:px-8 lg:px-20 lg:py-16">
         <div className="mx-auto grid max-w-[1280px] gap-8 lg:grid-cols-[minmax(0,0.95fr)_minmax(0,0.8fr)] lg:items-center">
           <div>

@@ -5,7 +5,7 @@ import Link from "next/link";
 import React from "react";
 
 export interface LogoProps {
-  /** "default" = #0D768E text and navy mark; "white" = pure white mark and white text */
+  /** "default" = dark text / normal colors; "white" = pure white text for dark backgrounds */
   variant?: "default" | "white";
   /** Alias for variant="white" when placed on dark backgrounds */
   isDark?: boolean;
@@ -14,7 +14,7 @@ export interface LogoProps {
   className?: string;
   iconClassName?: string;
   textClassName?: string;
-  /** Custom width for the icon (default ~38px - 44px based on context) */
+  /** Custom width for the icon (default ~44px) */
   iconWidth?: number;
   iconHeight?: number;
   /** Option to hide the text wordmark */
@@ -31,7 +31,7 @@ export default function Logo({
   iconClassName = "",
   textClassName = "",
   iconWidth = 46,
-  iconHeight = 39,
+  iconHeight = 46,
   showText = true,
   priority = false,
   onClick,
@@ -40,47 +40,49 @@ export default function Logo({
 
   const content = (
     <div
-      className={`inline-flex items-center gap-2.5 transition-opacity hover:opacity-95 ${className}`}
+      className={`inline-flex items-center gap-2.5 sm:gap-3 transition-opacity hover:opacity-95 ${className}`}
       onClick={onClick}
     >
-      <Image
-        src="/logo.svg"
-        alt="Dream Life Logo"
-        width={62}
-        height={52}
-        priority={priority}
-        unoptimized
-        className={`h-9 w-auto shrink-0 object-contain sm:h-10 lg:h-11 ${
-          isWhite ? "brightness-0 invert" : ""
-        } ${iconClassName}`}
-        style={{
-          width: iconWidth ? `${iconWidth}px` : undefined,
-          height: iconHeight ? `${iconHeight}px` : undefined,
-        }}
-      />
+      <div className="relative shrink-0 overflow-hidden rounded-full">
+        <Image
+          src={isWhite ? "/logo-white.svg" : "/logo.svg"}
+          alt="Sea Key Property Logo"
+          width={92}
+          height={92}
+          priority={priority}
+          unoptimized
+          className={`h-10 w-10 sm:h-11 sm:w-11 lg:h-12 lg:w-12 shrink-0 object-contain drop-shadow-sm ${iconClassName}`}
+          style={{
+            width: iconWidth ? `${iconWidth}px` : undefined,
+            height: iconHeight ? `${iconHeight}px` : undefined,
+          }}
+        />
+      </div>
 
       {showText && (
-        <span
-          className={`font-dm-serif italic font-normal tracking-normal select-none leading-none ${
-            isWhite ? "text-white" : "text-[#0D768E]"
-          } text-[24px] sm:text-[26px] lg:text-[28px] ${textClassName}`}
-          style={{
-            fontFamily: "var(--font-dm-serif-display), 'DM Serif Display', serif",
-            fontWeight: 400,
-            fontStyle: "italic",
-            lineHeight: "100%",
-            letterSpacing: "0%",
-          }}
-        >
-          Dream Life
-        </span>
+        <div className={`flex flex-col justify-center leading-none select-none ${textClassName}`}>
+          <span
+            className={`font-[var(--font-poppins),'Poppins',sans-serif] text-[17px] sm:text-[19px] font-bold tracking-[0.03em] uppercase ${
+              isWhite ? "text-white" : "text-[#12382e]"
+            }`}
+          >
+            SEA KEY
+          </span>
+          <span
+            className={`font-[var(--font-poppins),'Poppins',sans-serif] text-[9.5px] sm:text-[10px] font-semibold tracking-[0.28em] uppercase mt-1 ${
+              isWhite ? "text-white" : "text-[#12382e]"
+            }`}
+          >
+            PROPERTY
+          </span>
+        </div>
       )}
     </div>
   );
 
   if (href) {
     return (
-      <Link href={href} aria-label="Dream Life Home" className="inline-flex shrink-0">
+      <Link href={href} aria-label="Sea Key Property Home" className="inline-flex shrink-0">
         {content}
       </Link>
     );
@@ -88,3 +90,4 @@ export default function Logo({
 
   return content;
 }
+

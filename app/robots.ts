@@ -1,5 +1,6 @@
 import type { MetadataRoute } from "next";
 import { absoluteUrl } from "@/lib/site";
+import { locales } from "@/lib/i18n/config";
 
 export default function robots(): MetadataRoute.Robots {
   const privatePublicRoutes = ["/payment/", "/booking-confirmation"];
@@ -11,7 +12,7 @@ export default function robots(): MetadataRoute.Robots {
       disallow: [
         "/admin/",
         "/billing/",
-        ...privatePublicRoutes.flatMap((path) => [`/en${path}`, `/fr${path}`, `/de${path}`, `/ru${path}`]),
+        ...privatePublicRoutes.flatMap((path) => locales.map((locale) => `/${locale}${path}`)),
       ],
     },
     sitemap: absoluteUrl("/sitemap.xml"),

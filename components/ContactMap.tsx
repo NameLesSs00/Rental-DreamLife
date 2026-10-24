@@ -9,7 +9,7 @@ export default function ContactMap() {
   return (
     <div className="relative flex h-full min-h-[460px] w-full flex-col overflow-hidden rounded-[20px] border border-[#d8e0dd] bg-[#eef2f0] shadow-xs">
       <iframe
-        title="DreamLife Office Location - El Kawther, Hurghada"
+        title="Sea Key Property Office Location - El Kawther, Hurghada"
         src={mapUrl}
         width="100%"
         height="100%"

@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import SingleBuyPropertyPageContent from "@/components/SingleBuyPropertyPageContent";
 import { API_BASE_URL } from "@/lib/api/config";
 import { getPropertyIdBySlug } from "@/lib/api/propertyHelpers";
-import { siteConfig } from "@/lib/site";
+import { absoluteUrl, siteConfig } from "@/lib/site";
 import { isLocale, type Locale } from "@/lib/i18n/config";
 import { getMessages } from "@/lib/i18n/messages";
 
@@ -52,14 +52,15 @@ export async function generateMetadata({
         property?.description?.substring(0, 160) ||
         messages.buy.metaDefaultDescription,
       alternates: {
-        canonical: `/${locale}/buy/${slug}`,
+        canonical: absoluteUrl(`/${locale}/buy/${slug}`),
       },
       openGraph: {
         title: `${property?.title || messages.buy.metaDefaultTitle} | ${siteConfig.name}`,
         description:
           property?.description?.substring(0, 160) ||
           messages.buy.metaDefaultDescription,
-        images: coverImage ? [{ url: `${API_BASE_URL}/${coverImage}` }] : []
+        url: absoluteUrl(`/${locale}/buy/${slug}`),
+        images: coverImage ? [{ url: coverImage.startsWith("http") ? coverImage : `${API_BASE_URL}/${coverImage}` }] : []
       }
     };
   } catch {
@@ -77,12 +78,84 @@ export default async function SingleBuyPropertyPage({
   const { locale: rawLocale, slug } = await params;
   const query = await searchParams;
   const locale: Locale = isLocale(rawLocale) ? rawLocale : "en";
+  const messages = getMessages(locale);
   const id = await getPropertyIdBySlug(slug, "buy", locale, query.id);
 
   if (!id) {
     notFound();
   }
 
-  return <SingleBuyPropertyPageContent id={id as string} />;
+  let propertyJsonLd: Record<string, unknown> | null = null;
+  try {
+    const res = await fetch(`${API_BASE_URL}/api/public/property-buyings/${id}`, {
+      next: { revalidate: 60 },
+      headers: { "Accept-Language": locale, "X-Locale": locale },
+    });
+    if (res.ok) {
+      const json = await res.json();
+      const property = json.data;
+      if (property) {
+        const coverImage = (property?.images as PropertyImage[] | undefined)?.find((img) => img.isCover)?.imageUrl;
+        propertyJsonLd = {
+          "@context": "https://schema.org",
+          "@type": "RealEstateListing",
+          name: property.title,
+          description: property.description?.substring(0, 300),
+          url: absoluteUrl(`/${locale}/buy/${slug}`),
+          image: coverImage ? [coverImage.startsWith("http") ? coverImage : `${API_BASE_URL}/${coverImage}`] : [],
+          offers: {
+            "@type": "Offer",
+            price: property.price,
+            priceCurrency: property.currency || "USD",
+            availability: "https://schema.org/InStock",
+            businessFunction: "http://purl.org/goodrelations/v1#Sell",
+          },
+        };
+      }
+    }
+  } catch {
+    // Graceful fallback if API unavailable during render
+  }
+
+  const breadcrumbJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      {
+        "@type": "ListItem",
+        position: 1,
+        name: messages.common.home,
+        item: absoluteUrl(`/${locale}`),
+      },
+      {
+        "@type": "ListItem",
+        position: 2,
+        name: messages.buy.metadataTitle,
+        item: absoluteUrl(`/${locale}/buy`),
+      },
+      {
+        "@type": "ListItem",
+        position: 3,
+        name: messages.buy.detailsBreadcrumb,
+        item: absoluteUrl(`/${locale}/buy/${slug}`),
+      },
+    ],
+  };
+
+  return (
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+      />
+      {propertyJsonLd && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(propertyJsonLd) }}
+        />
+      )}
+      <SingleBuyPropertyPageContent id={id as string} />
+    </>
+  );
 }
 

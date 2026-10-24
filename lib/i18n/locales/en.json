@@ -1,6 +1,6 @@
 {
   "common": {
-    "brand": "Hurghada Vacation Homes",
+    "brand": "Sea Key Property",
     "home": "Home",
     "rent": "Vacation Homes",
     "transfers": "Transfers",
@@ -53,13 +53,13 @@
       "contact": "Contact Us",
       "blogs": "Blogs"
     },
-    "homeAria": "Hurghada Vacation Homes home"
+    "homeAria": "Sea Key Property home"
   },
   "footer": {
     "quickLinks": "Quick Links",
     "rentalTypes": "Rental Types",
     "contact": "Contact Us",
-    "intro": "Handpicked vacation homes, beachside chalets, and private airport transfers in Hurghada. Enjoy verified quality, transparent booking, and dedicated local host care.",
+    "intro": "Handpicked holiday homes, beachside chalets, and private Red Sea trips & airport transfers in Hurghada with Sea Key Property. Enjoy verified quality, transparent booking, and dedicated local host care.",
     "poweredBy": "Powered By",
     "rights": "All Rights Reserved",
     "rentalTypeLabels": {
@@ -69,17 +69,17 @@
     }
   },
   "seo": {
-    "homeTitle": "Vacation Homes & Holiday Rentals in Hurghada",
-    "homeDescription": "Discover and book verified holiday vacation homes, apartments, chalets, studios, and private airport transfers in Hurghada with 24/7 local support.",
-    "siteTitle": "Hurghada Vacation Homes | Vacation Homes & Holiday Rentals in Hurghada",
-    "siteDescription": "Discover and book verified vacation homes, holiday apartments, beach chalets, studios, and private airport transfers in Hurghada with local host support.",
-    "ogAlt": "Hurghada Vacation Homes holiday vacation homes in Hurghada"
+    "homeTitle": "Vacation Rentals, Beach Chalets & Trips in Hurghada",
+    "homeDescription": "Discover and book verified vacation homes, holiday apartments, beach chalets, studios, and private Red Sea trips in Hurghada with Sea Key Property.",
+    "siteTitle": "Sea Key Property | Vacation Rentals & Trips in Hurghada",
+    "siteDescription": "Discover and book verified vacation homes, holiday apartments, beach chalets, studios, and private Red Sea trips in Hurghada with Sea Key Property.",
+    "ogAlt": "Sea Key Property vacation rentals and trips in Hurghada"
   },
   "home": {
     "hero": {
       "titlePrefix": "From Home To",
       "titleHighlight": "Home",
-      "subtitle": "Handpicked vacation homes and relaxing holiday stays in Hurghada.",
+      "subtitle": "Handpicked vacation homes, beach chalets, and private Red Sea trips in Hurghada.",
       "checkIn": "Check-in Date",
       "checkOut": "Check-out Date",
       "searchHomes": "Search vacation homes"
@@ -190,21 +190,21 @@
         ],
         [
           "Book & Relax",
-          "Reserve your dates online with a 10% deposit, add airport transfers, and enjoy your holiday stay in Hurghada."
+          "Reserve your dates online with a 10% deposit, add private Red Sea trips or airport transfers, and enjoy your holiday stay in Hurghada."
         ]
       ]
     },
     "cta": {
-      "title": "Ready for Your Relaxing Hurghada Holiday?",
-      "body": "Browse verified vacation homes in Hurghada's top coastal spots and book your holiday stay today.",
+      "title": "Ready for Your Relaxing Hurghada Holiday & Trips?",
+      "body": "Browse verified vacation homes in Hurghada's top coastal spots and book your holiday stay and trips with Sea Key Property today.",
       "action": "Find Vacation Homes",
       "alt": "Hurghada vacation resort pool at night"
     },
     "who": {
       "eyebrow": "Who We Are",
-      "title": "Creating Spaces You'll Love Coming Home To",
-      "trustedTitle": "Your Trusted Host for Memorable Hurghada Vacations",
-      "body": "Whether you're visiting Hurghada for a sunny beach getaway or a relaxing holiday, we help you discover carefully selected vacation apartments, chalets, and studios with genuine local hospitality.",
+      "title": "Creating Spaces & Journeys You'll Love Coming Home To",
+      "trustedTitle": "Your Trusted Host for Memorable Hurghada Vacations & Trips",
+      "body": "Whether you're visiting Hurghada for a sunny beach getaway, a relaxing holiday stay, or exciting Red Sea boat trips, Sea Key Property helps you discover carefully selected apartments, chalets, and studios with genuine local hospitality.",
       "why": "Why Choose Us",
       "readMore": "Read More",
       "videoAlt": "Aerial view of a rental resort community",
@@ -248,8 +248,8 @@
     "twinHouse": "Twin House",
     "checkIn": "Check-In Date",
     "checkOut": "Check-Out Date",
-    "metadataTitle": "Hurghada Vacation Rentals & Holiday Homes",
-    "metadataDescription": "Find and book verified holiday apartments, chalets, studios, and vacation homes in Hurghada and El Kawther with local guest support.",
+    "metadataTitle": "Hurghada Vacation Rentals & Holiday Homes | Sea Key Property",
+    "metadataDescription": "Find and book verified holiday apartments, chalets, studios, and vacation homes in Hurghada and El Kawther with Sea Key Property.",
     "heroTitle": "Find Your Next Vacation Rental Home",
     "heroBody": "Discover comfortable holiday apartments, beachside chalets, and studios for rent in Hurghada. Enjoy verified amenities, prime coastal locations, and a relaxing stay.",
     "mobileTitle": "Rental Properties",
@@ -292,7 +292,7 @@
     "clearAll": "Clear All",
     "applyFilters": "Apply Filters",
     "breadcrumb": "Home > Vacation Rentals",
-    "heading": "Hurghada Vacation Homes & Holiday Rentals",
+    "heading": "Sea Key Property Rentals & Holiday Homes",
     "showingAvailable": "Showing available vacation homes for {from} to {to} ({count} available)",
     "checkingAvailability": "Checking availability for {from} to {to}...",
     "emptyTitle": "No vacation rentals available",
@@ -503,10 +503,10 @@
     "notifying": "Notifying server..."
   },
   "contact": {
-    "metadataTitle": "Contact Hurghada Vacation Homes",
-    "metadataDescription": "Contact Hurghada Vacation Homes in Hurghada El Kawther by phone or WhatsApp for vacation rentals, holiday bookings, and airport transfers.",
+    "metadataTitle": "Contact Sea Key Property",
+    "metadataDescription": "Contact Sea Key Property in Hurghada by phone or WhatsApp for vacation rentals, holiday bookings, real estate, and Red Sea trips.",
     "title": "Contact Us",
-    "body": "Have questions, need help choosing a vacation home, or want to arrange airport transfers? Send us a message and our local team will get back to you promptly.",
+    "body": "Have questions, need help choosing a vacation home, or want to arrange private Red Sea trips? Send us a message and our local team will get back to you promptly.",
     "getInTouch": "Get in touch",
     "helpTitle": "We are here to help.",
     "helpBody": "Reach us through any channel below, or use the form and we will route your message to the right person.",
@@ -531,7 +531,7 @@
       "namePlaceholder": "Your full name",
       "emailPlaceholder": "Your email address",
       "phonePlaceholder": "Your phone number",
-      "subjectPlaceholder": "Inquire about dates, homes, or transfers",
+      "subjectPlaceholder": "Inquire about dates, homes, or trips",
       "messagePlaceholder": "Write your message here...",
       "sending": "Sending...",
       "send": "Send Message"
@@ -540,18 +540,18 @@
     "heroSubtitle": "Our Team is ready to assist you.",
     "methodsTitle": "Contact Methods :",
     "offlineAddress": "Address",
-    "offlineAddressVal": "El Kawther, Hurghada",
+    "offlineAddressVal": "Al-Kawthar Street, above the Metro, Al-Safra Al-Shamiya, Hurghada",
     "phoneWhatsapp": "Phone & WhatsApp",
     "emailCard": "Email",
     "sendMessage": "Send Us a Message",
     "submitMessage": "Submit Message",
     "openInMaps": "Open in Google Maps",
-    "officeLocation": "El Kawther, Hurghada"
+    "officeLocation": "Al-Kawthar Street, above the Metro, Al-Safra Al-Shamiya, Hurghada"
   },
   "about": {
     "eyebrow": "Who we are",
     "title": "Your home away from home on the Red Sea.",
-    "body": "We help travelers and holidaymakers discover comfortable, handpicked vacation homes and private airport transfers across Hurghada with verified details and dedicated local host care.",
+    "body": "We help travelers and holidaymakers discover comfortable, handpicked vacation homes and private Red Sea trips across Hurghada with verified details and dedicated local host care.",
     "summaryPoints": [
       "Verified Properties",
       "Expert Local Knowledge",
@@ -560,7 +560,7 @@
     "missionTitle": "Our Mission",
     "missionBody": "To provide every guest with reliable, transparent, and welcoming hospitality so booking a vacation stay in Hurghada is completely stress-free.",
     "helpTitle": "What We Help With",
-    "helpBody": "From beachside apartments and resort chalets to private airport transfers and local recommendations, our team brings the details together so you can relax and enjoy your holiday.",
+    "helpBody": "From beachside apartments and resort chalets to private Red Sea trips, excursions, and airport transfers, our team brings the details together so you can relax and enjoy your holiday.",
     "imageAlt": "Bright rental living room with large windows",
     "imageCaption": "Thoughtfully selected homes, explained clearly.",
     "stats": {
@@ -594,18 +594,18 @@
     "ctaAction": "Contact Our Host Team",
     "heroTitle": "A Better Way To Feel At Home",
     "heroSubtitle": "We Connect you with handpicked homes and seamless rental experience, whatever you want to be.",
-    "aboutUsTitle": "About Us",
-    "aboutUsBody": "Discover new opportunities with our all-in-one real estate and holiday rental platform in Hurghada. We bring together a diverse selection of properties, from cozy holiday apartments and beachfront villas to long-term rental homes and real estate for sale. Whether you're searching for the perfect getaway, a place to call home, or a valuable investment on the Red Sea, we connect you with suitable properties and provide local assistance, personalized service, and convenient solutions tailored to your needs.",
+    "aboutUsTitle": "About Sea Key Property",
+    "aboutUsBody": "Discover new opportunities with Sea Key Property Rentals & Trips in Hurghada. We bring together a diverse selection of properties, from cozy holiday apartments and beachfront villas to long-term rental homes, real estate for sale, and unforgettable Red Sea trips. Whether you're searching for the perfect getaway, a place to call home, or an adventure on the Red Sea, we connect you with suitable properties and provide local assistance, personalized service, and convenient solutions tailored to your needs.",
     "statsBanner": {
-      "stat1Count": "10,000+",
-      "stat1Title": "Trusted Hosts",
-      "stat1Desc": "work with verified and reliable properties owners",
-      "stat2Count": "4,500+",
-      "stat2Title": "Curated Homes",
-      "stat2Desc": "From Cozy apartments to spacious Villas",
-      "stat3Count": "98%",
-      "stat3Title": "Guest-first Services",
-      "stat3Desc": "Real support, real people , real care"
+      "stat1Count": "100%",
+      "stat1Title": "Verified Homes",
+      "stat1Desc": "Personally inspected for quality, cleanliness, and comfort",
+      "stat2Count": "24/7",
+      "stat2Title": "Local Support",
+      "stat2Desc": "Dedicated on-the-ground team in Hurghada whenever you need",
+      "stat3Count": "Top Rated",
+      "stat3Title": "Rentals & Trips",
+      "stat3Desc": "Curated coastal apartments and memorable Red Sea adventures"
     },
     "featuresList": {
       "card1Title": "Carefully Selected Home",
@@ -613,7 +613,7 @@
       "card2Title": "Clear & Honest Pricing",
       "card2Desc": "No hidden fees, no surprises. just straightforward prices and real value",
       "card3Title": "Personal Support",
-      "card3Desc": "we handpick every property for quality comfort and a great location, so you can book with confidence"
+      "card3Desc": "Our friendly local team in Hurghada is always by your side to help with bookings, check-in, and local trips."
     },
     "ourPeopleTitle": "Our People",
     "ourPeopleSubtitle": "The People Behind Your Perfect Stay",
@@ -651,7 +651,7 @@
   },
   "houseRules": {
     "metadataTitle": "House Rules",
-    "metadataDescription": "Review the house rules for Hurghada Vacation Homes, including check-in times, visitor policy, apartment care, cleaning, laundry, and safety guidance.",
+    "metadataDescription": "Review the house rules for Sea Key Property, including check-in times, visitor policy, apartment care, cleaning, laundry, and safety guidance.",
     "eyebrow": "Guest Information",
     "intro": "Welcome. We hope you have a comfortable and enjoyable stay. Please note that these are self-catering apartments, so hotel services are not provided.",
     "heroAlt": "Comfortable holiday rental home",
@@ -743,6 +743,8 @@
     "body": "The page you are looking for may have moved, or the address may be incorrect."
   },
   "buy": {
+    "metadataTitle": "Properties for Sale",
+    "metadataDescription": "Browse verified beachfront apartments, luxury villas, and holiday homes for sale in Hurghada with Sea Key Property.",
     "basicAmenities": "Basic Amenities",
     "propertyInformation": "Property Information",
     "moreAmenities": "More Amenities",
@@ -793,11 +795,11 @@
   },
   "privacyPolicy": {
     "metadataTitle": "Privacy Policy",
-    "metadataDescription": "Learn how Hurghada Vacation Homes collects, protects, and handles your personal information for apartment reservations, resort security, and guest services.",
+    "metadataDescription": "Learn how Sea Key Property collects, protects, and handles your personal information for apartment reservations, resort security, and guest services.",
     "eyebrow": "Guest Information & Legal",
     "title": "Privacy Policy",
-    "intro": "At Hurghada Vacation Homes, we respect your privacy and are committed to safeguarding your personal data. This policy explains how we collect, use, and protect guest information in connection with our self-catering rental apartments, house rules compliance, and hospitality services.",
-    "heroAlt": "Hurghada Vacation Homes guest apartment",
+    "intro": "At Sea Key Property, we respect your privacy and are committed to safeguarding your personal data. This policy explains how we collect, use, and protect guest information in connection with our self-catering rental apartments, house rules compliance, and hospitality services.",
+    "heroAlt": "Sea Key Property guest apartment",
     "card1Title": "1. Information We Collect",
     "card1Items": [
       [
@@ -839,11 +841,11 @@
   },
   "refundPolicy": {
     "metadataTitle": "Refund Policy",
-    "metadataDescription": "Read the refund policy for Hurghada Vacation Homes, covering eligible refund scenarios, check-out inspections, deposit return timelines, and non-refundable items.",
+    "metadataDescription": "Read the refund policy for Sea Key Property, covering eligible refund scenarios, check-out inspections, deposit return timelines, and non-refundable items.",
     "eyebrow": "Booking Terms & Transparency",
     "title": "Refund Policy",
-    "intro": "At Hurghada Vacation Homes, we are committed to clear and fair terms. Because our properties are self-catering holiday homes held exclusively for your reserved dates, refunds are governed by the guidelines below.",
-    "heroAlt": "Hurghada Vacation Homes hospitality property",
+    "intro": "At Sea Key Property, we are committed to clear and fair terms. Because our properties are self-catering holiday homes held exclusively for your reserved dates, refunds are governed by the guidelines below.",
+    "heroAlt": "Sea Key Property hospitality property",
     "card1Title": "1. Eligible Refund Scenarios",
     "card1Items": [
       [
@@ -891,11 +893,11 @@
   },
   "cancellationPolicy": {
     "metadataTitle": "Cancellation Policy",
-    "metadataDescription": "Understand cancellation terms for Hurghada Vacation Homes, including refund windows, date modifications, house rules compliance, and host cancellation guarantees.",
+    "metadataDescription": "Understand cancellation terms for Sea Key Property, including refund windows, date modifications, house rules compliance, and host cancellation guarantees.",
     "eyebrow": "Reservation Policies & Flexibility",
     "title": "Cancellation Policy",
     "intro": "We understand that travel plans can change. To keep our self-catering holiday apartments available and well-prepared for all guests, our cancellations and date modifications follow the terms detailed below.",
-    "heroAlt": "Hurghada Vacation Homes rental property",
+    "heroAlt": "Sea Key Property rental property",
     "card1Title": "1. Standard Cancellation Windows",
     "card1Items": [
       [

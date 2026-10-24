@@ -21,7 +21,7 @@ export async function generateMetadata({ params }: LocaleLayoutProps): Promise<M
 
   const locale = rawLocale as Locale;
   const messages = getMessages(locale);
-  const languages = Object.fromEntries(locales.map((item) => [item, `/${item}`]));
+  const languages = Object.fromEntries(locales.map((item) => [item, absoluteUrl(`/${item}`)]));
 
   return {
     title: {
@@ -30,13 +30,13 @@ export async function generateMetadata({ params }: LocaleLayoutProps): Promise<M
     },
     description: messages.seo.siteDescription,
     alternates: {
-      canonical: `/${locale}`,
+      canonical: absoluteUrl(`/${locale}`),
       languages,
     },
     openGraph: {
       type: "website",
       locale: ogLocales[locale],
-      url: `/${locale}`,
+      url: absoluteUrl(`/${locale}`),
       siteName: siteConfig.name,
       title: messages.seo.siteTitle,
       description: messages.seo.siteDescription,
@@ -66,13 +66,16 @@ export default async function LocaleLayout({ children, params }: LocaleLayoutPro
   const messages = getMessages(locale);
   const localBusinessJsonLd = {
     "@context": "https://schema.org",
-    "@type": "LodgingBusiness",
+    "@type": ["LodgingBusiness", "TravelAgency"],
     name: siteConfig.name,
+    legalName: siteConfig.fullName,
     description: messages.seo.siteDescription,
     url: absoluteUrl(`/${locale}`),
     telephone: siteConfig.phone,
+    email: siteConfig.email,
     image: absoluteUrl(siteConfig.ogImage),
     logo: absoluteUrl(siteConfig.logo),
+    sameAs: [siteConfig.whatsappUrl],
     address: {
       "@type": "PostalAddress",
       streetAddress: siteConfig.address.streetAddress,
@@ -80,7 +83,10 @@ export default async function LocaleLayout({ children, params }: LocaleLayoutPro
       addressRegion: siteConfig.address.addressRegion,
       addressCountry: siteConfig.address.addressCountry,
     },
-    areaServed: ["Hurghada", "El Kawther", "Red Sea Governorate"],
+    areaServed: ["Hurghada", "El Kawther", "El Gouna", "Sahl Hasheesh", "Makadi Bay", "Red Sea Governorate"],
+    priceRange: "$$",
+    currenciesAccepted: "USD, EUR, EGP, GBP",
+    paymentAccepted: "Cash, Credit Card, Bank Transfer",
     contactPoint: {
       "@type": "ContactPoint",
       telephone: siteConfig.phone,

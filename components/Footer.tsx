@@ -25,7 +25,7 @@ const contactItems = [
   { label: siteConfig.email, href: `mailto:${siteConfig.email}`, icon: "/contact/icons/email.svg" },
   {
     label: siteConfig.address.label,
-    href: "https://www.google.com/maps/search/?api=1&query=Hurghada%20El%20Kawther",
+    href: `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(siteConfig.address.label)}`,
     icon: "/footer/icons/location.svg",
     external: true,
   },
@@ -133,6 +133,8 @@ export default function Footer() {
             variants={footerItemMotion}
             className="text-[10px] font-light leading-normal text-white/70 lg:text-[12px]"
           >
+            &copy; {new Date().getFullYear()} Sea Key Property Rentals &amp; Trips. {t("footer.rights")}
+            <span className="mx-2 text-white/30">|</span>
             {t("footer.poweredBy")}{" "}
             <motion.a
               href="https://tech-gear.net/"
@@ -143,7 +145,6 @@ export default function Footer() {
             >
               Tech Gear Solutions
             </motion.a>
-            &nbsp; &copy; 2026 {t("footer.rights")}
           </motion.p>
         </div>
       </div>
