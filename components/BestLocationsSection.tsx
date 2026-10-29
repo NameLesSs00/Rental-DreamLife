@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { useI18n } from "./I18nProvider";
+import { useCategories } from "@/lib/hooks/useCategory";
 
 interface LocationCardData {
   id: string;
@@ -55,7 +56,15 @@ const BOTTOM_ROW_LOCATIONS: LocationCardData[] = [
 ];
 
 export default function BestLocationsSection() {
-  const { href } = useI18n();
+  const { href, t, locale } = useI18n();
+  const { data: categories = [] } = useCategories(locale);
+
+  const resolveLocationName = (loc: LocationCardData) => {
+    const matched = categories.find(
+      (cat) => cat.id.toLowerCase() === loc.categoryId.toLowerCase()
+    );
+    return matched?.name?.trim() || loc.name;
+  };
 
   return (
     <section className="relative overflow-hidden bg-[#DDFDFE] px-5 py-14 font-[var(--font-poppins)] sm:px-8 sm:py-20 lg:px-12 lg:py-24 xl:px-20">
@@ -69,49 +78,53 @@ export default function BestLocationsSection() {
           className="mx-auto flex max-w-[760px] flex-col items-center text-center"
         >
           <h2 className="text-[30px] font-bold leading-tight tracking-tight sm:text-[36px] lg:text-[42px]">
-            <span className="text-[#000000]">Explore </span>
-            <span className="text-[#2B7F9B]">Locations</span>
+            <span className="text-[#000000]">{t("home.locations.titlePrefix")}</span>
+            <span className="text-[#2B7F9B]">{t("home.locations.titleHighlight")}</span>
           </h2>
           <p className="mt-3.5 max-w-[560px] text-[15px] font-normal leading-relaxed text-[#000000] sm:text-[16px]">
-            Enjoy the most beautiful areas, stretching from south of Hurghada to the north.
+            {t("home.locations.subtitle")}
           </p>
         </motion.div>
 
         {/* Locations Grid */}
         <div className="mt-10 space-y-6 sm:mt-12 lg:mt-14">
-          {/* Top Row: 3 Cards
-              Between `sm` and `lg` the row is 2-up, which would leave the 3rd card
-              orphaned beside a dead gap. It spans the full 2-col width instead, and
-              uses the wider aspect so it reads as a feature card rather than a
-              487px-tall slab. At `lg` it collapses back into the 3-across row. */}
+          {/* Top Row: 3 Cards */}
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {TOP_ROW_LOCATIONS.map((loc, idx) => (
-              <LocationCard
-                key={loc.id}
-                item={loc}
-                index={idx}
-                className={idx === 2 ? "sm:col-span-2 lg:col-span-1" : undefined}
-                aspectRatioClass={
-                  idx === 2
-                    ? "aspect-[4/3] sm:aspect-[616/340] lg:aspect-[400/290]"
-                    : "aspect-[4/3] sm:aspect-[400/290]"
-                }
-                hrefUrl={href(`/rent?CategoryId=${loc.categoryId}&location=${encodeURIComponent(loc.name)}`)}
-              />
-            ))}
+            {TOP_ROW_LOCATIONS.map((loc, idx) => {
+              const localizedName = resolveLocationName(loc);
+              return (
+                <LocationCard
+                  key={loc.id}
+                  item={loc}
+                  displayName={localizedName}
+                  index={idx}
+                  className={idx === 2 ? "sm:col-span-2 lg:col-span-1" : undefined}
+                  aspectRatioClass={
+                    idx === 2
+                      ? "aspect-[4/3] sm:aspect-[616/340] lg:aspect-[400/290]"
+                      : "aspect-[4/3] sm:aspect-[400/290]"
+                  }
+                  hrefUrl={href(`/rent?CategoryId=${loc.categoryId}&location=${encodeURIComponent(localizedName)}`)}
+                />
+              );
+            })}
           </div>
 
           {/* Bottom Row: 2 Wider Cards */}
           <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-            {BOTTOM_ROW_LOCATIONS.map((loc, idx) => (
-              <LocationCard
-                key={loc.id}
-                item={loc}
-                index={idx + 3}
-                aspectRatioClass="aspect-[16/10] sm:aspect-[616/340]"
-                hrefUrl={href(`/rent?CategoryId=${loc.categoryId}&location=${encodeURIComponent(loc.name)}`)}
-              />
-            ))}
+            {BOTTOM_ROW_LOCATIONS.map((loc, idx) => {
+              const localizedName = resolveLocationName(loc);
+              return (
+                <LocationCard
+                  key={loc.id}
+                  item={loc}
+                  displayName={localizedName}
+                  index={idx + 3}
+                  aspectRatioClass="aspect-[16/10] sm:aspect-[616/340]"
+                  hrefUrl={href(`/rent?CategoryId=${loc.categoryId}&location=${encodeURIComponent(localizedName)}`)}
+                />
+              );
+            })}
           </div>
         </div>
       </div>
@@ -121,12 +134,14 @@ export default function BestLocationsSection() {
 
 function LocationCard({
   item,
+  displayName,
   index,
   aspectRatioClass,
   hrefUrl,
   className,
 }: {
   item: LocationCardData;
+  displayName: string;
   index: number;
   aspectRatioClass: string;
   hrefUrl: string;
@@ -149,7 +164,7 @@ function LocationCard({
         {/* Full-size high resolution photo */}
         <Image
           src={item.image}
-          alt={item.name}
+          alt={displayName}
           fill
           sizes="(max-width: 640px) 100vw, (min-width: 1024px) 33vw, 100vw"
           className="object-cover object-center transition-transform duration-500 ease-out group-hover:scale-105"
@@ -167,7 +182,7 @@ function LocationCard({
         {/* Card Content */}
         <div className="absolute inset-x-0 bottom-0 flex items-center justify-between px-5 pt-3 pb-3 sm:px-6 sm:pb-4 lg:px-7 lg:pb-4">
           <h3 className="font-semibold text-[22px] sm:text-[26px] lg:text-[32px] leading-tight tracking-normal text-[#FFFFFF]">
-            {item.name}
+            {displayName}
           </h3>
 
           <div
@@ -175,7 +190,7 @@ function LocationCard({
             className="flex size-10 shrink-0 items-center justify-center rounded-full bg-[#95D3DE] text-[#000000] shadow-md transition-all duration-300 group-hover:scale-110 group-hover:bg-[#a5e3ec]"
           >
             <svg
-              className="size-5 transition-transform duration-300 group-hover:translate-x-0.5"
+              className="size-5 transition-transform duration-300 group-hover:translate-x-0.5 rtl:rotate-180 rtl:group-hover:-translate-x-0.5"
               viewBox="0 0 24 24"
               fill="none"
               stroke="currentColor"

@@ -7,7 +7,7 @@ import { motion } from "framer-motion";
 import { useI18n } from "./I18nProvider";
 
 export default function FaqSection() {
-  const { href, locale, t } = useI18n();
+  const { href, locale, t, isRtl } = useI18n();
   const { data, isLoading, isError } = useFaqs(
     {
       IsPublished: true,
@@ -24,9 +24,6 @@ export default function FaqSection() {
   return (
     <section className="bg-[#b3cbca] px-5 py-14 font-[var(--font-poppins)] sm:px-8 sm:py-18 lg:px-14 lg:py-20">
       <div className="mx-auto max-w-[1320px]">
-        {/* Grid rather than flex: the CTA has to sit under the heading on desktop but
-            AFTER the accordion on mobile. Explicit col/row placement handles desktop,
-            while plain DOM order handles mobile — no `order` overrides to fight. */}
         <div className="grid grid-cols-1 items-start gap-8 lg:grid-cols-[320px_minmax(0,1fr)] lg:gap-x-12 lg:gap-y-0 xl:grid-cols-[340px_minmax(0,1fr)] xl:gap-x-16">
           {/* Heading + Description — first on mobile, top-left on desktop */}
           <motion.div
@@ -71,16 +68,14 @@ export default function FaqSection() {
                     href={href("/faq")}
                     className="text-[14px] font-semibold text-[#183640] underline-offset-4 hover:underline"
                   >
-                    {t("faq.viewAll") || "View all FAQs"} &rarr;
+                    {t("faq.viewAll") || "View all FAQs"} {isRtl ? "←" : "→"}
                   </Link>
                 </div>
               </div>
             )}
           </motion.div>
 
-          {/* Still need A Help ? Card — last on mobile, under the heading on desktop.
-              `lg:gap-y-0` + `items-start` keep it snug under the heading instead of
-              stretching down its tall grid row. */}
+          {/* Still need A Help ? Card — last on mobile, under the heading on desktop. */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}

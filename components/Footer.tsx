@@ -220,12 +220,23 @@ function FooterLinkColumn({
 
 function ContactColumn({ shouldReduceMotion }: { shouldReduceMotion: boolean }) {
   const { t } = useI18n();
+  const addressLabel = t("footer.address") || siteConfig.address.label;
+  const localizedContactItems = [
+    { label: siteConfig.displayPhone, href: siteConfig.whatsappUrl, icon: "/footer/icons/phone.svg", external: true, forceLtr: true },
+    { label: siteConfig.email, href: `mailto:${siteConfig.email}`, icon: "/contact/icons/email.svg" },
+    {
+      label: addressLabel,
+      href: `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(siteConfig.address.label)}`,
+      icon: "/footer/icons/location.svg",
+      external: true,
+    },
+  ];
 
   return (
     <motion.div variants={footerColumnMotion} className="flex flex-col items-start gap-4">
       <FooterHeading>{t("footer.contact")}</FooterHeading>
       <ul className="flex flex-col gap-3.5">
-        {contactItems.map((item) => (
+        {localizedContactItems.map((item) => (
           <motion.li
             key={item.label}
             variants={footerItemMotion}
@@ -266,7 +277,7 @@ function Chevron() {
       alt=""
       width={12}
       height={12}
-      className="size-3 shrink-0"
+      className="size-3 shrink-0 rtl:rotate-180"
     />
   );
 }

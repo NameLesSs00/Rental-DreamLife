@@ -30,6 +30,21 @@ const propertyTypeNames: Record<number, string> = {
   12: "1 Bedroom",
 };
 
+const propertyTypeKeyById: Record<number, string> = {
+  1: "rent.apartment",
+  2: "rent.villa",
+  3: "rent.studio",
+  4: "rent.chalet",
+  5: "rent.twinHouse",
+  6: "rent.townhouse",
+  7: "rent.duplex",
+  8: "rent.penthouse",
+  9: "rent.cabin",
+  10: "rent.hotel",
+  11: "rent.twoBedrooms",
+  12: "rent.oneBedroom",
+};
+
 export default function BuyPropertiesPageContent() {
   return (
     <Suspense
@@ -45,7 +60,7 @@ export default function BuyPropertiesPageContent() {
 }
 
 function BuyPropertiesPageInner() {
-  const { href, t, locale } = useI18n();
+  const { href, t, locale, isRtl } = useI18n();
   const router = useRouter();
   const searchParams = useSearchParams();
   const paramsObj = useMemo(() => Object.fromEntries(searchParams.entries()), [searchParams]);
@@ -147,9 +162,9 @@ function BuyPropertiesPageInner() {
             <line x1="12" y1="16" x2="12.01" y2="16" />
           </svg>
         </div>
-        <h2 className="text-[20px] font-semibold text-[#183c2f]">Unable to load properties</h2>
+        <h2 className="text-[20px] font-semibold text-[#183c2f]">{t("buy.errorTitle")}</h2>
         <p className="max-w-[360px] text-[14px] text-[#656566]">
-          We couldn&apos;t fetch the listings right now. Please check your connection and try again.
+          {t("buy.errorBody")}
         </p>
         <button
           type="button"
@@ -168,14 +183,14 @@ function BuyPropertiesPageInner() {
       {/* 1. Hero Section: Unified PageHero with identical spacing and height */}
       <PageHero
         imageSrc="/buy/buy-hero-bg.jpg"
-        imageAlt="Discover Properties for Sale in Hurghada"
+        imageAlt={t("buy.heroTitle")}
         title={
           <>
-            Discover Properties<br />
-            for Sale
+            <span className="block">{t("buy.heroTitleLine1")}</span>
+            <span className="block rtl:mt-1.5">{t("buy.heroTitleLine2")}</span>
           </>
         }
-        subtitle="Explore exceptional homes and investment opportunities in one of Egypt's most attractive Red Sea destinations."
+        subtitle={t("buy.heroSubtitle")}
 
         maxTitleWidth="max-w-[640px]"
         maxSubtitleWidth="max-w-[560px]"
@@ -208,7 +223,7 @@ function BuyPropertiesPageInner() {
             <svg className="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <line x1="4" y1="21" x2="4" y2="14" /><line x1="4" y1="10" x2="4" y2="3" /><line x1="12" y1="21" x2="12" y2="12" /><line x1="12" y1="8" x2="12" y2="3" /><line x1="20" y1="21" x2="20" y2="16" /><line x1="20" y1="12" x2="20" y2="3" />
             </svg>
-            Filters
+            {t("rent.filters") || "Filters"}
           </button>
         </div>
 
@@ -228,11 +243,11 @@ function BuyPropertiesPageInner() {
                 className="absolute inset-0 bg-black/40"
               />
               <motion.aside
-                initial={{ x: "-100%" }}
+                initial={{ x: isRtl ? "100%" : "-100%" }}
                 animate={{ x: 0 }}
-                exit={{ x: "-100%" }}
+                exit={{ x: isRtl ? "100%" : "-100%" }}
                 transition={{ type: "tween", duration: 0.3, ease: "easeInOut" }}
-                className="absolute inset-y-0 left-0 flex w-full max-w-[340px] flex-col bg-white shadow-2xl"
+                className="absolute inset-y-0 start-0 flex w-full max-w-[340px] flex-col bg-white shadow-2xl"
               >
                 <div className="flex shrink-0 items-center justify-between border-b border-[#f0f0f0] px-5 py-4">
                   <h2 className="text-[18px] font-bold text-[#183640]">
@@ -279,7 +294,7 @@ function BuyPropertiesPageInner() {
             ) : (
               <div className="relative">
                 {(isLoading || isPending) && (
-                  <div className="absolute top-2 right-2 z-20 flex items-center gap-2 rounded-full border border-[#2C798B]/20 bg-white/95 px-3 py-1.5 text-[12px] font-medium text-[#2C798B] shadow-md backdrop-blur-xs">
+                  <div className="absolute top-2 end-2 z-20 flex items-center gap-2 rounded-full border border-[#2C798B]/20 bg-white/95 px-3 py-1.5 text-[12px] font-medium text-[#2C798B] shadow-md backdrop-blur-xs">
                     <span className="size-3 animate-spin rounded-full border-2 border-[#2C798B] border-t-transparent" />
                     <span>{t("common.loading") || "Loading..."}</span>
                   </div>
@@ -312,10 +327,11 @@ function BuyPropertiesPageInner() {
 }
 
 function ListingHeading() {
+  const { t } = useI18n();
   return (
     <div className="pt-8 sm:pt-12 pb-3 text-center">
       <h2 className="text-[26px] sm:text-[32px] lg:text-[38px] font-bold tracking-tight text-[#142d38]">
-        Featured Buy <span className="text-[#3ca3b5]">Properties</span>
+        {t("buy.featuredHeadingPrefix")}<span className="text-[#3ca3b5]">{t("buy.featuredHeadingHighlight")}</span>
       </h2>
       <div className="mx-auto mt-2 h-[3px] w-[86px] rounded-full bg-[#2C798B]" />
     </div>
@@ -381,7 +397,7 @@ function BuyFilterForm({
             onClick={onClear}
             className="text-[12px] font-medium text-[#2C798B] transition hover:underline"
           >
-            Clear all
+            {t("rent.clearAll") || "Clear all"}
           </button>
         )}
       </div>
@@ -416,7 +432,7 @@ function BuyFilterForm({
             step="1"
             value={localRooms}
             onChange={(e) => handleDebouncedChange({ bedrooms: e.target.value })}
-            placeholder="e.g. 2"
+            placeholder={t("rent.egTwo")}
             className="w-full rounded-xl border border-[#e2e8e6] bg-[#fbfdfc] px-3 py-2 text-[12.5px] text-[#183640] outline-none transition focus:border-[#2C798B]"
           />
         </div>
@@ -434,7 +450,7 @@ function BuyFilterForm({
             step="1"
             value={localBaths}
             onChange={(e) => handleDebouncedChange({ bathrooms: e.target.value })}
-            placeholder="e.g. 1"
+            placeholder={t("rent.egOne")}
             className="w-full rounded-xl border border-[#e2e8e6] bg-[#fbfdfc] px-3 py-2 text-[12.5px] text-[#183640] outline-none transition focus:border-[#2C798B]"
           />
         </div>
@@ -459,7 +475,7 @@ function BuyFilterForm({
                 type="number"
                 value={localMaxPrice}
                 onChange={(e) => handleDebouncedChange({ maxPrice: e.target.value })}
-                placeholder="No limit"
+                placeholder={t("rent.noLimit")}
                 min="0"
                 className="w-full rounded-lg border border-[#e2e8e6] bg-[#fbfdfc] px-2.5 py-1.5 text-[12px] text-[#142d38] outline-none focus:border-[#2C798B]"
               />
@@ -472,8 +488,8 @@ function BuyFilterForm({
         <div className="pt-1">
           <label className="flex cursor-pointer items-center justify-between gap-3 rounded-xl border border-[#e2e8e6] bg-[#fbfdfc] px-3 py-2.5 transition hover:bg-[#f2f7f5]">
             <span className="flex flex-col">
-              <span className="text-[13px] font-semibold text-[#142d38]">Featured Only</span>
-              <span className="text-[11px] text-[#8a9a94]">Show featured properties first</span>
+              <span className="text-[13px] font-semibold text-[#142d38]">{t("rent.featuredOnly") || "Featured Only"}</span>
+              <span className="text-[11px] text-[#8a9a94]">{t("buy.featuredSubtext") || "Show featured properties first"}</span>
             </span>
             <input
               type="checkbox"
@@ -498,22 +514,25 @@ function BuyPropertyCard({
   url: string;
   selectedCurrency: string;
 }) {
-  const {} = useI18n();
+  const { t, locale } = useI18n();
   const image = property.coverImageUrl
     ? `${API_BASE_URL}/${property.coverImageUrl}`
     : "/rent/property-card.png";
 
   const location = [property.areaName?.trim(), property.city?.trim()]
     .filter(Boolean)
-    .join(", ") || "Hurghada, Egypt";
+    .join(", ") || t("home.featured.locationMissing") || (locale === "ar" ? "الغردقة، مصر" : "Hurghada, Egypt");
 
-  const typeName = propertyTypeNames[property.propertyTypeId] || "Apartment";
+  const typeKey = property.propertyTypeId ? propertyTypeKeyById[property.propertyTypeId] : undefined;
+  const typeName = typeKey ? t(typeKey) : propertyTypeNames[property.propertyTypeId] || "Apartment";
 
   const formattedPrice = formatPriceInfo(
     property.priceInfo,
     property.price,
     property.priceInfo?.currency || selectedCurrency || property.currency || "USD"
   );
+
+  const areaUnit = locale === "ar" ? "م²" : "m²";
 
   return (
     <motion.article
@@ -532,14 +551,14 @@ function BuyPropertyCard({
           sizes="(min-width: 1280px) 25vw, (min-width: 768px) 33vw, 100vw"
           className="object-cover object-center transition-transform duration-500 group-hover:scale-105"
         />
-        <div className="absolute right-3.5 top-3.5 flex items-center gap-1.5">
+        <div className="absolute end-3.5 top-3.5 flex items-center gap-1.5">
           {property.isFeatured && (
             <span className="inline-flex items-center gap-1 rounded-full bg-[#183640]/90 px-2.5 py-1 text-[11px] font-semibold text-white shadow-xs backdrop-blur-xs">
-            Featured
+              {t("home.featured.featured")}
             </span>
           )}
           <span className="inline-flex items-center justify-center rounded-full bg-[#3da5b6]/85 px-3 py-1 text-[11px] font-medium text-white backdrop-blur-xs">
-            For Sale
+            {t("home.featured.forSaleBadge")}
           </span>
         </div>
       </Link>
@@ -567,7 +586,7 @@ function BuyPropertyCard({
         {/* Type & Size Row */}
         <div className="mt-2.5 flex items-center justify-between text-[13px] text-[#718288]">
           <span>{typeName}</span>
-          <span>{property.area ? `${property.area} m²` : "N/A"}</span>
+          <span>{property.area ? `${property.area} ${areaUnit}` : (locale === "ar" ? "غير محدد" : "N/A")}</span>
         </div>
 
         {/* Price & Beds/Baths Row */}
@@ -604,7 +623,7 @@ function BuyPropertyCard({
           href={url}
           className="mt-4 flex h-9 sm:h-10 w-full items-center justify-center rounded-lg bg-[#71a8b7] text-[13.5px] sm:text-[14px] font-semibold text-white shadow-xs transition hover:bg-[#5b95a4]"
         >
-          View Details
+          {t("buy.viewDetails")}
         </Link>
       </div>
     </motion.article>

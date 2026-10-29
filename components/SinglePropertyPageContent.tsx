@@ -35,6 +35,36 @@ import { getPropertyLandmarks } from "@/lib/utils/landmarks";
 import { getPropertyCategoryGroupsFromValues } from "@/lib/utils/propertyCategoryValues";
 import { toast } from "sonner";
 
+const propertyTypeNames: Record<number, string> = {
+  1: "Apartment",
+  2: "Villa",
+  3: "Studio",
+  4: "Chalet",
+  5: "Twin House",
+  6: "Townhouse",
+  7: "Duplex",
+  8: "Penthouse",
+  9: "Cabin",
+  10: "Hotel",
+  11: "2 Bedrooms",
+  12: "1 Bedroom",
+};
+
+const propertyTypeKeyById: Record<number, string> = {
+  1: "rent.apartment",
+  2: "rent.villa",
+  3: "rent.studio",
+  4: "rent.chalet",
+  5: "rent.twinHouse",
+  6: "rent.townhouse",
+  7: "rent.duplex",
+  8: "rent.penthouse",
+  9: "rent.cabin",
+  10: "rent.hotel",
+  11: "rent.twoBedrooms",
+  12: "rent.oneBedroom",
+};
+
 const weekdays = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
 
 type CalendarDay = {
@@ -853,12 +883,19 @@ function PropertyOverviewCard({
   activeNightPrice?: number;
   currencyCode?: string;
 }) {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
 
   const locationText =
     [property.address?.street, property.address?.area, property.address?.city, property.address?.country]
       .filter(Boolean)
-      .join(", ") || "Hurghada, Egypt";
+      .join(", ") || t("home.featured.locationMissing") || (locale === "ar" ? "الغردقة، مصر" : "Hurghada, Egypt");
+
+  const typeKey = property.propertyType ? propertyTypeKeyById[property.propertyType] : undefined;
+  const propertyTypeName = typeKey
+    ? t(typeKey)
+    : property.propertyTypeName || (property.propertyType ? propertyTypeNames[property.propertyType] : t("rent.apartment")) || t("rent.apartment");
+
+  const areaUnit = locale === "ar" ? "م²" : "m²";
 
   const displayedPrice = activeNightPrice ?? getPriceInfoAmount(property.basePriceInfo, property.basePrice || 0);
 
@@ -875,7 +912,7 @@ function PropertyOverviewCard({
               <span className="text-[13px] text-[#667c74]">/ {t("common.night")}</span>
             </div>
             <p className="text-[13px] text-[#667c74]">
-              {property.size ? `${property.size} m²` : "175 m²"}
+              {property.size ? `${property.size} ${areaUnit}` : `175 ${areaUnit}`}
             </p>
           </div>
 
@@ -894,7 +931,7 @@ function PropertyOverviewCard({
         <div className="mt-4 flex flex-wrap gap-x-4 gap-y-2 border-t border-[#eef2f0] pt-3 text-[12px] text-[#40544c]">
           <span className="inline-flex items-center gap-1.5">
             <Image src="/homepage/properties/icons/size.svg" alt="" width={15} height={15} className="size-[15px] opacity-70" />
-            <span>{property.propertyTypeName || "Villa"}</span>
+            <span>{propertyTypeName}</span>
           </span>
           <span className="inline-flex items-center gap-1.5">
             <Image src="/billing/icons/tenant.svg" alt="" width={15} height={15} className="size-[15px] opacity-70" />
@@ -1059,9 +1096,9 @@ function TermsAndConditionsSection({ property }: { property: Property }) {
           </p>
           {(listing?.checkInHour || listing?.checkOutHour) && (
             <p className="mt-2 text-[12px] font-medium text-[#718288]">
-              {listing?.checkInHour ? `Check-in: ${listing.checkInHour}` : ""}
+              {listing?.checkInHour ? `${t("property.checkInLabel")}: ${listing.checkInHour}` : ""}
               {listing?.checkInHour && listing?.checkOutHour ? " • " : ""}
-              {listing?.checkOutHour ? `Check-out: ${listing.checkOutHour}` : ""}
+              {listing?.checkOutHour ? `${t("property.checkOutLabel")}: ${listing.checkOutHour}` : ""}
             </p>
           )}
         </div>
@@ -1327,7 +1364,7 @@ function ReviewsSection({ propertyId, propertyName }: { propertyId: string; prop
         {totalReviews > 0 && (
           <div className="mt-4 flex items-center gap-3">
             <span className="text-[20px] font-bold text-[#183c2f] sm:text-[22px]">
-              {average.toFixed(1)} out of 5
+              {average.toFixed(1)} {locale === "ar" ? "من 5" : "out of 5"}
             </span>
             <div className="flex text-[#2C798B] text-[18px]">
               {[1, 2, 3, 4, 5].map((star) => (
@@ -1403,7 +1440,7 @@ function ReviewsSection({ propertyId, propertyName }: { propertyId: string; prop
               onClick={() => setDisplayCount((prev) => prev + 3)}
               className="inline-flex items-center gap-1.5 text-[13.5px] font-semibold text-[#2C798B] transition hover:text-[#183c2f]"
             >
-              <span>Load more</span>
+              <span>{t("reviews.loadMore") || "Load more"}</span>
               <svg className="size-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
               </svg>

@@ -53,6 +53,38 @@ const propertyTypeNames: Record<number, string> = {
   12: "1 Bedroom",
 };
 
+const propertyTypeKeyById: Record<number, string> = {
+  1: "rent.apartment",
+  2: "rent.villa",
+  3: "rent.studio",
+  4: "rent.chalet",
+  5: "rent.twinHouse",
+  6: "rent.townhouse",
+  7: "rent.duplex",
+  8: "rent.penthouse",
+  9: "rent.cabin",
+  10: "rent.hotel",
+  11: "rent.twoBedrooms",
+  12: "rent.oneBedroom",
+};
+
+const propertyTypeKeyByName: Record<string, string> = {
+  apartment: "rent.apartment",
+  villa: "rent.villa",
+  studio: "rent.studio",
+  chalet: "rent.chalet",
+  "twin house": "rent.twinHouse",
+  twinhouse: "rent.twinHouse",
+  townhouse: "rent.townhouse",
+  "town house": "rent.townhouse",
+  duplex: "rent.duplex",
+  penthouse: "rent.penthouse",
+  cabin: "rent.cabin",
+  hotel: "rent.hotel",
+  "2 bedrooms": "rent.twoBedrooms",
+  "1 bedroom": "rent.oneBedroom",
+};
+
 /**
  * Translates the URL's filter params into `/api/properties/filter` params.
  *
@@ -108,8 +140,8 @@ export default function PropertiesPageContent() {
 function PropertiesPageInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { t, href } = useI18n();
-  const { data: categories } = useCategories();
+  const { t, href, locale, isRtl } = useI18n();
+  const { data: categories } = useCategories(locale);
   const paramsObj = useMemo(() => Object.fromEntries(searchParams.entries()), [searchParams]);
   const [selectedCurrency] = useSelectedCurrency(paramsObj.Currency);
 
@@ -172,15 +204,14 @@ function PropertiesPageInner() {
       {/* 1. Hero Section: Unified PageHero with identical spacing and height */}
       <PageHero
         imageSrc="/rent/rent-hero-bg.jpg"
-        imageAlt="Browse Homes, Apartments & rental with Ease"
+        imageAlt={t("rent.heroTitle")}
         title={
           <>
-            Browse Vacation Homes<br />
-            with Ease
+            <span className="block">{t("rent.heroTitleLine1")}</span>
+            <span className="block rtl:mt-1.5">{t("rent.heroTitleLine2")}</span>
           </>
         }
-        subtitle="Explore rentals that match your space, style, and way of living."
-
+        subtitle={t("rent.heroSubtitle")}
         maxTitleWidth="max-w-[640px]"
         maxSubtitleWidth="max-w-[560px]"
         priority
@@ -206,11 +237,11 @@ function PropertiesPageInner() {
         {mobileFiltersOpen && (
           <motion.aside
             key="drawer"
-            initial={{ x: "-100%" }}
+            initial={{ x: isRtl ? "100%" : "-100%" }}
             animate={{ x: 0 }}
-            exit={{ x: "-100%" }}
+            exit={{ x: isRtl ? "100%" : "-100%" }}
             transition={{ type: "tween", duration: 0.3, ease: "easeInOut" }}
-            className="fixed inset-y-0 left-0 z-[90] flex w-full max-w-[340px] flex-col bg-white shadow-2xl lg:hidden"
+            className="fixed inset-y-0 start-0 z-[90] flex w-full max-w-[340px] flex-col bg-white shadow-2xl lg:hidden"
           >
             <div className="flex shrink-0 items-center justify-between border-b border-[#f0f0f0] px-5 py-4">
               <h2 className="text-[18px] font-bold text-[#183640]">{t("rent.filters")}</h2>
@@ -270,10 +301,11 @@ function PropertiesPageInner() {
 }
 
 function ListingHeading() {
+  const { t } = useI18n();
   return (
     <div className="pt-8 sm:pt-12 pb-3 text-center">
       <h2 className="text-[26px] sm:text-[32px] lg:text-[38px] font-bold tracking-tight text-[#142d38]">
-        Featured Rental <span className="text-[#3ca3b5]">Properties</span>
+        {t("rent.featuredHeadingPrefix")}<span className="text-[#3ca3b5]">{t("rent.featuredHeadingHighlight")}</span>
       </h2>
       <div className="mx-auto mt-2 h-[3px] w-[86px] rounded-full bg-[#2C798B]" />
     </div>
@@ -588,7 +620,7 @@ function FilterForm({
                 type="number"
                 value={localMaxPrice}
                 onChange={(e) => handleDebouncedInput({ MaxPrice: e.target.value })}
-                placeholder="No limit"
+                placeholder={t("rent.noLimit")}
                 min="0"
                 className="w-full rounded-lg border border-[#e2e8e6] bg-[#fbfdfc] px-2.5 py-1.5 text-[12px] text-[#142d38] outline-none focus:border-[#2C798B]"
               />
@@ -606,7 +638,7 @@ function FilterForm({
               min="0"
               value={localMinBedrooms}
               onChange={(e) => handleDebouncedInput({ MinBedrooms: e.target.value })}
-              placeholder="e.g. 1"
+              placeholder={t("rent.egOne")}
               aria-label={t("rent.minBedrooms") || "Min Bedrooms"}
               className="w-full rounded-lg border border-[#e2e8e6] bg-[#fbfdfc] px-2.5 py-1.5 text-[12px] text-[#142d38] outline-none focus:border-[#2C798B]"
             />
@@ -615,7 +647,7 @@ function FilterForm({
               min="0"
               value={localMaxBedrooms}
               onChange={(e) => handleDebouncedInput({ MaxBedrooms: e.target.value })}
-              placeholder="e.g. 3"
+              placeholder={t("rent.egThree")}
               aria-label={t("rent.maxBedrooms") || "Max Bedrooms"}
               className="w-full rounded-lg border border-[#e2e8e6] bg-[#fbfdfc] px-2.5 py-1.5 text-[12px] text-[#142d38] outline-none focus:border-[#2C798B]"
             />
@@ -631,7 +663,7 @@ function FilterForm({
               min="0"
               value={localMinBathrooms}
               onChange={(e) => handleDebouncedInput({ MinBathrooms: e.target.value })}
-              placeholder="e.g. 1"
+              placeholder={t("rent.egOne")}
               aria-label={t("rent.minBathrooms") || "Min Bathrooms"}
               className="w-full rounded-lg border border-[#e2e8e6] bg-[#fbfdfc] px-2.5 py-1.5 text-[12px] text-[#142d38] outline-none focus:border-[#2C798B]"
             />
@@ -640,7 +672,7 @@ function FilterForm({
               min="0"
               value={localMaxBathrooms}
               onChange={(e) => handleDebouncedInput({ MaxBathrooms: e.target.value })}
-              placeholder="e.g. 2"
+              placeholder={t("rent.egTwo")}
               aria-label={t("rent.maxBathrooms") || "Max Bathrooms"}
               className="w-full rounded-lg border border-[#e2e8e6] bg-[#fbfdfc] px-2.5 py-1.5 text-[12px] text-[#142d38] outline-none focus:border-[#2C798B]"
             />
@@ -652,7 +684,7 @@ function FilterForm({
           <button
             type="button"
             onClick={() => setAdvancedOpen((prev) => !prev)}
-            className="flex w-full items-center justify-between text-left text-[12.5px] font-semibold text-[#183640] transition hover:text-[#2C798B]"
+            className="flex w-full items-center justify-between text-start text-[12.5px] font-semibold text-[#183640] transition hover:text-[#2C798B]"
           >
             <span className="flex items-center gap-2">
               <span>{t("common.advanced") || "Advanced"}</span>
@@ -787,7 +819,7 @@ function FilterForm({
 function PropertyGrid({ paramsObj }: { paramsObj: Record<string, string> }) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { t, href } = useI18n();
+  const { t, href, locale } = useI18n();
   const pageNumber = Number(paramsObj.page) || 1;
   const pageSize = 50;
   const { data: currencies = [] } = useCurrencies({ isActive: true });
@@ -808,14 +840,17 @@ function PropertyGrid({ paramsObj }: { paramsObj: Record<string, string> }) {
 
   // `SearchTerm` is only honoured by `/api/properties/search` — the filter endpoint
   // ignores it, which made search silently return the unfiltered list.
-  const { data: searchData, isLoading: searchLoading } = useSearchProperties({
-    SearchTerm: searchTerm,
-    PageNumber: pageNumber,
-    PageSize: pageSize,
-  });
+  const { data: searchData, isLoading: searchLoading } = useSearchProperties(
+    {
+      SearchTerm: searchTerm,
+      PageNumber: pageNumber,
+      PageSize: pageSize,
+    },
+    locale
+  );
   const { data: listData, isLoading: listLoading } = usePublicRentProperties(
     { ...apiParams, pageNumber, pageSize },
-    { enabled: !searchTerm }
+    { enabled: !searchTerm, locale }
   );
 
   const data = searchTerm ? searchData : listData;
@@ -938,17 +973,23 @@ function PropertyGrid({ paramsObj }: { paramsObj: Record<string, string> }) {
     const queryString = detailParams.toString();
     const url = `/rent/${slugify(rentItem.name)}${queryString ? `?${queryString}` : ""}`;
 
-    const typeName =
-      rentItem.propertyTypeName ||
-      (rentItem.propertyType ? propertyTypeNames[rentItem.propertyType] : "Apartment") ||
-      "Apartment";
+    const typeKey =
+      (rentItem.propertyType ? propertyTypeKeyById[rentItem.propertyType] : undefined) ||
+      (rentItem.propertyTypeName ? propertyTypeKeyByName[rentItem.propertyTypeName.toLowerCase()] : undefined);
 
+    const typeName = typeKey
+      ? t(typeKey)
+      : rentItem.propertyTypeName ||
+        (rentItem.propertyType ? propertyTypeNames[rentItem.propertyType] : t("rent.apartment")) ||
+        t("rent.apartment");
+
+    const unitLabel = locale === "ar" ? "م²" : "m²";
     const sizeStr =
       typeof rentItem.size === "number" && rentItem.size > 0
-        ? `${rentItem.size} m²`
+        ? `${rentItem.size} ${unitLabel}`
         : rentItem.capacity
-        ? `${rentItem.capacity * 35} m²`
-        : "140 m²";
+        ? `${rentItem.capacity * 35} ${unitLabel}`
+        : `140 ${unitLabel}`;
 
     return {
       id: rentItem.id,
@@ -987,7 +1028,9 @@ function PropertyGrid({ paramsObj }: { paramsObj: Record<string, string> }) {
     activeFilterTags.push({ keys: ["Location"], label: `${t("rent.location") || "Location"}: ${paramsObj.Location}` });
   }
   if (paramsObj.PropertyType) {
-    const typeLabel = propertyTypeNames[Number(paramsObj.PropertyType)] || paramsObj.PropertyType;
+    const typeId = Number(paramsObj.PropertyType);
+    const typeKey = propertyTypeKeyById[typeId];
+    const typeLabel = typeKey ? t(typeKey) : propertyTypeNames[typeId] || paramsObj.PropertyType;
     activeFilterTags.push({ keys: ["PropertyType"], label: `${t("rent.propertyType") || "Type"}: ${typeLabel}` });
   }
   if (paramsObj.MinPrice || paramsObj.MaxPrice) {
@@ -1120,7 +1163,7 @@ function PropertyGrid({ paramsObj }: { paramsObj: Record<string, string> }) {
         ) : (
           <div className="relative">
             {isGridLoading && (
-              <div className="absolute top-2 right-2 z-20 flex items-center gap-2 rounded-full border border-[#2C798B]/20 bg-white/95 px-3 py-1.5 text-[12px] font-medium text-[#2C798B] shadow-md backdrop-blur-xs">
+              <div className="absolute top-2 end-2 z-20 flex items-center gap-2 rounded-full border border-[#2C798B]/20 bg-white/95 px-3 py-1.5 text-[12px] font-medium text-[#2C798B] shadow-md backdrop-blur-xs">
                 <span className="size-3 animate-spin rounded-full border-2 border-[#2C798B] border-t-transparent" />
                 <span>{t("common.loading") || "Loading..."}</span>
               </div>
@@ -1166,8 +1209,8 @@ function PropertyCard({ property }: { property: NormalizedPropertyCard }) {
           sizes="(min-width: 1280px) 25vw, (min-width: 768px) 33vw, 100vw"
           className="object-cover object-center transition-transform duration-500 group-hover:scale-105"
         />
-        <span className="absolute right-3.5 top-3.5 inline-flex items-center justify-center rounded-full bg-[#3da5b6]/85 px-3 py-1 text-[11px] font-medium text-white backdrop-blur-xs">
-          For Rent
+        <span className="absolute end-3.5 top-3.5 inline-flex items-center justify-center rounded-full bg-[#3da5b6]/85 px-3 py-1 text-[11px] font-medium text-white backdrop-blur-xs">
+          {t("home.featured.forRentBadge")}
         </span>
       </Link>
 
@@ -1193,7 +1236,7 @@ function PropertyCard({ property }: { property: NormalizedPropertyCard }) {
 
         {/* Type & Size Row */}
         <div className="mt-2.5 flex items-center justify-between text-[13px] text-[#718288]">
-          <span>{property.propertyType || "Apartment"}</span>
+          <span>{property.propertyType || t("rent.apartment")}</span>
           <span>{property.size}</span>
         </div>
 
@@ -1297,7 +1340,7 @@ function PageArrow({ src, label, disabled = false, onClick }: { src: string; lab
       onClick={onClick}
       className={`grid size-10 place-items-center rounded-full border transition ${disabled ? "cursor-not-allowed border-[#f0f0f0] opacity-40" : "border-[#e6e6e6] bg-white hover:border-[#2C798B] hover:bg-[#2C798B] hover:text-white"}`}
     >
-      <Image src={src} alt="" width={16} height={16} className="size-4" />
+      <Image src={src} alt="" width={16} height={16} className="size-4 rtl:rotate-180" />
     </button>
   );
 }

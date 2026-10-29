@@ -9,11 +9,14 @@ import {
 
 const CATEGORIES_KEY = "categories";
 
-export function useCategories() {
+export function useCategories(locale?: string) {
   return useQuery({
-    queryKey: [CATEGORIES_KEY],
+    queryKey: [CATEGORIES_KEY, locale],
     queryFn: async () => {
-      const { data } = await axiosInstance.get<CategoryApiResponse<CategoryItem[]>>("/api/Categories");
+      const { data } = await axiosInstance.get<CategoryApiResponse<CategoryItem[]>>(
+        "/api/Categories",
+        locale ? { headers: { "Accept-Language": locale, "X-Locale": locale } } : undefined
+      );
       return data.data || [];
     },
     staleTime: 30 * 1000,
@@ -71,10 +74,10 @@ export function useCreateCategory() {
       });
       return data;
     },
-    onSuccess: (data) => {
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [CATEGORIES_KEY] });
     },
-    onError: (error: any) => {
+    onError: () => {
     },
   });
 }
@@ -90,10 +93,10 @@ export function useUpdateCategory() {
       });
       return data;
     },
-    onSuccess: (data) => {
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [CATEGORIES_KEY] });
     },
-    onError: (error: any) => {
+    onError: () => {
     },
   });
 }
@@ -105,10 +108,10 @@ export function useDeleteCategory() {
       const { data } = await axiosInstance.delete<CategoryApiResponse<boolean>>(`/api/Categories/${id}`);
       return data;
     },
-    onSuccess: (data) => {
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [CATEGORIES_KEY] });
     },
-    onError: (error: any) => {
+    onError: () => {
     },
   });
 }

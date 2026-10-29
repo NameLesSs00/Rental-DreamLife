@@ -131,7 +131,7 @@ export default function PropertyBookingCard({
                 className="mt-0.5 w-full bg-transparent text-[12.5px] font-semibold text-[#183c2f] outline-none cursor-pointer"
               />
             </div>
-            <div className="border-l border-[#dfe8e4] pl-2">
+            <div className="border-s border-[#dfe8e4] ps-2">
               <label className="block text-[10px] font-bold uppercase tracking-wider text-[#667c74]">
                 {t("booking.checkout")}
               </label>

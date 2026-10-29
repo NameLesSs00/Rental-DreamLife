@@ -40,6 +40,21 @@ const propertyTypeNames: Record<number, string> = {
   12: "1 Bedroom",
 };
 
+const propertyTypeKeyById: Record<number, string> = {
+  1: "rent.apartment",
+  2: "rent.villa",
+  3: "rent.studio",
+  4: "rent.chalet",
+  5: "rent.twinHouse",
+  6: "rent.townhouse",
+  7: "rent.duplex",
+  8: "rent.penthouse",
+  9: "rent.cabin",
+  10: "rent.hotel",
+  11: "rent.twoBedrooms",
+  12: "rent.oneBedroom",
+};
+
 export default function SingleBuyPropertyPageContent({ id }: { id: string }) {
   const { locale, t, href } = useI18n();
   const router = useRouter();
@@ -178,8 +193,9 @@ function DescriptionSection({ text }: { text: string }) {
   );
 }
 
-function propertyTypeLabel(propertyTypeId: number) {
-  return propertyTypeNames[propertyTypeId] || String(propertyTypeId);
+function propertyTypeLabel(propertyTypeId: number, t: (key: string) => string) {
+  const key = propertyTypeKeyById[propertyTypeId];
+  return key ? t(key) : propertyTypeNames[propertyTypeId] || String(propertyTypeId);
 }
 
 /** "More Amenities" — every group with its own items, in a bordered card. */
@@ -238,14 +254,15 @@ function PropertyInformationCard({
   selectedCurrency: string;
   onCurrencyChange: (currency: string) => void;
 }) {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
 
   const locationText =
     [property.address?.area, property.address?.city, property.address?.country]
       .filter(Boolean)
       .join(", ") || t("buy.unknown");
 
-  const typeLabel = propertyTypeLabel(property.propertyTypeId);
+  const typeLabel = propertyTypeLabel(property.propertyTypeId, t);
+  const areaUnit = locale === "ar" ? "م²" : "m²";
 
   return (
     <article className="rounded-xl border border-[#dfe8e4] bg-white p-5">
@@ -253,7 +270,7 @@ function PropertyInformationCard({
 
       <div className="mt-3 flex flex-wrap items-baseline justify-between gap-2">
         <p className="text-[20px] font-bold leading-tight text-[#183c2f] lg:text-[24px]">{priceLabel}</p>
-        <p className="text-[13px] text-[#667c74]">{property.area || 0} m²</p>
+        <p className="text-[13px] text-[#667c74]">{property.area || 0} {areaUnit}</p>
       </div>
 
       <p className="mt-3 flex items-start gap-2 text-[12.5px] leading-5 text-[#667c74]">
@@ -362,25 +379,27 @@ function RelatedPropertiesSection({
   properties: PropertyBuyingListItem[];
   href: (path: string) => string;
 }) {
+  const { t } = useI18n();
   if (properties.length === 0) return null;
 
   return (
     <section className="border-t border-[#e8eeea] bg-[#f8faf9] px-5 py-14 sm:px-8 lg:px-20 lg:py-20">
       <div className="mx-auto w-full max-w-[1282px]">
-        <div className="mb-8 flex flex-col items-center justify-between gap-3 text-center sm:flex-row sm:text-left">
+        <div className="mb-8 flex flex-col items-center justify-between gap-3 text-center sm:flex-row sm:text-start">
           <div>
             <h2 className="text-[24px] font-bold text-[#142d38] sm:text-[30px]">
-              Related <span className="text-[#3ca3b5]">Properties</span>
+              {t("buy.relatedHeadingPrefix")}<span className="text-[#3ca3b5]">{t("buy.relatedHeadingHighlight")}</span>
             </h2>
             <p className="mt-1 text-[13.5px] text-[#718288]">
-              Explore similar homes and investment opportunities
+              {t("buy.relatedSubtitle")}
             </p>
           </div>
           <Link
             href={href("/buy")}
             className="inline-flex items-center gap-1.5 rounded-full border border-[#2C798B] px-5 py-2 text-[13px] font-semibold text-[#2C798B] transition hover:bg-[#2C798B] hover:text-white"
           >
-            View all properties &rarr;
+            <span>{t("buy.viewAllProperties")}</span>
+            <span className="rtl:rotate-180 inline-block">&rarr;</span>
           </Link>
         </div>
 
@@ -405,19 +424,23 @@ function RelatedPropertyCard({
   property: PropertyBuyingListItem;
   url: string;
 }) {
+  const { t, locale } = useI18n();
   const image = resolveApiImageUrl(property.coverImageUrl) || "/rent/property-card.png";
 
   const location = [property.areaName?.trim(), property.city?.trim()]
     .filter(Boolean)
-    .join(", ") || "Hurghada, Egypt";
+    .join(", ") || t("home.featured.locationMissing") || (locale === "ar" ? "الغردقة، مصر" : "Hurghada, Egypt");
 
-  const typeName = propertyTypeNames[property.propertyTypeId] || "Apartment";
+  const typeKey = property.propertyTypeId ? propertyTypeKeyById[property.propertyTypeId] : undefined;
+  const typeName = typeKey ? t(typeKey) : propertyTypeNames[property.propertyTypeId] || "Apartment";
 
   const formattedPrice = formatPriceInfo(
     property.priceInfo,
     property.price,
     property.priceInfo?.currency || property.currency || "USD"
   );
+
+  const areaUnit = locale === "ar" ? "م²" : "m²";
 
   return (
     <article className="group flex flex-col overflow-hidden rounded-[20px] bg-white shadow-[0_4px_20px_rgba(0,0,0,0.06)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_12px_28px_rgba(0,0,0,0.12)]">
@@ -433,14 +456,14 @@ function RelatedPropertyCard({
           sizes="(min-width: 1280px) 25vw, (min-width: 768px) 33vw, 100vw"
           className="object-cover object-center transition-transform duration-500 group-hover:scale-105"
         />
-        <div className="absolute right-3.5 top-3.5 flex items-center gap-1.5">
+        <div className="absolute end-3.5 top-3.5 flex items-center gap-1.5">
           {property.isFeatured && (
             <span className="inline-flex items-center rounded-full bg-[#183640]/85 px-2.5 py-1 text-[11px] font-medium text-white backdrop-blur-xs">
-              Featured
+              {t("home.featured.featured")}
             </span>
           )}
           <span className="inline-flex items-center rounded-full bg-[#3da5b6]/85 px-3 py-1 text-[11px] font-medium text-white backdrop-blur-xs">
-            For Sale
+            {t("home.featured.forSaleBadge")}
           </span>
         </div>
       </Link>
@@ -468,7 +491,7 @@ function RelatedPropertyCard({
         {/* Type & Size Row */}
         <div className="mt-2.5 flex items-center justify-between text-[13px] text-[#718288]">
           <span>{typeName}</span>
-          <span>{property.area ? `${property.area} m²` : "N/A"}</span>
+          <span>{property.area ? `${property.area} ${areaUnit}` : (locale === "ar" ? "غير محدد" : "N/A")}</span>
         </div>
 
         {/* Price & Beds/Baths Row */}

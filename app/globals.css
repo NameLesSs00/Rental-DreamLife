@@ -14,10 +14,18 @@
   --font-poppins: var(--font-poppins);
   --font-dm-serif: var(--font-dm-serif-display);
   --font-manrope: var(--font-manrope);
+  --font-arabic: var(--font-arabic);
+}
+
+html[dir="rtl"] {
+  --font-poppins: var(--font-arabic);
+  --font-manrope: var(--font-arabic);
+  --font-dm-serif-display: var(--font-arabic);
+  --font-geist-sans: var(--font-arabic);
 }
 
 .font-dm-serif {
-  font-family: var(--font-dm-serif-display), "DM Serif Display", serif;
+  font-family: var(--font-dm-serif-display), var(--font-arabic), "DM Serif Display", serif;
 }
 
 
@@ -34,7 +42,7 @@ body {
   background: #ffffff;
   color: #171717;
 
-  font-family: var(--font-poppins), Arial, Helvetica, sans-serif;
+  font-family: var(--font-poppins), var(--font-arabic), Arial, Helvetica, sans-serif;
 }
 
 img,

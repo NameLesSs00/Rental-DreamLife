@@ -1,6 +1,6 @@
 import { slugify } from "@/lib/utils/slugify";
 import { API_BASE_URL } from "@/lib/api/config";
-import { defaultLocale, type Locale } from "@/lib/i18n/config";
+import { defaultLocale, locales, type Locale } from "@/lib/i18n/config";
 
 type SlugSourceItem = {
   id: string;
@@ -36,7 +36,7 @@ export async function getPropertyIdBySlug(
     if (idParam?.trim()) return idParam.trim();
 
     const decodedSlug = decodeURIComponent(slug);
-    const localesToTry = locale === defaultLocale ? [defaultLocale] : [locale, defaultLocale];
+    const localesToTry: Locale[] = [locale, ...locales.filter((item) => item !== locale)];
 
     for (const lookupLocale of localesToTry) {
       const items = await getSlugItems(type, lookupLocale);

@@ -9,9 +9,9 @@ import { resolveApiImageUrl } from "@/lib/utils/imageUrl";
 import { getBlogSlug } from "@/lib/utils/blogSlug";
 import { useI18n } from "@/components/I18nProvider";
 
-function formatDate(value: string, locale: string) {
+function formatDate(value: string, locale: string, fallback: string) {
   const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return "Recently";
+  if (Number.isNaN(date.getTime())) return fallback;
   return new Intl.DateTimeFormat(locale, {
     month: "short",
     day: "2-digit",
@@ -21,13 +21,16 @@ function formatDate(value: string, locale: string) {
 
 export default function BlogInsightsSection() {
   const { t, locale, href } = useI18n();
-  const { data, isLoading, isError } = useBlogs({
-    IsPublished: true,
-    PageNumber: 1,
-    PageSize: 3,
-    SortBy: "displayOrder",
-    IsDescending: false,
-  });
+  const { data, isLoading, isError } = useBlogs(
+    {
+      IsPublished: true,
+      PageNumber: 1,
+      PageSize: 3,
+      SortBy: "displayOrder",
+      IsDescending: false,
+    },
+    locale
+  );
 
   const blogs = data?.items ?? [];
 
@@ -45,12 +48,12 @@ export default function BlogInsightsSection() {
           <div className="flex items-center justify-center gap-3 sm:gap-4">
             <span className="h-[2.5px] w-8 sm:w-12 rounded-full bg-[#2C798B]" />
             <h2 className="text-[22px] font-bold tracking-tight text-[#2C798B] sm:text-[28px] lg:text-[34px]">
-              From Property to Lifestyle
+              {t("blogs.sectionTitle")}
             </h2>
             <span className="h-[2.5px] w-8 sm:w-12 rounded-full bg-[#2C798B]" />
           </div>
           <p className="mt-2 text-[14px] sm:text-[15px] font-medium text-[#2C798B]">
-            Stay updated on the latest real-estate trends.
+            {t("blogs.sectionSubtitle")}
           </p>
         </motion.div>
 
@@ -67,12 +70,12 @@ export default function BlogInsightsSection() {
             </div>
           ) : isError ? (
             <div className="rounded-2xl border border-[#e2e8e6] bg-[#fafbfb] py-12 text-center text-[14px] text-[#718288]">
-              {t("blogs.unableHome") || "Unable to load articles at this time."}
+              {t("blogs.unableHome")}
             </div>
           ) : blogs.length === 0 ? (
             <div className="rounded-2xl border border-dashed border-[#d8e0dd] bg-[#fafbfb] py-14 text-center text-[15px] text-[#718288]">
-              <p className="font-semibold text-[#183640]">No articles published yet</p>
-              <p className="mt-1 text-[13px] text-[#86979d]">Check back soon for new articles and market trends.</p>
+              <p className="font-semibold text-[#183640]">{t("blogs.emptyTitle")}</p>
+              <p className="mt-1 text-[13px] text-[#86979d]">{t("blogs.emptyBody")}</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
@@ -90,7 +93,7 @@ export default function BlogInsightsSection() {
               href={href("/blogs")}
               className="inline-flex h-10 items-center justify-center rounded-full border border-[#183640]/40 bg-white px-8 text-[14px] font-medium text-[#183640] transition hover:bg-[#183640] hover:text-white"
             >
-              {t("common.viewMore") || "View more"}
+              {t("common.viewMore")}
             </Link>
           </div>
         )}
@@ -100,7 +103,7 @@ export default function BlogInsightsSection() {
 }
 
 function ArticleCard({ blog, locale }: { blog: BlogItem; locale: string }) {
-  const { href } = useI18n();
+  const { href, t } = useI18n();
   const imageSrc = resolveApiImageUrl(blog.featuredImageUrl) || "/homepage/blogs/articles.png";
   const excerpt = blog.summary || blog.content || "";
   const blogUrl = href(`/blogs/${getBlogSlug(blog)}`);
@@ -150,14 +153,14 @@ function ArticleCard({ blog, locale }: { blog: BlogItem; locale: string }) {
               <line x1="8" y1="2" x2="8" y2="6" />
               <line x1="3" y1="10" x2="21" y2="10" />
             </svg>
-            <span>{formatDate(blog.createdAtUtc, locale)}</span>
+            <span>{formatDate(blog.createdAtUtc, locale, t("common.recently"))}</span>
           </div>
 
           <Link
             href={blogUrl}
             className="inline-flex items-center justify-center rounded-full border border-[#183640]/30 px-3.5 py-1 text-[12px] font-medium text-[#183640] transition hover:border-[#183640] hover:bg-[#183640] hover:text-white"
           >
-            read article
+            {t("common.readArticle")}
           </Link>
         </div>
       </div>

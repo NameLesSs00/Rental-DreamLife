@@ -62,24 +62,16 @@ function sectionFormData(payload: CreateBlogSectionRequest | UpdateBlogSectionRe
   return formData;
 }
 
-function getErrorMessage(error: unknown) {
-  const apiError = error as {
-    response?: { data?: { errors?: string[]; message?: string } };
-  };
-  return (
-    apiError.response?.data?.errors?.[0] ||
-    apiError.response?.data?.message ||
-    "Operation failed"
-  );
-}
-
-export function useBlogs(query: BlogsQuery) {
+export function useBlogs(query: BlogsQuery, locale?: string) {
   return useQuery({
-    queryKey: [BLOGS_KEY, "list", query],
+    queryKey: [BLOGS_KEY, "list", query, locale],
     queryFn: async () => {
       const { data } = await axiosInstance.get<
         BlogApiResponse<PaginatedBlogsResponse<BlogItem>>
-      >("/api/blogs", { params: query });
+      >("/api/blogs", {
+        params: query,
+        headers: locale ? { "Accept-Language": locale, "X-Locale": locale } : undefined,
+      });
       return data.data as PaginatedBlogsResponse<BlogItem>;
     },
     staleTime: 30 * 1000,
@@ -161,7 +153,7 @@ export function useCreateBlog() {
       );
       return data;
     },
-    onSuccess: (data) => {
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [BLOGS_KEY] });
     },
   });
@@ -179,7 +171,7 @@ export function useUpdateBlog() {
       );
       return data;
     },
-    onSuccess: (data, { id }) => {
+    onSuccess: (_data, { id }) => {
       queryClient.invalidateQueries({ queryKey: [BLOGS_KEY] });
       queryClient.invalidateQueries({ queryKey: [BLOGS_KEY, id] });
     },
@@ -194,7 +186,7 @@ export function useDeleteBlog() {
       const { data } = await axiosInstance.delete<BlogApiResponse<boolean>>(`/api/blogs/${id}`);
       return data;
     },
-    onSuccess: (data) => {
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [BLOGS_KEY] });
     },
   });
@@ -212,7 +204,7 @@ export function useCreateBlogSection() {
       );
       return data;
     },
-    onSuccess: (data, { blogId }) => {
+    onSuccess: (_data, { blogId }) => {
       queryClient.invalidateQueries({ queryKey: [BLOGS_KEY] });
       queryClient.invalidateQueries({ queryKey: [BLOGS_KEY, blogId] });
     },
@@ -239,7 +231,7 @@ export function useUpdateBlogSection() {
       );
       return data;
     },
-    onSuccess: (data, { blogId }) => {
+    onSuccess: (_data, { blogId }) => {
       queryClient.invalidateQueries({ queryKey: [BLOGS_KEY] });
       queryClient.invalidateQueries({ queryKey: [BLOGS_KEY, blogId] });
     },
@@ -256,7 +248,7 @@ export function useDeleteBlogSection() {
       );
       return data;
     },
-    onSuccess: (data, { blogId }) => {
+    onSuccess: (_data, { blogId }) => {
       queryClient.invalidateQueries({ queryKey: [BLOGS_KEY] });
       queryClient.invalidateQueries({ queryKey: [BLOGS_KEY, blogId] });
     },

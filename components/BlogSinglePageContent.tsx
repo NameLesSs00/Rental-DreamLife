@@ -84,7 +84,7 @@ export default function BlogSinglePageContent({
             href={href("/blogs")}
             className="inline-flex items-center gap-2 text-[13.5px] font-semibold text-[#142d38] transition hover:text-[#2C798B]"
           >
-            <ArrowLeft className="size-4" />
+            <ArrowLeft className="size-4 rtl:rotate-180" />
             <span>{t("common.allBlogs") || "All Articles"}</span>
           </Link>
 
@@ -124,7 +124,7 @@ export default function BlogSinglePageContent({
             {blog.summary && (
               <motion.p
                 variants={fadeUp}
-                className="mt-4 border-l-4 border-[#2C798B] pl-4 text-[16px] font-medium leading-relaxed text-[#4b5b63] sm:text-[18px] lg:text-[20px]"
+                className="mt-4 border-s-4 border-[#2C798B] ps-4 text-[16px] font-medium leading-relaxed text-[#4b5b63] sm:text-[18px] lg:text-[20px]"
               >
                 {blog.summary}
               </motion.p>
@@ -218,14 +218,14 @@ export default function BlogSinglePageContent({
                 {sections.length > 0 && (
                   <div className="rounded-[20px] border border-black/5 bg-[#F9F7F3] p-5 shadow-xs">
                     <p className="text-[12px] font-bold uppercase tracking-wider text-[#2C798B]">
-                      In this article
+                      {t("blogs.inThisArticle") || "In this article"}
                     </p>
                     <nav className="mt-3.5 space-y-2.5">
                       {sections.map((sec) => (
                         <a
                           key={sec.id}
                           href={`#section-${sec.id}`}
-                          className="block text-[13.5px] font-medium leading-snug text-[#4d5e66] transition hover:translate-x-1 hover:text-[#142d38]"
+                          className="block text-[13.5px] font-medium leading-snug text-[#4d5e66] transition hover:translate-x-1 rtl:hover:-translate-x-1 hover:text-[#142d38]"
                         >
                           {sec.title}
                         </a>
@@ -237,26 +237,26 @@ export default function BlogSinglePageContent({
                 {/* Sea Key Property Booking CTA Banner */}
                 <div className="overflow-hidden rounded-[20px] border border-[#2C798B]/20 bg-[#183640] p-6 text-white shadow-sm">
                   <p className="text-[11.5px] font-semibold uppercase tracking-wider text-[#79cbd8]">
-                    Sea Key Property
+                    {t("common.brand") || "Sea Key Property"}
                   </p>
                   <h3 className="mt-2 text-[19px] font-bold leading-snug text-white">
-                    Planning Your Trip to Hurghada?
+                    {t("blogs.sidebarCtaTitle") || "Planning Your Trip to Hurghada?"}
                   </h3>
                   <p className="mt-2.5 text-[13px] leading-relaxed text-white/80">
-                    Discover handpicked luxury beachfront villas and modern holiday apartments.
+                    {t("blogs.sidebarCtaBody") || "Discover handpicked luxury beachfront villas and modern holiday apartments."}
                   </p>
                   <div className="mt-5 flex flex-col gap-2.5">
                     <Link
                       href={href("/rent")}
                       className="inline-flex h-10 items-center justify-center rounded-full bg-[#2C798B] px-5 text-[13px] font-semibold text-white transition hover:bg-[#23606e]"
                     >
-                      Browse Vacation Rentals
+                      {t("blogs.sidebarBrowseRentals") || "Browse Vacation Rentals"}
                     </Link>
                     <Link
                       href={href("/buy")}
                       className="inline-flex h-10 items-center justify-center rounded-full border border-white/20 px-5 text-[13px] font-medium text-white transition hover:bg-white/10"
                     >
-                      Properties For Sale
+                      {t("blogs.sidebarPropertiesSale") || "Properties For Sale"}
                     </Link>
                   </div>
                 </div>
@@ -270,10 +270,10 @@ export default function BlogSinglePageContent({
           <section className="mt-16 sm:mt-20">
             <div className="mb-8 flex flex-col gap-1.5">
               <p className="text-[12.5px] font-bold uppercase tracking-wider text-[#2C798B]">
-                {t("common.blogs") || "More to Explore"}
+                {t("blogs.moreToExplore") || "More to Explore"}
               </p>
               <h2 className="text-[26px] font-bold leading-tight text-[#142d38] sm:text-[32px]">
-                Related Articles
+                {t("blogs.relatedArticles") || "Related Articles"}
               </h2>
             </div>
 
@@ -333,7 +333,7 @@ function RelatedBoxCard({ blog, locale }: { blog: BlogItem; locale: string }) {
             href={blogUrl}
             className="rounded-full border border-[#8a9a94] px-4 py-1.5 text-[12px] font-medium text-[#142d38] transition hover:border-[#142d38] hover:bg-[#142d38] hover:text-white"
           >
-            read article
+            {t("common.readArticle") || "read article"}
           </Link>
         </div>
       </div>

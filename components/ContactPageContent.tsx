@@ -88,7 +88,7 @@ export default function ContactPageContent() {
                 {t("contact.offlineAddress") || "Address"}
               </h3>
               <p className="mt-3 text-[14px] leading-relaxed text-[#718288]">
-                {siteConfig.address.label}
+                {t("footer.address") || siteConfig.address.label}
               </p>
             </motion.div>
 
@@ -106,7 +106,8 @@ export default function ContactPageContent() {
               <div className="mt-3 flex flex-col items-center gap-1.5 text-[14px] text-[#718288]">
                 <a
                   href={`tel:${siteConfig.phone}`}
-                  className="font-medium transition hover:text-[#183640]"
+                  dir="ltr"
+                  className="font-medium transition hover:text-[#183640] [unicode-bidi:isolate]"
                 >
                   {siteConfig.displayPhone}
                 </a>
@@ -114,9 +115,10 @@ export default function ContactPageContent() {
                   href={siteConfig.whatsappUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="font-medium text-[#183640] transition hover:text-[#25D366]"
+                  className="inline-flex items-center gap-1 font-medium text-[#183640] transition hover:text-[#25D366]"
                 >
-                  {siteConfig.displayPhone} (WhatsApp)
+                  <span dir="ltr" className="[unicode-bidi:isolate]">{siteConfig.displayPhone}</span>
+                  <span className="text-[#718288]">(WhatsApp)</span>
                 </a>
               </div>
             </motion.div>

@@ -53,14 +53,14 @@ export function appendTranslationFormData(formData: FormData, prefix: string, va
 }
 
 export function buildTranslationFromRecords<T>(
-  records: LocaleRecord<T>,
+  records: Partial<LocaleRecord<T>>,
   selector: (record: T) => string | null | undefined
 ): TranslationInput {
   return translationFromLocaleValues({
-    en: selector(records.en),
-    ar: selector(records.ar),
-    fr: selector(records.fr),
-    de: selector(records.de),
-    ru: selector(records.ru),
+    en: records.en ? selector(records.en) : "",
+    ar: records.ar ? selector(records.ar) : "",
+    fr: records.fr ? selector(records.fr) : "",
+    de: records.de ? selector(records.de) : "",
+    ru: records.ru ? selector(records.ru) : "",
   });
 }

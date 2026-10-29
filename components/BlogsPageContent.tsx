@@ -70,13 +70,16 @@ export default function BlogsPageContent() {
   const initial = shouldReduceMotion ? undefined : "hidden";
   const animate = shouldReduceMotion ? undefined : "visible";
 
-  const { data, isLoading, isError } = useBlogs({
-    IsPublished: true,
-    PageNumber: page,
-    PageSize: pageSize,
-    SortBy: "displayOrder",
-    IsDescending: false,
-  });
+  const { data, isLoading, isError } = useBlogs(
+    {
+      IsPublished: true,
+      PageNumber: page,
+      PageSize: pageSize,
+      SortBy: "displayOrder",
+      IsDescending: false,
+    },
+    locale
+  );
 
   const blogs = data?.items ?? [];
 
@@ -134,8 +137,8 @@ export default function BlogsPageContent() {
             animate={animate}
             className="py-20 text-center"
           >
-            <h2 className="text-[20px] font-semibold text-[#183c2f]">Unable to load blogs</h2>
-            <p className="mt-2 text-[14px] text-[#656566]">Please check your connection and try again.</p>
+            <h2 className="text-[20px] font-semibold text-[#183c2f]">{t("blogs.unableTitle") || "Unable to load blogs"}</h2>
+            <p className="mt-2 text-[14px] text-[#656566]">{t("blogs.unableBody") || "Please check your connection and try again."}</p>
           </motion.div>
         ) : blogs.length === 0 ? (
           <motion.div
@@ -144,8 +147,8 @@ export default function BlogsPageContent() {
             animate={animate}
             className="rounded-2xl border border-dashed border-[#d8e0dd] bg-white py-24 text-center"
           >
-            <p className="text-[18px] font-semibold text-[#183c2f]">No articles found</p>
-            <p className="mt-2 text-[14px] text-[#656566]">Check back soon for new articles and lifestyle stories.</p>
+            <p className="text-[18px] font-semibold text-[#183c2f]">{t("blogs.emptyTitle") || "No articles found"}</p>
+            <p className="mt-2 text-[14px] text-[#656566]">{t("blogs.emptyBody") || "Check back soon for new articles and lifestyle stories."}</p>
           </motion.div>
         ) : (
           /* Staggered entrance animation for all blog cards */
@@ -217,7 +220,7 @@ function StandardBlogCard({ blog, locale }: { blog: BlogItem; locale: string }) 
             href={blogUrl}
             className="rounded-full border border-[#8a9a94] px-4 py-1.5 text-[12px] font-medium text-[#142d38] transition hover:border-[#142d38] hover:bg-[#142d38] hover:text-white"
           >
-            read article
+            {t("common.readArticle") || "read article"}
           </Link>
         </div>
       </div>

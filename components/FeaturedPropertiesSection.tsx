@@ -15,26 +15,43 @@ import { formatPriceForCurrency } from "@/lib/utils/currency";
 import { useSelectedCurrency } from "@/lib/hooks/useSelectedCurrency";
 import { useI18n } from "./I18nProvider";
 
-const propertyTypeNames: Record<number, string> = {
-  1: "Apartment",
-  2: "Villa",
-  3: "Studio",
-  4: "Chalet",
-  5: "Twin House",
-  6: "Townhouse",
-  7: "Duplex",
-  8: "Penthouse",
-  9: "Cabin",
-  10: "Hotel",
-  11: "2 Bedrooms",
-  12: "1 Bedroom",
+const propertyTypeKeyById: Record<number, string> = {
+  1: "rent.apartment",
+  2: "rent.villa",
+  3: "rent.studio",
+  4: "rent.chalet",
+  5: "rent.twinHouse",
+  6: "rent.townhouse",
+  7: "rent.duplex",
+  8: "rent.penthouse",
+  9: "rent.cabin",
+  10: "rent.hotel",
+  11: "rent.twoBedrooms",
+  12: "rent.oneBedroom",
+};
+
+const propertyTypeKeyByName: Record<string, string> = {
+  apartment: "rent.apartment",
+  villa: "rent.villa",
+  studio: "rent.studio",
+  chalet: "rent.chalet",
+  twinhouse: "rent.twinHouse",
+  "twin house": "rent.twinHouse",
+  townhouse: "rent.townhouse",
+  duplex: "rent.duplex",
+  penthouse: "rent.penthouse",
+  cabin: "rent.cabin",
+  hotel: "rent.hotel",
+  "2 bedrooms": "rent.twoBedrooms",
+  "2 bedroom": "rent.twoBedrooms",
+  "1 bedroom": "rent.oneBedroom",
 };
 
 const FALLBACK_IMAGE = "/rent/property-card.png";
 
 export default function FeaturedPropertiesSection() {
   const [currency] = useSelectedCurrency();
-  const { t, href, isRtl } = useI18n();
+  const { t, href, locale, isRtl } = useI18n();
   const { data: currencies = [] } = useCurrencies({ isActive: true });
 
   const containerRef = useRef<HTMLDivElement>(null);
@@ -47,11 +64,14 @@ export default function FeaturedPropertiesSection() {
   const [canNext, setCanNext] = useState(false);
 
   // Fetch 6 rental properties from backend
-  const { data: response, isLoading } = useProperties({
-    pageNumber: 1,
-    pageSize: 6,
-    Currency: currency,
-  });
+  const { data: response, isLoading } = useProperties(
+    {
+      pageNumber: 1,
+      pageSize: 6,
+      Currency: currency,
+    },
+    locale
+  );
 
   const properties: PropertyListItem[] = response?.items || [];
 
@@ -188,7 +208,7 @@ export default function FeaturedPropertiesSection() {
                   aria-label={t("home.featured.previous")}
                   className={arrowClass}
                 >
-                  <ChevronLeft className="size-4" aria-hidden="true" />
+                  <ChevronLeft className="size-4 rtl:rotate-180" aria-hidden="true" />
                 </button>
                 <button
                   type="button"
@@ -197,7 +217,7 @@ export default function FeaturedPropertiesSection() {
                   aria-label={t("home.featured.next")}
                   className={arrowClass}
                 >
-                  <ChevronRight className="size-4" aria-hidden="true" />
+                  <ChevronRight className="size-4 rtl:rotate-180" aria-hidden="true" />
                 </button>
               </div>
             </div>
@@ -291,7 +311,7 @@ export default function FeaturedPropertiesSection() {
               aria-label={t("home.featured.previous")}
               className={arrowClass}
             >
-              <ChevronLeft className="size-4" aria-hidden="true" />
+              <ChevronLeft className="size-4 rtl:rotate-180" aria-hidden="true" />
             </button>
             <button
               type="button"
@@ -300,7 +320,7 @@ export default function FeaturedPropertiesSection() {
               aria-label={t("home.featured.next")}
               className={arrowClass}
             >
-              <ChevronRight className="size-4" aria-hidden="true" />
+              <ChevronRight className="size-4 rtl:rotate-180" aria-hidden="true" />
             </button>
           </div>
         </div>
@@ -318,7 +338,7 @@ function PropertyCard({
   currency: string;
   currencies: Currency[];
 }) {
-  const { t, href } = useI18n();
+  const { t, href, locale } = useI18n();
   const propertyWithSize = property as PropertyListItem & {
     size?: number | null;
     area?: number | null;
@@ -326,11 +346,12 @@ function PropertyCard({
 
   const imageUrl = resolveApiImageUrl(property.coverImageUrl) || FALLBACK_IMAGE;
 
+  const defaultCity = locale === "ar" ? "الغردقة" : "Hurghada";
   const location = property.city
     ? property.country
       ? `${property.city}, ${property.country}`
       : property.city
-    : property.country || "Hurghada";
+    : property.country || defaultCity;
 
   const detailParams = new URLSearchParams({
     id: property.id,
@@ -345,19 +366,23 @@ function PropertyCard({
     currencies
   );
 
+  const unit = locale === "ar" ? "م²" : "m²";
   const sizeLabel =
     typeof propertyWithSize.size === "number" && propertyWithSize.size > 0
-      ? `${propertyWithSize.size} m²`
+      ? `${propertyWithSize.size} ${unit}`
       : typeof propertyWithSize.area === "number" && propertyWithSize.area > 0
-        ? `${propertyWithSize.area} m²`
+        ? `${propertyWithSize.area} ${unit}`
         : property.capacity
-          ? `${property.capacity * 35} m²`
-          : "140 m²";
+          ? `${property.capacity * 35} ${unit}`
+          : `140 ${unit}`;
 
-  const typeName =
-    property.propertyTypeName ||
-    (property.propertyType ? propertyTypeNames[property.propertyType] : "Apartment") ||
-    "Apartment";
+  const typeKey =
+    (property.propertyType ? propertyTypeKeyById[property.propertyType] : undefined) ||
+    (property.propertyTypeName
+      ? propertyTypeKeyByName[property.propertyTypeName.toLowerCase().trim()]
+      : undefined);
+
+  const typeName = typeKey ? t(typeKey) : property.propertyTypeName || t("rent.apartment");
 
   return (
     <article
@@ -383,7 +408,7 @@ function PropertyCard({
             e.currentTarget.src = FALLBACK_IMAGE;
           }}
         />
-        <span className="pointer-events-none absolute right-4 top-4 inline-flex items-center justify-center rounded-full bg-[#3DA9BA] px-3.5 py-1.5 font-[var(--font-poppins)] text-[10.97px] font-medium leading-[1] text-white">
+        <span className="pointer-events-none absolute end-4 top-4 inline-flex items-center justify-center rounded-full bg-[#3DA9BA] px-3.5 py-1.5 font-[var(--font-poppins)] text-[10.97px] font-medium leading-[1] text-white">
           {t("home.featured.forRentBadge")}
         </span>
       </Link>

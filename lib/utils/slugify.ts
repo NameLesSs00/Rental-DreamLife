@@ -5,7 +5,7 @@ export function slugify(text: string): string {
     .toLowerCase()
     .trim()
     .replace(/\s+/g, "-") // Replace spaces with -
-    .replace(/[^\p{L}\p{N}_-]+/gu, "") // Remove punctuation while preserving localized letters
+    .replace(/[^\p{L}\p{M}\p{N}_-]+/gu, "") // Remove punctuation while preserving localized letters and marks
     .replace(/\-\-+/g, "-") // Replace multiple - with single -
     .replace(/^-+|-+$/g, "");
 }

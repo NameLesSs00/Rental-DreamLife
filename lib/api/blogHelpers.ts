@@ -1,5 +1,5 @@
 import { API_BASE_URL } from "@/lib/api/config";
-import { defaultLocale, type Locale } from "@/lib/i18n/config";
+import { defaultLocale, locales, type Locale } from "@/lib/i18n/config";
 import type { BlogApiResponse, BlogItem, PaginatedBlogsResponse } from "@/lib/types/blog";
 import { getBlogSlug } from "@/lib/utils/blogSlug";
 
@@ -66,11 +66,9 @@ export async function getBlogBySlug(slug: string, locale: Locale = defaultLocale
       return getBlogById(matchId, locale);
     }
 
-    const [canonicalBlogs, localizedBlogs] = await Promise.all([
-      getPublishedBlogs(defaultLocale),
-      locale === defaultLocale ? Promise.resolve([]) : getPublishedBlogs(locale),
-    ]);
-    const blogs = [...localizedBlogs, ...canonicalBlogs];
+    const localesToTry: Locale[] = [locale, ...locales.filter((item) => item !== locale)];
+    const blogLists = await Promise.all(localesToTry.map((lookupLocale) => getPublishedBlogs(lookupLocale)));
+    const blogs = blogLists.flat();
     const match = blogs.find((blog) => blog.id === decodedSlug || getBlogSlug(blog) === decodedSlug);
 
     if (!match) return null;

@@ -144,13 +144,19 @@ export interface AdminPropertiesQueryParams {
   pageSize?: number;
 }
 
-export function useSearchProperties(params: { SearchTerm: string; PageNumber?: number; PageSize?: number }) {
+export function useSearchProperties(
+  params: { SearchTerm: string; PageNumber?: number; PageSize?: number },
+  locale?: string
+) {
   return useQuery({
-    queryKey: [KEY, "search", params],
+    queryKey: [KEY, "search", params, locale],
     queryFn: async () => {
       const { data } = await axiosInstance.get<PropertyApiResponse<PaginatedResponse<PropertyListItem>>>(
         "/api/properties/search",
-        { params: { PageNumber: 1, PageSize: 10, ...params } }
+        {
+          params: { PageNumber: 1, PageSize: 10, ...params },
+          headers: locale ? { "Accept-Language": locale, "X-Locale": locale } : undefined,
+        }
       );
       return data.data;
     },
@@ -278,13 +284,16 @@ export function useAdminProperties(params: AdminPropertiesQueryParams = {}) {
   });
 }
 
-export function useProperties(params: PropertyQueryParams = {}) {
+export function useProperties(params: PropertyQueryParams = {}, locale?: string) {
   return useQuery({
-    queryKey: [KEY, "list", params],
+    queryKey: [KEY, "list", params, locale],
     queryFn: async () => {
       const { data } = await axiosInstance.get<PropertyApiResponse<PaginatedResponse<PropertyListItem>>>(
         "/api/properties",
-        { params: { pageNumber: 1, pageSize: 10, ...params } }
+        {
+          params: { pageNumber: 1, pageSize: 10, ...params },
+          headers: locale ? { "Accept-Language": locale, "X-Locale": locale } : undefined,
+        }
       );
       return data.data;
     },
@@ -292,9 +301,14 @@ export function useProperties(params: PropertyQueryParams = {}) {
   });
 }
 
-export function usePublicRentProperties(params: PropertyQueryParams = {}, options: { enabled?: boolean } = {}) {
+export function usePublicRentProperties(
+  params: PropertyQueryParams = {},
+  options: { enabled?: boolean; locale?: string } = {}
+) {
+  const { enabled = true, locale } = options;
+  const headers = locale ? { "Accept-Language": locale, "X-Locale": locale } : undefined;
   return useQuery({
-    queryKey: [KEY, "public", params],
+    queryKey: [KEY, "public", params, locale],
     queryFn: async () => {
       const shouldUseFilterEndpoint = hasServerRentFilters(params);
       const groupedTypes = getGroupedRentPropertyTypes(params);
@@ -314,7 +328,7 @@ export function usePublicRentProperties(params: PropertyQueryParams = {}, option
       if (!shouldUseFilterEndpoint && groupedTypes.length === 0) {
         const { data } = await axiosInstance.get<PropertyApiResponse<PaginatedResponse<PropertyListItem>>>(
           "/api/properties",
-          { params: baseParams }
+          { params: baseParams, headers }
         );
 
         if (categoryId || bedroomNo !== null) {
@@ -334,7 +348,7 @@ export function usePublicRentProperties(params: PropertyQueryParams = {}, option
           groupedTypes.map((propertyType) =>
             axiosInstance.get<PropertyApiResponse<PaginatedResponse<PropertyListItem>>>(
               "/api/properties/filter",
-              { params: { ...baseParams, PropertyType: propertyType } },
+              { params: { ...baseParams, PropertyType: propertyType }, headers },
             ),
           ),
         );
@@ -354,7 +368,7 @@ export function usePublicRentProperties(params: PropertyQueryParams = {}, option
 
       const { data } = await axiosInstance.get<PropertyApiResponse<PaginatedResponse<PropertyListItem>>>(
         "/api/properties/filter",
-        { params: baseParams }
+        { params: baseParams, headers }
       );
 
       if (categoryId || bedroomNo !== null) {
@@ -365,7 +379,7 @@ export function usePublicRentProperties(params: PropertyQueryParams = {}, option
 
       return data.data;
     },
-    enabled: options.enabled ?? true,
+    enabled,
     staleTime: 30 * 1000,
   });
 }

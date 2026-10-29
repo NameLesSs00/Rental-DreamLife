@@ -56,7 +56,7 @@ export default function PageHero({
           fill
           priority={priority}
           sizes="(min-width: 1780px) 1740px, 100vw"
-          className="object-cover object-center"
+          className="object-cover object-center rtl:-scale-x-100"
         />
 
         {overlayGradient && (
@@ -67,13 +67,13 @@ export default function PageHero({
         <div className="absolute inset-0 z-10 flex flex-col justify-center">
           <div className="mx-auto w-full max-w-[1536px] px-4 sm:px-6 lg:px-10">
             <h1
-              className={`font-[var(--font-poppins)] text-[34px] font-bold leading-[1.12] tracking-[0%] text-white drop-shadow-[0_2px_12px_rgba(0,0,0,0.5)] sm:text-[44px] sm:leading-[1.1] lg:text-[52px] lg:leading-[55px] xl:text-[60px] ${maxTitleWidth}`}
+              className={`font-[var(--font-poppins)] text-[34px] font-bold leading-[1.12] rtl:leading-[1.28] tracking-[0%] text-white drop-shadow-[0_2px_12px_rgba(0,0,0,0.5)] sm:text-[44px] sm:leading-[1.1] sm:rtl:leading-[1.28] lg:text-[52px] lg:leading-[55px] lg:rtl:leading-[1.28] xl:text-[60px] ${maxTitleWidth}`}
             >
               {title}
             </h1>
             {subtitle && (
               <p
-                className={`mt-3.5 font-[var(--font-poppins)] text-[16px] font-semibold leading-[120%] tracking-[0%] text-white drop-shadow-[0_2px_8px_rgba(0,0,0,0.5)] sm:text-[18px] lg:text-[20px] xl:text-[22px] ${maxSubtitleWidth}`}
+                className={`mt-3.5 font-[var(--font-poppins)] text-[16px] font-semibold leading-[120%] rtl:leading-[1.5] tracking-[0%] text-white drop-shadow-[0_2px_8px_rgba(0,0,0,0.5)] sm:text-[18px] lg:text-[20px] xl:text-[22px] ${maxSubtitleWidth}`}
               >
                 {subtitle}
               </p>

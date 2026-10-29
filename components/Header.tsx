@@ -103,7 +103,7 @@ function getLocationSearchSnapshot() {
 }
 
 export default function Header() {
-  const { menuOpen, toggleMenu, closeMenu, pageEntityId, pageEntityType } = useHeaderStore();
+  const { menuOpen, toggleMenu, closeMenu } = useHeaderStore();
   const pathname = usePathname();
   const publicPathname = stripLocale(pathname);
   const queryString = useSyncExternalStore(subscribeToLocationChanges, getLocationSearchSnapshot, () => "");
@@ -116,14 +116,15 @@ export default function Header() {
     { href: "/rent", label: t("common.properties") || "Properties" },
     { href: "/buy", label: t("nav.items.buy") },
     { href: "/blogs", label: t("nav.items.blogs") },
-    { href: "/about", label: locale === "en" ? "About" : t("nav.items.about") },
-    { href: "/contact", label: locale === "en" ? "Contact" : t("nav.items.contact") },
+    { href: "/about", label: t("nav.items.about") },
+    { href: "/contact", label: t("nav.items.contact") },
   ];
 
   const mobileNavItems: NavItem[] = [
     { href: "/", label: t("nav.items.home") },
     { href: "/rent", label: t("nav.items.rent") },
     { href: "/buy", label: t("nav.items.buy") },
+    { href: "/blogs", label: t("nav.items.blogs") },
     // HIDDEN FOR THIS VERSION: Transfer navigation link - uncomment to re-enable
     // { href: "/transfer", label: t("nav.items.transfer") },
     { href: "/about", label: t("nav.items.about") },
@@ -204,7 +205,7 @@ export default function Header() {
                       <motion.svg
                         animate={{ rotate: isOpen ? 180 : 0 }}
                         transition={{ duration: 0.18 }}
-                        className="ml-1.5 size-4"
+                        className="ms-1.5 size-4"
                         fill="none"
                         viewBox="0 0 24 24"
                         stroke="currentColor"
@@ -227,7 +228,7 @@ export default function Header() {
                           initial={initialState}
                           animate="visible"
                           exit="exit"
-                          className="absolute left-0 top-[70px] flex w-48 origin-top flex-col overflow-hidden rounded-xl border border-[#1F4D3D]/10 bg-white shadow-[0_12px_24px_rgba(31,77,61,0.08)]"
+                          className="absolute start-0 top-[70px] flex w-48 origin-top flex-col overflow-hidden rounded-xl border border-[#1F4D3D]/10 bg-white shadow-[0_12px_24px_rgba(31,77,61,0.08)]"
                         >
                           {item.subItems.map((sub) => (
                             <motion.div key={sub.href} variants={dropdownItemMotion}>
@@ -277,13 +278,11 @@ export default function Header() {
             })}
           </motion.nav>
 
-          {/* HIDDEN FOR THIS VERSION: Desktop Currency switcher & Language selector - uncomment to re-enable */}
-          {/*
           <motion.div variants={headerItemMotion} className="hidden shrink-0 items-center gap-2.5 justify-end lg:flex xl:gap-3">
-            <CurrencySwitcher />
+            {/* HIDDEN FOR THIS VERSION: Desktop Currency switcher - uncomment to re-enable */}
+            {/* <CurrencySwitcher /> */}
             <LanguageSwitcher locale={locale} publicPathname={publicPathname} queryString={queryString} />
           </motion.div>
-          */}
 
           {/* Mobile hamburger button */}
           <motion.button
@@ -342,7 +341,7 @@ export default function Header() {
                       <div className="px-2 py-3 text-base font-semibold text-[#1F4D3D]">
                         {item.label}
                       </div>
-                      <div className="ml-4 flex flex-col border-l-2 border-[#1F4D3D]/10 pl-2">
+                      <div className="ms-4 flex flex-col border-s-2 border-[#1F4D3D]/10 ps-2">
                         {item.subItems.map((sub) => (
                           <Link
                             key={sub.label}
@@ -370,8 +369,6 @@ export default function Header() {
                   </motion.div>
                 );
               })}
-              {/* HIDDEN FOR THIS VERSION: Mobile Language selector & Currency switcher - uncomment to re-enable */}
-              {/*
               <motion.div variants={dropdownItemMotion} className="mt-4 space-y-3 border-t border-[#1F4D3D]/10 pt-4">
                 <div>
                   <p className="px-1 pb-1.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-[#8a9a94]">
@@ -384,14 +381,16 @@ export default function Header() {
                     onCloseMenu={closeMenu}
                   />
                 </div>
+                {/* HIDDEN FOR THIS VERSION: Mobile Currency switcher - uncomment to re-enable */}
+                {/*
                 <div>
                   <p className="px-1 pb-1.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-[#8a9a94]">
                     {t("common.currency")}
                   </p>
                   <CurrencySwitcher variant="mobile" onCloseMenu={closeMenu} />
                 </div>
+                */}
               </motion.div>
-              */}
             </nav>
           </motion.div>
         )}
@@ -428,6 +427,65 @@ function buildLocalizedEntityPath({
   const suffix = params.toString() ? `?${params.toString()}` : "";
   const path = translatedSlug ? `/${entityType}/${translatedSlug}${suffix}` : `${fallbackPathname}${suffix}`;
   return localizePath(path, targetLocale);
+}
+
+async function navigateToLocalizedEntity({
+  targetLocale,
+  entityType,
+  entityId,
+  fallbackPathname,
+}: {
+  targetLocale: Locale;
+  entityType: "rent" | "buy" | "transfer" | "blogs";
+  entityId: string;
+  fallbackPathname: string;
+}) {
+  const currentQueryString = getLocationSearchSnapshot();
+
+  try {
+    let endpoint = "";
+    if (entityType === "rent") endpoint = `/api/properties/${entityId}`;
+    else if (entityType === "buy") endpoint = `/api/public/property-buyings/${entityId}`;
+    else if (entityType === "transfer") endpoint = `/api/journeys/${entityId}`;
+    else if (entityType === "blogs") endpoint = `/api/blogs/${entityId}`;
+
+    const res = await fetch(`${API_BASE_URL}${endpoint}`, {
+      headers: { "Accept-Language": targetLocale, "X-Locale": targetLocale },
+    });
+
+    if (res.ok) {
+      const json = await res.json();
+      const data = json.data;
+      let translatedSlug = "";
+      if (entityType === "rent") translatedSlug = slugify(data?.name || "");
+      else if (entityType === "buy") translatedSlug = slugify(data?.title || "");
+      else if (entityType === "transfer") translatedSlug = slugify(data?.name || "");
+      else if (entityType === "blogs") translatedSlug = slugify(data?.title || "");
+
+      if (translatedSlug) {
+        window.location.href = buildLocalizedEntityPath({
+          targetLocale,
+          entityType,
+          entityId,
+          translatedSlug,
+          fallbackPathname,
+          queryString: currentQueryString,
+        });
+        return;
+      }
+    }
+  } catch (err) {
+    console.error("Failed to localize url slug:", err);
+  }
+
+  window.location.href = buildLocalizedEntityPath({
+    targetLocale,
+    entityType,
+    entityId,
+    translatedSlug: "",
+    fallbackPathname,
+    queryString: currentQueryString,
+  });
 }
 
 function LanguageSwitcher({
@@ -501,7 +559,7 @@ function LanguageSwitcher({
             animate="visible"
             exit="exit"
             role="menu"
-            className="absolute right-0 top-[calc(100%+10px)] z-[80] w-56 origin-top-right overflow-hidden rounded-[14px] border border-[#dfe8e4] bg-white p-1.5 shadow-[0_18px_42px_rgba(31,77,61,0.16)]"
+            className="absolute end-0 top-[calc(100%+10px)] z-[80] w-56 origin-top-right rtl:origin-top-left overflow-hidden rounded-[14px] border border-[#dfe8e4] bg-white p-1.5 shadow-[0_18px_42px_rgba(31,77,61,0.16)]"
           >
             {locales.map((item) => {
               const isSelected = item === locale;
@@ -526,52 +584,11 @@ function LanguageSwitcher({
                       if (pageEntityId && pageEntityType) {
                         e.preventDefault();
                         setIsOpen(false);
-                        const currentQueryString = getLocationSearchSnapshot();
-                        
-                        try {
-                          let endpoint = "";
-                          if (pageEntityType === "rent") endpoint = `/api/properties/${pageEntityId}`;
-                          else if (pageEntityType === "buy") endpoint = `/api/public/property-buyings/${pageEntityId}`;
-                          else if (pageEntityType === "transfer") endpoint = `/api/journeys/${pageEntityId}`;
-                          else if (pageEntityType === "blogs") endpoint = `/api/blogs/${pageEntityId}`;
-
-                          const res = await fetch(`${API_BASE_URL}${endpoint}`, {
-                            headers: { "Accept-Language": item, "X-Locale": item },
-                          });
-
-                          if (res.ok) {
-                            const json = await res.json();
-                            const data = json.data;
-                            let translatedSlug = "";
-                            if (pageEntityType === "rent") translatedSlug = slugify(data.name || "");
-                            else if (pageEntityType === "buy") translatedSlug = slugify(data.title || "");
-                            else if (pageEntityType === "transfer") translatedSlug = slugify(data.name || "");
-                            else if (pageEntityType === "blogs") translatedSlug = slugify(data.title || "");
-
-                            if (translatedSlug) {
-                              window.location.href = buildLocalizedEntityPath({
-                                targetLocale: item,
-                                entityType: pageEntityType,
-                                entityId: pageEntityId,
-                                translatedSlug,
-                                fallbackPathname: publicPathname,
-                                queryString: currentQueryString,
-                              });
-                              return;
-                            }
-                          }
-                        } catch (err) {
-                          console.error("Failed to localize url slug:", err);
-                        }
-                        
-                        // Fallback if fetch fails
-                        window.location.href = buildLocalizedEntityPath({
+                        await navigateToLocalizedEntity({
                           targetLocale: item,
                           entityType: pageEntityType,
                           entityId: pageEntityId,
-                          translatedSlug: "",
                           fallbackPathname: publicPathname,
-                          queryString: currentQueryString,
                         });
                       } else {
                         setIsOpen(false);
@@ -672,7 +689,7 @@ function MobileLanguageSwitcher({
                         })
                       : buildLocalizedPath(publicPathname, item, queryString)
                   }
-                  onClick={(event) => {
+                  onClick={async (event) => {
                     setIsOpen(false);
                     if (!pageEntityId || !pageEntityType) {
                       onCloseMenu();
@@ -680,13 +697,11 @@ function MobileLanguageSwitcher({
                     }
                     event.preventDefault();
                     onCloseMenu();
-                    window.location.href = buildLocalizedEntityPath({
+                    await navigateToLocalizedEntity({
                       targetLocale: item,
                       entityType: pageEntityType,
                       entityId: pageEntityId,
-                      translatedSlug: "",
                       fallbackPathname: publicPathname,
-                      queryString: getLocationSearchSnapshot(),
                     });
                   }}
                   className={`flex w-full items-center justify-between rounded-lg px-3 py-2 text-[14px] font-semibold transition ${

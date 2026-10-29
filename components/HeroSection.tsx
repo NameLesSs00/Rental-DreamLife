@@ -10,8 +10,8 @@ import { useCategories } from "@/lib/hooks/useCategory";
 
 export default function HeroSection() {
   const router = useRouter();
-  const { t, href } = useI18n();
-  const { data: categories = [] } = useCategories();
+  const { t, href, locale } = useI18n();
+  const { data: categories = [] } = useCategories(locale);
   const [showMoreFilters, setShowMoreFilters] = useState(false);
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
@@ -104,9 +104,8 @@ export default function HeroSection() {
             transition={{ duration: 0.6 }}
             className="mx-auto font-[var(--font-poppins)] font-black uppercase tracking-[0%] text-center text-white text-[32px] leading-[36px] sm:text-[50px] sm:leading-[52px] lg:text-[70px] lg:leading-[70px]"
           >
-            YOUR FUTURE
-            <br />
-            STARTS HERE
+            <span className="block">{t("home.hero.headlineLine1")}</span>
+            <span className="block rtl:mt-1.5 sm:rtl:mt-2 lg:rtl:mt-3">{t("home.hero.headlineLine2")}</span>
           </motion.h1>
 
           <motion.p
@@ -115,7 +114,7 @@ export default function HeroSection() {
             transition={{ duration: 0.6 }}
             className="mx-auto mt-2.5 font-[var(--font-poppins)] font-semibold tracking-[0%] text-center text-white text-[15px] leading-[1.25] sm:text-[18px] lg:text-[20px] lg:leading-[24px]"
           >
-            Find the Place You&apos;ll Love to Call Home
+            {t("home.hero.tagline")}
           </motion.p>
 
           <motion.p
@@ -124,7 +123,7 @@ export default function HeroSection() {
             transition={{ duration: 0.6 }}
             className="mx-auto mt-2 max-w-[240px] font-[var(--font-poppins)] font-normal tracking-[0%] text-center text-[11.5px] leading-relaxed text-white/90 sm:max-w-[300px] sm:text-[14px] lg:max-w-[400px]"
           >
-            Discover exceptional properties in prime locations, tailored to the way you want to live.
+            {t("home.hero.description")}
           </motion.p>
         </motion.div>
 
@@ -137,7 +136,7 @@ export default function HeroSection() {
           style={{ boxShadow: "0px 4px 50px 0px rgba(0, 0, 0, 0.22)" }}
           className="absolute bottom-0 left-1/2 z-30 w-[calc(100%-24px)] max-w-[1040px] -translate-x-1/2 translate-y-1/2 rounded-[20px] bg-[#e4edf0]/90 p-3 sm:p-5 lg:p-6 backdrop-blur-md border border-white/70 shadow-lg sm:rounded-[24px]"
         >
-          {/* Row 1: Primary Inputs (Check-in, Check-out, Adults) + Filters Button + Search */}
+          {/* Row 1: Primary Inputs (Check-in, Check-out, Residents/Adults) + Filters Button + Search */}
           <div className="grid grid-cols-2 sm:grid-cols-12 gap-2 sm:gap-3 items-end">
             {/* Check-in Date */}
             <label className="col-span-1 sm:col-span-3 block min-w-0">
@@ -169,7 +168,7 @@ export default function HeroSection() {
               />
             </label>
 
-            {/* Adults */}
+            {/* Adults / Residents */}
             <label className="col-span-2 sm:col-span-2 block min-w-0">
               <span className="mb-1 block truncate text-[11.5px] sm:text-[13px] xl:text-[14px] font-medium leading-none text-[#2C798B]">
                 {t("rent.adults")}
@@ -198,7 +197,7 @@ export default function HeroSection() {
                 }`}
               >
                 <SlidersHorizontal className="size-3.5 sm:size-4 shrink-0" />
-                <span className="truncate">{showMoreFilters ? "Fewer" : "Filters"}</span>
+                <span className="truncate">{showMoreFilters ? t("home.hero.fewerFilters") : t("home.hero.moreFilters")}</span>
                 <ChevronDown
                   className={`size-3.5 shrink-0 transition-transform duration-200 ${
                     showMoreFilters ? "rotate-180" : ""
@@ -214,7 +213,7 @@ export default function HeroSection() {
                 className="inline-flex h-10 sm:h-[44px] w-full items-center justify-center gap-1.5 rounded-lg bg-[#2C798B] px-3 sm:px-4 text-[13px] sm:text-[14px] font-semibold text-white shadow-xs transition hover:bg-[#23606e] active:scale-[0.98] cursor-pointer"
               >
                 <Search className="size-4 shrink-0" />
-                <span>Search</span>
+                <span>{t("common.search")}</span>
               </button>
             </div>
           </div>
@@ -233,7 +232,7 @@ export default function HeroSection() {
                   {/* Min Price (USD) */}
                   <div>
                     <label className="mb-1 block text-[11px] sm:text-[12px] font-medium text-[#2d3f38]">
-                      Min Price
+                      {t("rent.minPrice")}
                     </label>
                     <div className="relative flex h-[38px] w-full items-center rounded-[10px] bg-white px-3 focus-within:ring-2 focus-within:ring-[#7faeb9]/40">
                       <input
@@ -242,9 +241,9 @@ export default function HeroSection() {
                         placeholder="0.0"
                         step="any"
                         min="0"
-                        className="w-full bg-transparent pr-9 text-[13px] font-medium text-[#183c2f] outline-none placeholder:text-[#9eada6]"
+                        className="w-full bg-transparent pe-9 text-[13px] font-medium text-[#183c2f] outline-none placeholder:text-[#9eada6]"
                       />
-                      <span className="pointer-events-none absolute right-2.5 text-[10.5px] font-bold text-[#8fa099]">
+                      <span className="pointer-events-none absolute end-2.5 text-[10.5px] font-bold text-[#8fa099]">
                         USD
                       </span>
                     </div>
@@ -253,7 +252,7 @@ export default function HeroSection() {
                   {/* Max Price (USD) */}
                   <div>
                     <label className="mb-1 block text-[11px] sm:text-[12px] font-medium text-[#2d3f38]">
-                      Max Price
+                      {t("rent.maxPrice")}
                     </label>
                     <div className="relative flex h-[38px] w-full items-center rounded-[10px] bg-white px-3 focus-within:ring-2 focus-within:ring-[#7faeb9]/40">
                       <input
@@ -262,9 +261,9 @@ export default function HeroSection() {
                         placeholder="0.0"
                         step="any"
                         min="0"
-                        className="w-full bg-transparent pr-9 text-[13px] font-medium text-[#183c2f] outline-none placeholder:text-[#9eada6]"
+                        className="w-full bg-transparent pe-9 text-[13px] font-medium text-[#183c2f] outline-none placeholder:text-[#9eada6]"
                       />
-                      <span className="pointer-events-none absolute right-2.5 text-[10.5px] font-bold text-[#8fa099]">
+                      <span className="pointer-events-none absolute end-2.5 text-[10.5px] font-bold text-[#8fa099]">
                         USD
                       </span>
                     </div>
@@ -273,7 +272,7 @@ export default function HeroSection() {
                   {/* Rooms (Number Input) */}
                   <div>
                     <label className="mb-1 block text-[11px] sm:text-[12px] font-medium text-[#2d3f38]">
-                      Rooms
+                      {t("rent.rooms")}
                     </label>
                     <div className="relative flex h-[38px] w-full items-center rounded-[10px] bg-white px-3 focus-within:ring-2 focus-within:ring-[#7faeb9]/40">
                       <input
@@ -290,47 +289,47 @@ export default function HeroSection() {
                   {/* Location (Fetched dynamically from backend) */}
                   <div>
                     <label className="mb-1 block text-[11px] sm:text-[12px] font-medium text-[#2d3f38]">
-                      Location
+                      {t("rent.location")}
                     </label>
                     <div className="relative flex h-[38px] w-full items-center rounded-[10px] bg-white px-3 focus-within:ring-2 focus-within:ring-[#7faeb9]/40">
                       <select
                         name="location"
                         defaultValue=""
-                        className="w-full cursor-pointer appearance-none bg-transparent pr-6 text-[13px] font-medium text-[#183c2f] outline-none"
+                        className="w-full cursor-pointer appearance-none bg-transparent pe-6 text-[13px] font-medium text-[#183c2f] outline-none"
                       >
-                        <option value="">{t("rent.all") || "All Locations"}</option>
+                        <option value="">{t("rent.anyLocation") || t("rent.all")}</option>
                         {categories.map((cat) => (
                           <option key={cat.id} value={cat.id}>
                             {cat.name}
                           </option>
                         ))}
                       </select>
-                      <ChevronDown className="pointer-events-none absolute right-2.5 size-4 text-[#4a5e55]" />
+                      <ChevronDown className="pointer-events-none absolute end-2.5 size-4 text-[#4a5e55]" />
                     </div>
                   </div>
 
                   {/* Property Type */}
                   <div className="col-span-2 sm:col-span-1">
                     <label className="mb-1 block text-[11px] sm:text-[12px] font-medium text-[#2d3f38]">
-                      Property Type
+                      {t("rent.propertyType")}
                     </label>
                     <div className="relative flex h-[38px] w-full items-center rounded-[10px] bg-white px-3 focus-within:ring-2 focus-within:ring-[#7faeb9]/40">
                       <select
                         name="propertyType"
                         defaultValue="All"
-                        className="w-full cursor-pointer appearance-none bg-transparent pr-6 text-[13px] font-medium text-[#183c2f] outline-none"
+                        className="w-full cursor-pointer appearance-none bg-transparent pe-6 text-[13px] font-medium text-[#183c2f] outline-none"
                       >
-                        <option value="All">{t("rent.all") || "All Types"}</option>
-                        <option value="Villa">Villa</option>
-                        <option value="Apartment">Apartment</option>
-                        <option value="Studio">Studio</option>
-                        <option value="Chalet">Chalet</option>
-                        <option value="TwinHouse">Twin House</option>
-                        <option value="TownHouse">Townhouse</option>
-                        <option value="Duplex">Duplex</option>
-                        <option value="Penthouse">Penthouse</option>
+                        <option value="All">{t("rent.allTypes")}</option>
+                        <option value="Villa">{t("rent.villa")}</option>
+                        <option value="Apartment">{t("rent.apartment")}</option>
+                        <option value="Studio">{t("rent.studio")}</option>
+                        <option value="Chalet">{t("rent.chalet")}</option>
+                        <option value="TwinHouse">{t("rent.twinHouse")}</option>
+                        <option value="TownHouse">{t("rent.townhouse")}</option>
+                        <option value="Duplex">{t("rent.duplex")}</option>
+                        <option value="Penthouse">{t("rent.penthouse")}</option>
                       </select>
-                      <ChevronDown className="pointer-events-none absolute right-2.5 size-4 text-[#4a5e55]" />
+                      <ChevronDown className="pointer-events-none absolute end-2.5 size-4 text-[#4a5e55]" />
                     </div>
                   </div>
                 </div>

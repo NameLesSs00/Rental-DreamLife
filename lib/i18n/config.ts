@@ -1,6 +1,8 @@
-export const locales = ["en", "ar", "fr", "de", "ru"] as const;
+export const allLocales = ["en", "ar", "fr", "de", "ru"] as const;
 
-export type Locale = (typeof locales)[number];
+export type Locale = (typeof allLocales)[number];
+
+export const locales = ["en", "ar"] as const satisfies readonly Locale[];
 
 export const defaultLocale: Locale = "en";
 

@@ -16,8 +16,23 @@ import type { PropertyBuyingListItem } from "@/lib/types/propertyBuying";
 
 const FALLBACK_IMAGE = "/rent/property-card.png";
 
+const propertyTypeKeyById: Record<number, string> = {
+  1: "rent.apartment",
+  2: "rent.villa",
+  3: "rent.studio",
+  4: "rent.chalet",
+  5: "rent.twinHouse",
+  6: "rent.townhouse",
+  7: "rent.duplex",
+  8: "rent.penthouse",
+  9: "rent.cabin",
+  10: "rent.hotel",
+  11: "rent.twoBedrooms",
+  12: "rent.oneBedroom",
+};
+
 export default function CategoriesSection() {
-  const { href, t, isRtl } = useI18n();
+  const { href, t, locale, isRtl } = useI18n();
   const [currency] = useSelectedCurrency();
 
   const containerRef = useRef<HTMLDivElement>(null);
@@ -30,10 +45,13 @@ export default function CategoriesSection() {
   const [canNext, setCanNext] = useState(false);
 
   // `Currency` tells the API which currency to price in — same call as the /buy page.
-  const { data, isLoading, isError } = usePublicBuyProperties({
-    pageSize: 6,
-    Currency: currency,
-  });
+  const { data, isLoading, isError } = usePublicBuyProperties(
+    {
+      pageSize: 6,
+      Currency: currency,
+    },
+    locale
+  );
 
   const properties: PropertyBuyingListItem[] = data?.items ?? [];
 
@@ -116,6 +134,8 @@ export default function CategoriesSection() {
   const arrowClass =
     "grid size-10 place-items-center rounded-full border border-[#2C798B]/30 bg-white text-[#183640] transition hover:border-[#2C798B] hover:bg-[#2C798B] hover:text-white disabled:cursor-not-allowed disabled:opacity-35 disabled:hover:border-[#2C798B]/30 disabled:hover:bg-white disabled:hover:text-[#183640]";
 
+  const areaUnit = locale === "ar" ? "م²" : "m²";
+
   return (
     <section className="relative z-20 flex w-full flex-col items-center bg-[#8FBAC4] px-2 pt-28 pb-16 font-[var(--font-poppins)] sm:px-3 sm:pt-32 sm:pb-20 lg:px-4 lg:pt-36">
       <div className="mx-auto w-full max-w-[1800px] rounded-[24px] bg-[#F3F0E9] p-6 shadow-sm sm:p-8 lg:p-10">
@@ -165,7 +185,7 @@ export default function CategoriesSection() {
         {!isLoading && isError && (
           <div className="my-10 flex flex-col items-center justify-center py-8 text-center">
             <p className="text-[15px] font-medium text-[#2C798B]">
-              Unable to load properties right now.
+              {t("buy.errorTitle")}
             </p>
           </div>
         )}
@@ -174,7 +194,7 @@ export default function CategoriesSection() {
         {!isLoading && !isError && properties.length === 0 && (
           <div className="my-10 flex flex-col items-center justify-center py-8 text-center">
             <p className="text-[15px] font-medium text-[#2C798B]">
-              No properties available at the moment.
+              {t("buy.emptyTitle")}
             </p>
           </div>
         )}
@@ -233,8 +253,13 @@ export default function CategoriesSection() {
                   .filter(Boolean)
                   .join(", ");
 
+                const typeKey = property.propertyTypeId
+                  ? propertyTypeKeyById[property.propertyTypeId]
+                  : undefined;
+
                 const categoryName =
-                  property.category?.name || getPropertyTypeLabel(property.propertyTypeId);
+                  property.category?.name ||
+                  (typeKey ? t(typeKey) : getPropertyTypeLabel(property.propertyTypeId));
 
                 // Same pricing helper as the /buy page — respects the selected currency.
                 const priceText = formatPriceInfo(
@@ -263,14 +288,13 @@ export default function CategoriesSection() {
                     >
                       <Image
                         src={imageSrc}
-                        alt={property.title || "Property"}
+                        alt={property.title || t("common.property")}
                         fill
                         unoptimized
                         draggable={false}
                         sizes="(min-width: 1280px) 275px, (min-width: 1024px) 220px, (min-width: 640px) 270px, 260px"
                         className="pointer-events-none object-cover object-center transition-transform duration-500 group-hover:scale-105"
                         onError={(e) => {
-                          // Guard against a cover URL that 404s — not just a missing one.
                           if (e.currentTarget.src.endsWith(FALLBACK_IMAGE)) return;
                           e.currentTarget.src = FALLBACK_IMAGE;
                         }}
@@ -278,7 +302,7 @@ export default function CategoriesSection() {
                     </Link>
 
                     {/* For Sale Badge */}
-                    <span className="pointer-events-none absolute right-4 top-4 inline-flex items-center justify-center rounded-full bg-[#3DA9BA] px-3.5 py-1.5 font-[var(--font-poppins)] text-[10.97px] font-medium leading-[1] text-white">
+                    <span className="pointer-events-none absolute end-4 top-4 inline-flex items-center justify-center rounded-full bg-[#3DA9BA] px-3.5 py-1.5 font-[var(--font-poppins)] text-[10.97px] font-medium leading-[1] text-white">
                       {t("home.featured.forSaleBadge")}
                     </span>
                   </div>
@@ -298,7 +322,7 @@ export default function CategoriesSection() {
                     {/* Category & Area */}
                     <div className="mt-3 flex items-center justify-between text-[13px] text-[#78888f] lg:text-[15px]">
                       <span className="font-medium">{categoryName}</span>
-                      <span>{property.area ? `${property.area} m²` : "-"}</span>
+                      <span>{property.area ? `${property.area} ${areaUnit}` : "-"}</span>
                     </div>
 
                     {/* Price & Specs */}
@@ -319,7 +343,7 @@ export default function CategoriesSection() {
                       </div>
                     </div>
 
-                    {/* Book Now Button */}
+                    {/* View Details Button */}
                     <Link
                       href={propertyUrl}
                       draggable={false}
@@ -352,7 +376,7 @@ export default function CategoriesSection() {
               aria-label={t("home.featured.previous")}
               className={arrowClass}
             >
-              <ChevronLeft className="size-4" aria-hidden="true" />
+              <ChevronLeft className="size-4 rtl:rotate-180" aria-hidden="true" />
             </button>
             <button
               type="button"
@@ -361,7 +385,7 @@ export default function CategoriesSection() {
               aria-label={t("home.featured.next")}
               className={arrowClass}
             >
-              <ChevronRight className="size-4" aria-hidden="true" />
+              <ChevronRight className="size-4 rtl:rotate-180" aria-hidden="true" />
             </button>
           </div>
         </div>

@@ -59,6 +59,7 @@
     "quickLinks": "Quick Links",
     "rentalTypes": "Rental Types",
     "contact": "Contact Us",
+    "address": "Al-Kawthar Street, above the Metro, Al-Safra Al-Shamiya, Hurghada",
     "intro": "Handpicked holiday homes, beachside chalets, and private Red Sea trips & airport transfers in Hurghada with Sea Key Property. Enjoy verified quality, transparent booking, and dedicated local host care.",
     "poweredBy": "Powered By",
     "rights": "All Rights Reserved",
@@ -80,9 +81,29 @@
       "titlePrefix": "From Home To",
       "titleHighlight": "Home",
       "subtitle": "Handpicked vacation homes, beach chalets, and private Red Sea trips in Hurghada.",
+      "headlineLine1": "YOUR FUTURE",
+      "headlineLine2": "STARTS HERE",
+      "tagline": "Find the Place You'll Love to Call Home",
+      "description": "Discover exceptional properties in prime locations, tailored to the way you want to live.",
       "checkIn": "Check-in Date",
       "checkOut": "Check-out Date",
+      "moreFilters": "Filters",
+      "fewerFilters": "Fewer",
       "searchHomes": "Search vacation homes"
+    },
+    "locations": {
+      "titlePrefix": "Explore ",
+      "titleHighlight": "Locations",
+      "subtitle": "Enjoy the most beautiful areas, stretching from south of Hurghada to the north."
+    },
+    "services": {
+      "titlePrefix": "Our ",
+      "titleHighlight": "Services",
+      "subtitle": "From finding the right property to closing the deal, we provide reliable real estate solutions built around your needs, budget, and goals.",
+      "item1Title": "Value You Can Trust",
+      "item1Body": "We focus on quality properties, competitive prices, and reliable service backed by real market experience.",
+      "item2Title": "Locations That Fit Your Lifestyle",
+      "item2Body": "We help you find properties in locations that match your lifestyle, preferences, and daily needs."
     },
     "categories": {
       "eyebrow": "Featured Listings",
@@ -251,7 +272,16 @@
     "metadataTitle": "Hurghada Vacation Rentals & Holiday Homes | Sea Key Property",
     "metadataDescription": "Find and book verified holiday apartments, chalets, studios, and vacation homes in Hurghada and El Kawther with Sea Key Property.",
     "heroTitle": "Find Your Next Vacation Rental Home",
+    "heroTitleLine1": "Browse Vacation Homes",
+    "heroTitleLine2": "with Ease",
+    "heroSubtitle": "Explore rentals that match your space, style, and way of living.",
     "heroBody": "Discover comfortable holiday apartments, beachside chalets, and studios for rent in Hurghada. Enjoy verified amenities, prime coastal locations, and a relaxing stay.",
+    "featuredHeadingPrefix": "Featured Rental ",
+    "featuredHeadingHighlight": "Properties",
+    "noLimit": "No limit",
+    "egOne": "e.g. 1",
+    "egTwo": "e.g. 2",
+    "egThree": "e.g. 3",
     "mobileTitle": "Rental Properties",
     "filters": "Filters",
     "closeFilters": "Close filters",
@@ -342,7 +372,18 @@
     "past": "Past",
     "today": "Today",
     "booked": "Booked",
-    "selected": "Selected"
+    "selected": "Selected",
+    "tagline": "Enjoy a luxurious place You can relax and unwind there.",
+    "termsAndConditions": "Terms & Conditions",
+    "smokingAllowed": "Smoking Allowed",
+    "petsAllowed": "Pets Allowed",
+    "partyAllowed": "Party Allowed",
+    "childrenAllowed": "Children Allowed",
+    "otherRules": "Other Rules",
+    "otherRulesDefault": "No parties or events. Self check-in with the lockbox.",
+    "cancellationDefault": "Free cancellation for 48 hours. Contact the owner to cancel the booking.",
+    "checkInLabel": "Check-in",
+    "checkOutLabel": "Check-out"
   },
   "booking": {
     "bookTheProperty": "Book The Property",
@@ -620,6 +661,8 @@
     "ourPeopleBody": "Behind every great experience is a dedicated team. Our local team in Hurghada is passionate about helping travelers, property seekers, and homeowners find the right solutions for their needs. From discovering the perfect holiday rental to exploring properties for sale, we focus on providing personal attention, reliable information, and friendly support at every step."
   },
   "blogs": {
+    "sectionTitle": "From Property to Lifestyle",
+    "sectionSubtitle": "Stay updated on the latest real-estate trends.",
     "homeEyebrow": "Travel & Stay Guides",
     "homeTitle": "Hurghada Holiday & Travel Guides",
     "fallbackExcerpt": "Explore the latest vacation rental tips and local Hurghada travel guides.",
@@ -633,7 +676,14 @@
     "noContent": "No article content is available yet.",
     "ctaTitle": "Find Your Perfect Vacation Home",
     "ctaBody": "Whether you're planning a weekend beach break, a family holiday, or an extended stay in the sun, we're here to make your Hurghada holiday effortless. Explore our handpicked vacation rentals and book your relaxing getaway today.",
-    "ctaAction": "Explore Vacation Homes"
+    "ctaAction": "Explore Vacation Homes",
+    "inThisArticle": "In this article",
+    "sidebarCtaTitle": "Planning Your Trip to Hurghada?",
+    "sidebarCtaBody": "Discover handpicked luxury beachfront villas and modern holiday apartments.",
+    "sidebarBrowseRentals": "Browse Vacation Rentals",
+    "sidebarPropertiesSale": "Properties For Sale",
+    "relatedArticles": "Related Articles",
+    "moreToExplore": "More to Explore"
   },
   "bookingConfirmation": {
     "title": "Booking Confirmed!",
@@ -750,7 +800,16 @@
     "moreAmenities": "More Amenities",
     "aboutProperty": "About Property",
     "heroTitle": "Properties for Sale",
-    "heroSubtitle": "Find your perfect home in Hurghada",
+    "heroTitleLine1": "Discover Properties",
+    "heroTitleLine2": "for Sale",
+    "heroSubtitle": "Explore exceptional homes and investment opportunities in one of Egypt's most attractive Red Sea destinations.",
+    "featuredHeadingPrefix": "Featured Buy ",
+    "featuredHeadingHighlight": "Properties",
+    "featuredSubtext": "Show featured properties first",
+    "relatedHeadingPrefix": "Related ",
+    "relatedHeadingHighlight": "Properties",
+    "relatedSubtitle": "Explore similar homes and investment opportunities",
+    "viewAllProperties": "View all properties",
     "availableProperties": "Available Properties",
     "propertiesFound": "{count} {count, plural, one {property} other {properties}} found",
     "loading": "Loading properties...",
@@ -965,6 +1024,11 @@
     "errorBookingNotCompleted": "Reviews can only be created for completed bookings. Please leave your review on or after your checkout date once your stay has concluded. We look forward to hearing your thoughts then!",
     "errorAlreadySubmitted": "A review has already been submitted for this booking number. Thank you for sharing your experience!",
     "errorBookingNotFound": "We couldn't find a booking matching this confirmation number. Please check your booking confirmation email.",
-    "errorGeneric": "Unable to submit review. Please verify your booking number and ensure your stay has concluded."
+    "errorGeneric": "Unable to submit review. Please verify your booking number and ensure your stay has concluded.",
+    "shareOpinion": "Share your opinion",
+    "yourRating": "Your Rating",
+    "nameOptional": "Booking Number",
+    "yourReview": "Your review",
+    "loadMore": "Load more"
   }
 }

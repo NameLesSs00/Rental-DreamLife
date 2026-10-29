@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { motion } from "framer-motion";
+import { useI18n } from "./I18nProvider";
 
 const rectangleTransition = {
   duration: 5,
@@ -79,6 +80,8 @@ function ImageWithAnimatedRectangles({
 }
 
 export default function OurServices() {
+  const { t } = useI18n();
+
   return (
     <section className="relative z-20 overflow-hidden bg-[#183640] px-5 py-16 font-[var(--font-poppins)] sm:px-8 sm:py-20 lg:px-16 lg:py-24">
       <div className="mx-auto w-full max-w-[1240px]">
@@ -91,13 +94,12 @@ export default function OurServices() {
           className="mx-auto max-w-[680px] text-center"
         >
           <h2 className="text-[28px] font-bold tracking-tight text-white sm:text-[34px] lg:text-[40px]">
-            <span>Our </span>
-            <span className="text-[#367e96]">Services</span>
+            <span>{t("home.services.titlePrefix")}</span>
+            <span className="text-[#367e96]">{t("home.services.titleHighlight")}</span>
           </h2>
 
           <p className="mx-auto mt-3 max-w-[620px] text-[13px] font-normal leading-relaxed text-[#e2e8f0] sm:text-[14px] lg:text-[15px]">
-            From finding the right property to closing the deal, we provide reliable
-            real estate solutions built around your needs, budget, and goals.
+            {t("home.services.subtitle")}
           </p>
         </motion.div>
 
@@ -107,7 +109,7 @@ export default function OurServices() {
           <div className="flex flex-col items-center justify-between gap-10 lg:flex-row lg:gap-14 xl:gap-20">
             <ImageWithAnimatedRectangles
               src="/homepage/services/handshake.jpg"
-              alt="Value You Can Trust"
+              alt={t("home.services.item1Title")}
             />
 
             <motion.div
@@ -115,14 +117,13 @@ export default function OurServices() {
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true, margin: "-40px" }}
               transition={{ duration: 0.6, delay: 0.1 }}
-              className="flex max-w-[560px] flex-col text-center lg:text-left xl:max-w-[600px]"
+              className="flex max-w-[560px] flex-col text-center lg:text-start xl:max-w-[600px]"
             >
               <h3 className="text-[26px] font-semibold leading-[130%] tracking-normal text-white sm:text-[30px] lg:text-[35px]">
-                Value You Can Trust
+                {t("home.services.item1Title")}
               </h3>
               <p className="mt-4 text-[16px] font-normal leading-[1.35] tracking-normal text-white sm:text-[20px] lg:text-[23px] xl:text-[27px] xl:leading-[34px]">
-                We focus on quality properties, competitive prices, and reliable
-                service backed by real market experience.
+                {t("home.services.item1Body")}
               </p>
             </motion.div>
           </div>
@@ -134,20 +135,19 @@ export default function OurServices() {
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true, margin: "-40px" }}
               transition={{ duration: 0.6, delay: 0.1 }}
-              className="flex max-w-[560px] flex-col text-center lg:text-left xl:max-w-[600px]"
+              className="flex max-w-[560px] flex-col text-center lg:text-start xl:max-w-[600px]"
             >
               <h3 className="text-[26px] font-semibold leading-[130%] tracking-normal text-white sm:text-[30px] lg:text-[35px]">
-                Locations That Fit Your Lifestyle
+                {t("home.services.item2Title")}
               </h3>
               <p className="mt-4 text-[16px] font-normal leading-[1.35] tracking-normal text-white sm:text-[20px] lg:text-[23px] xl:text-[27px] xl:leading-[34px]">
-                We help you find properties in locations that match your
-                lifestyle, preferences, and daily needs.
+                {t("home.services.item2Body")}
               </p>
             </motion.div>
 
             <ImageWithAnimatedRectangles
               src="/homepage/services/building.jpg"
-              alt="Locations That Fit Your Lifestyle"
+              alt={t("home.services.item2Title")}
               secondImage
             />
           </div>
